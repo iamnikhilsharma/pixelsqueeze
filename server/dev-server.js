@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const imageProcessor = require('./services/imageProcessor');
+const stripeService = require('./services/stripeService');
 require('dotenv').config();
 
 const app = express();
@@ -336,6 +337,276 @@ app.post('/api/download-batch', authenticateToken, (req, res) => {
   } catch (error) {
     console.error('Download error:', error);
     res.status(500).json({ error: 'Failed to create download' });
+  }
+});
+
+// Stripe routes
+app.use('/api/stripe', stripeRoutes);
+
+// Billing routes
+app.get('/api/billing/plans', authenticateToken, async (req, res) => {
+  try {
+    const plans = [
+      {
+        id: 'free',
+        name: 'Free',
+        price: 0,
+        period: 'month',
+        description: 'Perfect for getting started',
+        features: [
+          '100 images per month',
+          'Basic optimization',
+          'Standard support',
+          'WebP, JPEG, PNG support'
+        ],
+        limits: {
+          images: 100,
+          bandwidth: '1GB',
+          quality: 'Good'
+        },
+        popular: false
+      },
+      {
+        id: 'starter',
+        name: 'Starter',
+        price: 9,
+        period: 'month',
+        description: 'Great for small projects',
+        features: [
+          '5,000 images per month',
+          'Advanced optimization',
+          'Priority support',
+          'All formats supported',
+          'Custom quality settings',
+          'API access'
+        ],
+        limits: {
+          images: 5000,
+          bandwidth: '10GB',
+          quality: 'Excellent'
+        },
+        popular: false,
+        stripePriceId: stripeService.getPriceId('starter')
+      },
+      {
+        id: 'pro',
+        name: 'Pro',
+        price: 29,
+        period: 'month',
+        description: 'For growing businesses',
+        features: [
+          '20,000 images per month',
+          'Premium optimization',
+          '24/7 support',
+          'All formats + AVIF',
+          'Advanced settings',
+          'API access',
+          'Bulk processing',
+          'Analytics dashboard'
+        ],
+        limits: {
+          images: 20000,
+          bandwidth: '50GB',
+          quality: 'Premium'
+        },
+        popular: true,
+        stripePriceId: stripeService.getPriceId('pro')
+      },
+      {
+        id: 'enterprise',
+        name: 'Enterprise',
+        price: 99,
+        period: 'month',
+        description: 'For large organizations',
+        features: [
+          '100,000 images per month',
+          'Maximum optimization',
+          'Dedicated support',
+          'All formats supported',
+          'Custom integrations',
+          'White-label options',
+          'SLA guarantee',
+          'Advanced analytics'
+        ],
+        limits: {
+          images: 100000,
+          bandwidth: '200GB',
+          quality: 'Maximum'
+        },
+        popular: false,
+        stripePriceId: stripeService.getPriceId('enterprise')
+      }
+    ];
+
+    res.json({
+      success: true,
+      data: plans
+    });
+  } catch (error) {
+    console.error('Error getting plans:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get subscription plans'
+    });
+  }
+});
+
+// Create subscription
+app.post('/api/billing/subscribe', authenticateToken, async (req, res) => {
+  try {
+    const { planType, paymentMethodId } = req.body;
+    const user = users.get(req.user.apiKey);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (!planType || planType === 'free') {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid plan type'
+      });
+    }
+
+    const priceId = stripeService.getPriceId(planType);
+    if (!priceId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid plan type'
+      });
+    }
+
+    // Create or get Stripe customer
+    let customer;
+    if (user.stripeCustomerId) {
+      customer = await stripeService.getCustomer(user.stripeCustomerId);
+    } else {
+      customer = await stripeService.createCustomer(
+        user.email,
+        `${user.firstName} ${user.lastName}`,
+        { userId: user.id }
+      );
+      
+      // Update user with Stripe customer ID
+      user.stripeCustomerId = customer.id;
+    }
+
+    // Create subscription
+    const subscription = await stripeService.createSubscription(
+      customer.id,
+      priceId,
+      paymentMethodId
+    );
+
+    res.json({
+      success: true,
+      data: {
+        subscriptionId: subscription.id,
+        clientSecret: subscription.latest_invoice.payment_intent.client_secret,
+        status: subscription.status
+      }
+    });
+  } catch (error) {
+    console.error('Error creating subscription:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to create subscription'
+    });
+  }
+});
+
+// Get customer details
+app.get('/api/billing/customer', authenticateToken, async (req, res) => {
+  try {
+    const user = users.get(req.user.apiKey);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (!user.stripeCustomerId) {
+      return res.json({
+        success: true,
+        data: null
+      });
+    }
+
+    const customer = await stripeService.getCustomer(user.stripeCustomerId);
+
+    res.json({
+      success: true,
+      data: customer
+    });
+  } catch (error) {
+    console.error('Error getting customer:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get customer'
+    });
+  }
+});
+
+// Get payment methods
+app.get('/api/billing/payment-methods', authenticateToken, async (req, res) => {
+  try {
+    const user = users.get(req.user.apiKey);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (!user.stripeCustomerId) {
+      return res.json({
+        success: true,
+        data: []
+      });
+    }
+
+    const paymentMethods = await stripeService.getPaymentMethods(user.stripeCustomerId);
+
+    res.json({
+      success: true,
+      data: paymentMethods
+    });
+  } catch (error) {
+    console.error('Error getting payment methods:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get payment methods'
+    });
+  }
+});
+
+// Create setup intent
+app.post('/api/billing/setup-intent', authenticateToken, async (req, res) => {
+  try {
+    const user = users.get(req.user.apiKey);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (!user.stripeCustomerId) {
+      return res.status(400).json({
+        success: false,
+        error: 'No Stripe customer found'
+      });
+    }
+
+    const setupIntent = await stripeService.createSetupIntent(user.stripeCustomerId);
+
+    res.json({
+      success: true,
+      data: {
+        clientSecret: setupIntent.client_secret
+      }
+    });
+  } catch (error) {
+    console.error('Error creating setup intent:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to create setup intent'
+    });
   }
 });
 

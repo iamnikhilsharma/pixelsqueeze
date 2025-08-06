@@ -20,9 +20,15 @@ A fully web-based SaaS platform for image optimization with API service for thir
 
 ### Subscription Plans
 - **Free Tier**: 100 images/month, max 2MB each
-- **Starter**: 5,000 images - $10/month
-- **Pro**: 20,000 images - $40/month
-- **Enterprise**: Custom pricing
+- **Starter**: 5,000 images - $9/month
+- **Pro**: 20,000 images - $29/month
+- **Enterprise**: 100,000 images - $99/month
+
+### Payment Processing
+- **Stripe Integration**: Secure payment processing
+- **Subscription Management**: Automatic billing and plan upgrades
+- **Billing Portal**: Self-service billing management
+- **Webhook Handling**: Real-time subscription updates
 
 ## 🛠 Technology Stack
 
@@ -89,7 +95,15 @@ API_RATE_LIMIT=100
 API_RATE_LIMIT_WINDOW=900000
 ```
 
-4. **Start development servers**
+4. **Configure Stripe (Optional)**
+   
+   For payment processing, set up Stripe:
+   ```bash
+   # Follow the detailed guide
+   cat STRIPE_SETUP.md
+   ```
+
+5. **Start development servers**
 ```bash
 npm run dev
 ```

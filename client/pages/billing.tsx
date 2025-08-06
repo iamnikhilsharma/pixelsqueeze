@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   CheckIcon,
@@ -7,13 +7,15 @@ import {
   CogIcon,
   ArrowRightIcon,
   ShieldCheckIcon,
-  ZapIcon,
   StarIcon
 } from '@heroicons/react/24/outline';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/Button';
 import { useAuthStore } from '@/store/authStore';
 import { formatBytes, formatNumber } from '@/utils/formatters';
+import { stripeUtils } from '@/utils/stripe';
+import BillingPlans from '@/components/BillingPlans';
+import toast from 'react-hot-toast';
 
 const plans = [
   {
@@ -108,17 +110,35 @@ export default function Billing() {
   const { user } = useAuthStore();
   const [selectedPlan, setSelectedPlan] = useState(user?.subscription?.plan || 'free');
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
 
   const currentPlan = plans.find(plan => plan.id === user?.subscription?.plan) || plans[0];
 
   const handleUpgrade = async (planId: string) => {
     setIsUpgrading(true);
-    // TODO: Implement actual billing logic
-    setTimeout(() => {
+    try {
+      // Map plan IDs to Stripe price IDs (you'll need to create these in your Stripe dashboard)
+      const priceIdMap: { [key: string]: string } = {
+        starter: process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER || 'price_starter',
+        pro: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO || 'price_pro',
+        enterprise: process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE || 'price_enterprise'
+      };
+
+      const priceId = priceIdMap[planId];
+      if (!priceId) {
+        throw new Error('Invalid plan selected');
+      }
+
+      const successUrl = `${window.location.origin}/billing?success=true`;
+      const cancelUrl = `${window.location.origin}/billing?canceled=true`;
+
+      await stripeUtils.redirectToCheckout(priceId, successUrl, cancelUrl);
+    } catch (error) {
+      console.error('Error upgrading plan:', error);
+      toast.error('Failed to upgrade plan. Please try again.');
+    } finally {
       setIsUpgrading(false);
-      // For now, just show a success message
-      alert('Billing integration coming soon!');
-    }, 2000);
+    }
   };
 
   return (
@@ -132,38 +152,67 @@ export default function Billing() {
           </p>
         </div>
 
-        {/* Current Plan */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">Current Plan</h2>
-                <div className="mt-2 flex items-center space-x-3">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                    {currentPlan.name}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    ${currentPlan.price}/{currentPlan.period}
-                  </span>
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200 mb-8">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'overview'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('plans')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'plans'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Subscription Plans
+            </button>
+          </nav>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Current Plan */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8"
+            >
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900">Current Plan</h2>
+                    <div className="mt-2 flex items-center space-x-3">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                        {currentPlan.name}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        ${currentPlan.price}/{currentPlan.period}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm text-gray-600">{currentPlan.description}</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-gray-900">
+                      ${currentPlan.price}
+                      <span className="text-sm font-normal text-gray-500">/{currentPlan.period}</span>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {user?.subscription?.status === 'active' ? 'Active' : 'Inactive'}
+                    </div>
+                  </div>
                 </div>
-                <p className="mt-2 text-sm text-gray-600">{currentPlan.description}</p>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-gray-900">
-                  ${currentPlan.price}
-                  <span className="text-sm font-normal text-gray-500">/{currentPlan.period}</span>
-                </div>
-                <div className="text-sm text-gray-500">
-                  {user?.subscription?.status === 'active' ? 'Active' : 'Inactive'}
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+            </motion.div>
 
         {/* Usage Statistics */}
         <motion.div
