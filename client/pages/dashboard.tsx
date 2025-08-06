@@ -1,0 +1,309 @@
+import React, { useState, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { motion } from 'framer-motion';
+import { 
+  CloudArrowUpIcon, 
+  PhotoIcon, 
+  ChartBarIcon,
+  CogIcon,
+  UserIcon,
+  CreditCardIcon
+} from '@heroicons/react/24/outline';
+import { useAuthStore } from '@/store/authStore';
+import { useQuery } from 'react-query';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import { ImageUploader } from '@/components/ImageUploader';
+import { StatsCard } from '@/components/StatsCard';
+import { RecentImages } from '@/components/RecentImages';
+import { Layout } from '@/components/Layout';
+import { Button } from '@/components/Button';
+import { formatBytes, formatNumber } from '@/utils/formatters';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+export default function Dashboard() {
+  const { user, isAuthenticated } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<'upload' | 'stats' | 'images'>('upload');
+
+  // Fetch user statistics
+  const { data: stats, isLoading: statsLoading } = useQuery(
+    ['userStats'],
+    async () => {
+      const response = await axios.get(`${API_URL}/api/stats`);
+      return response.data.data;
+    },
+    {
+      enabled: isAuthenticated,
+      refetchInterval: 30000, // Refetch every 30 seconds
+    }
+  );
+
+  // Fetch recent images
+  const { data: recentImages, isLoading: imagesLoading } = useQuery(
+    ['recentImages'],
+    async () => {
+      const response = await axios.get(`${API_URL}/api/images?limit=5`);
+      return response.data.data;
+    },
+    {
+      enabled: isAuthenticated,
+      refetchInterval: 60000, // Refetch every minute
+    }
+  );
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Please log in to access your dashboard
+          </h1>
+          <Button href="/login" variant="primary">
+            Log In
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const tabs = [
+    { id: 'upload', name: 'Upload & Optimize', icon: CloudArrowUpIcon },
+    { id: 'stats', name: 'Statistics', icon: ChartBarIcon },
+    { id: 'images', name: 'Recent Images', icon: PhotoIcon },
+  ];
+
+  return (
+    <Layout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Welcome back, {user?.firstName}!
+          </h1>
+          <p className="mt-2 text-gray-600">
+            Optimize your images and track your usage
+          </p>
+        </div>
+
+        {/* Usage Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <StatsCard
+            title="Images This Month"
+            value={stats?.usage?.monthlyImages || 0}
+            total={stats?.usage?.planLimit || 100}
+            unit="images"
+            color="primary"
+          />
+          <StatsCard
+            title="Bandwidth Used"
+            value={formatBytes(stats?.usage?.monthlyBandwidth || 0)}
+            color="secondary"
+          />
+          <StatsCard
+            title="Average Compression"
+            value={`${stats?.statistics?.averageCompressionRatio || 0}%`}
+            color="success"
+          />
+        </div>
+
+        {/* Subscription Status */}
+        {user?.subscription && (
+          <div className="mb-8">
+            <div className="card">
+              <div className="card-body">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {user.subscription.plan.charAt(0).toUpperCase() + user.subscription.plan.slice(1)} Plan
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Status: <span className={`badge-${user.subscription.status === 'active' ? 'success' : 'warning'}`}>
+                        {user.subscription.status}
+                      </span>
+                    </p>
+                  </div>
+                  <div className="flex space-x-3">
+                    <Button variant="secondary" size="sm">
+                      <CreditCardIcon className="w-4 h-4 mr-2" />
+                      Manage Billing
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      <CogIcon className="w-4 h-4 mr-2" />
+                      Settings
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tabs */}
+        <div className="mb-6">
+          <nav className="flex space-x-8">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
+                  activeTab === tab.id
+                    ? 'bg-primary-100 text-primary-700'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+              >
+                <tab.icon className="w-5 h-5 mr-2" />
+                {tab.name}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Tab Content */}
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {activeTab === 'upload' && (
+            <div className="space-y-6">
+              <ImageUploader />
+              
+              {/* Quick Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="card">
+                  <div className="card-body text-center">
+                    <div className="text-2xl font-bold text-primary-600">
+                      {formatNumber(stats?.statistics?.totalImages || 0)}
+                    </div>
+                    <div className="text-sm text-gray-600">Total Images</div>
+                  </div>
+                </div>
+                <div className="card">
+                  <div className="card-body text-center">
+                    <div className="text-2xl font-bold text-success-600">
+                      {formatBytes(stats?.statistics?.totalSizeSaved || 0)}
+                    </div>
+                    <div className="text-sm text-gray-600">Space Saved</div>
+                  </div>
+                </div>
+                <div className="card">
+                  <div className="card-body text-center">
+                    <div className="text-2xl font-bold text-warning-600">
+                      {formatNumber(stats?.statistics?.totalDownloads || 0)}
+                    </div>
+                    <div className="text-sm text-gray-600">Downloads</div>
+                  </div>
+                </div>
+                <div className="card">
+                  <div className="card-body text-center">
+                    <div className="text-2xl font-bold text-secondary-600">
+                      {stats?.statistics?.averageCompressionRatio || 0}%
+                    </div>
+                    <div className="text-sm text-gray-600">Avg. Compression</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'stats' && (
+            <div className="space-y-6">
+              {/* Detailed Statistics */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="card">
+                  <div className="card-header">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Usage Overview
+                    </h3>
+                  </div>
+                  <div className="card-body">
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Images Used</span>
+                          <span className="font-medium">
+                            {stats?.usage?.monthlyImages || 0} / {stats?.usage?.planLimit || 100}
+                          </span>
+                        </div>
+                        <div className="mt-2">
+                          <div className="progress-bar">
+                            <div 
+                              className="progress-bar-fill"
+                              style={{ 
+                                width: `${Math.min(100, ((stats?.usage?.monthlyImages || 0) / (stats?.usage?.planLimit || 100)) * 100)}%` 
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Bandwidth Used</span>
+                          <span className="font-medium">
+                            {formatBytes(stats?.usage?.monthlyBandwidth || 0)}
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Remaining Images</span>
+                          <span className="font-medium text-success-600">
+                            {stats?.usage?.remainingImages || 0}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card">
+                  <div className="card-header">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Performance Metrics
+                    </h3>
+                  </div>
+                  <div className="card-body">
+                    <div className="space-y-4">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total Images Processed</span>
+                        <span className="font-medium">
+                          {formatNumber(stats?.statistics?.totalImages || 0)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total Space Saved</span>
+                        <span className="font-medium text-success-600">
+                          {formatBytes(stats?.statistics?.totalSizeSaved || 0)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Average Compression</span>
+                        <span className="font-medium">
+                          {stats?.statistics?.averageCompressionRatio || 0}%
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total Downloads</span>
+                        <span className="font-medium">
+                          {formatNumber(stats?.statistics?.totalDownloads || 0)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'images' && (
+            <div className="space-y-6">
+              <RecentImages images={recentImages?.images || []} loading={imagesLoading} />
+            </div>
+          )}
+        </motion.div>
+      </div>
+    </Layout>
+  );
+} 
