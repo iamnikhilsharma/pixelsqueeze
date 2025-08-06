@@ -7,6 +7,7 @@ const fs = require('fs');
 const multer = require('multer');
 const imageProcessor = require('./services/imageProcessor');
 const stripeService = require('./services/stripeService');
+const advancedImageRoutes = require('./routes/advancedImage');
 require('dotenv').config();
 
 const app = express();
@@ -342,6 +343,9 @@ app.post('/api/download-batch', authenticateToken, (req, res) => {
 
 // Stripe routes
 app.use('/api/stripe', stripeRoutes);
+
+// Advanced image processing routes
+app.use('/api/advanced', advancedImageRoutes);
 
 // Billing routes
 app.get('/api/billing/plans', authenticateToken, async (req, res) => {

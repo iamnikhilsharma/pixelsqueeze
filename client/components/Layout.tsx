@@ -6,7 +6,8 @@ import {
   CreditCardIcon,
   ArrowRightOnRectangleIcon,
   PhotoIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from './Button';
@@ -20,6 +21,7 @@ export function Layout({ children }: LayoutProps) {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: ChartBarIcon },
+    { name: 'Advanced Tools', href: '/advanced-tools', icon: SparklesIcon },
     { name: 'Images', href: '/images', icon: PhotoIcon },
     { name: 'Settings', href: '/settings', icon: CogIcon },
     { name: 'Billing', href: '/billing', icon: CreditCardIcon },
