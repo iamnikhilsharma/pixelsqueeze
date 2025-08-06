@@ -3,12 +3,14 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
+const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const apiRoutes = require('./routes/api');
 const webhookRoutes = require('./routes/webhooks');
 const adminRoutes = require('./routes/admin');
+const storageService = require('./services/storageService');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { logger } = require('./utils/logger');
@@ -63,6 +65,9 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Local storage static file serving
+app.use('/uploads', storageService.getStaticMiddleware());
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api', apiRoutes);
@@ -93,6 +98,7 @@ app.use('*', (req, res) => {
 app.listen(PORT, () => {
   logger.info(`PixelSqueeze server running on port ${PORT}`);
   logger.info(`Environment: ${process.env.NODE_ENV}`);
+  logger.info(`Local storage path: ${process.env.LOCAL_STORAGE_PATH || path.join(__dirname, '../uploads')}`);
 });
 
 // Graceful shutdown

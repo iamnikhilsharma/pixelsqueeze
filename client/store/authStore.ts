@@ -34,7 +34,7 @@ interface AuthState {
 }
 
 interface AuthActions {
-  login: (email: string, password: string) => Promise<void>;
+  login: (userData: any, token: string) => void;
   register: (userData: RegisterData) => Promise<void>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
@@ -65,35 +65,17 @@ export const useAuthStore = create<AuthStore>()(
       error: null,
 
       // Actions
-      login: async (email: string, password: string) => {
-        set({ isLoading: true, error: null });
-        
-        try {
-          const response = await axios.post(`${API_URL}/api/auth/login`, {
-            email,
-            password,
-          });
+      login: (userData: any, token: string) => {
+        set({
+          user: userData,
+          token,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        });
 
-          const { user, token } = response.data.data;
-          
-          set({
-            user,
-            token,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          });
-
-          // Set auth header for future requests
-          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        } catch (error: any) {
-          const errorMessage = error.response?.data?.error || 'Login failed';
-          set({
-            isLoading: false,
-            error: errorMessage,
-          });
-          throw new Error(errorMessage);
-        }
+        // Set auth header for future requests
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       },
 
       register: async (userData: RegisterData) => {
@@ -189,17 +171,9 @@ export const useAuthStore = create<AuthStore>()(
         token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
+
     }
   )
 );
 
-// Auth provider component
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { checkAuth } = useAuthStore();
-
-  React.useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
-
-  return <>{children}</>;
-}; 
+ 

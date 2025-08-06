@@ -115,11 +115,13 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">
-                      {user.subscription.plan.charAt(0).toUpperCase() + user.subscription.plan.slice(1)} Plan
+                      {(user.subscription.plan?.charAt(0).toUpperCase() + user.subscription.plan?.slice(1)) || 'Free'} Plan
                     </h3>
                     <p className="text-sm text-gray-600">
-                      Status: <span className={`badge-${user.subscription.status === 'active' ? 'success' : 'warning'}`}>
-                        {user.subscription.status}
+                      Status: <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        user.subscription.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {user.subscription.status || 'active'}
                       </span>
                     </p>
                   </div>
@@ -299,7 +301,7 @@ export default function Dashboard() {
 
           {activeTab === 'images' && (
             <div className="space-y-6">
-              <RecentImages images={recentImages?.images || []} loading={imagesLoading} />
+              <RecentImages images={recentImages?.images || []} isLoading={imagesLoading} />
             </div>
           )}
         </motion.div>

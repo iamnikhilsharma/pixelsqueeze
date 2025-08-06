@@ -1,28 +1,38 @@
-const AWS = require('aws-sdk');
+const fs = require('fs').promises;
+const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const { logger } = require('../utils/logger');
 
-class StorageService {
+class LocalStorageService {
   constructor() {
-    this.s3 = new AWS.S3({
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      region: process.env.AWS_REGION || 'us-east-1'
-    });
-    
-    this.bucket = process.env.AWS_S3_BUCKET;
-    this.region = process.env.AWS_REGION || 'us-east-1';
+    this.baseDir = process.env.LOCAL_STORAGE_PATH || path.join(__dirname, '../../uploads');
+    this.publicUrl = process.env.PUBLIC_URL || 'http://localhost:5000';
+    this.ensureDirectories();
   }
 
   /**
-   * Upload file to S3
+   * Ensure storage directories exist
+   */
+  async ensureDirectories() {
+    try {
+      await fs.mkdir(this.baseDir, { recursive: true });
+      await fs.mkdir(path.join(this.baseDir, 'optimized'), { recursive: true });
+      await fs.mkdir(path.join(this.baseDir, 'temp'), { recursive: true });
+      logger.info('Local storage directories created');
+    } catch (error) {
+      logger.error('Error creating storage directories:', error);
+    }
+  }
+
+  /**
+   * Upload file to local storage
    * @param {Buffer} buffer - File buffer
-   * @param {string} key - S3 key
+   * @param {string} filename - Filename
    * @param {string} contentType - MIME type
    * @param {Object} options - Additional options
    * @returns {Object} - Upload result
    */
-  async uploadFile(buffer, key, contentType, options = {}) {
+  async uploadFile(buffer, filename, contentType, options = {}) {
     try {
       const {
         isPublic = false,
@@ -30,244 +40,273 @@ class StorageService {
         metadata = {}
       } = options;
 
-      const params = {
-        Bucket: this.bucket,
-        Key: key,
-        Body: buffer,
-        ContentType: contentType,
-        Metadata: {
-          ...metadata,
-          uploadedAt: new Date().toISOString(),
-          fileId: uuidv4()
-        }
-      };
-
-      // Set ACL based on public flag
-      if (isPublic) {
-        params.ACL = 'public-read';
-      }
-
-      // Set expiration if specified
-      if (expiresIn) {
-        params.Expires = new Date(Date.now() + expiresIn * 1000);
-      }
-
-      const result = await this.s3.upload(params).promise();
+      // Generate unique filename
+      const timestamp = Date.now();
+      const uuid = uuidv4().split('-')[0];
+      const extension = path.extname(filename);
+      const uniqueFilename = `${timestamp}-${uuid}${extension}`;
       
-      logger.info(`File uploaded successfully: ${key}`);
+      // Determine storage path
+      const storagePath = isPublic ? 'public' : 'optimized';
+      const filePath = path.join(this.baseDir, storagePath, uniqueFilename);
+      
+      // Write file to disk
+      await fs.writeFile(filePath, buffer);
+      
+      // Store metadata
+      const metadataPath = filePath + '.meta.json';
+      const fileMetadata = {
+        originalName: filename,
+        contentType,
+        size: buffer.length,
+        uploadedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
+        metadata,
+        fileId: uuidv4()
+      };
+      
+      await fs.writeFile(metadataPath, JSON.stringify(fileMetadata, null, 2));
+      
+      logger.info(`File uploaded successfully: ${uniqueFilename}`);
       
       return {
         success: true,
-        key: result.Key,
-        url: result.Location,
-        etag: result.ETag,
-        bucket: result.Bucket
+        key: uniqueFilename,
+        url: `${this.publicUrl}/uploads/${storagePath}/${uniqueFilename}`,
+        path: filePath,
+        size: buffer.length
       };
 
     } catch (error) {
-      logger.error('S3 upload error:', error);
+      logger.error('Local upload error:', error);
       throw new Error(`Upload failed: ${error.message}`);
     }
   }
 
   /**
-   * Generate presigned URL for file download
-   * @param {string} key - S3 key
+   * Generate download URL for file
+   * @param {string} filename - Filename
    * @param {number} expiresIn - URL expiration time in seconds
-   * @returns {string} - Presigned URL
+   * @returns {string} - Download URL
    */
-  async generateDownloadUrl(key, expiresIn = 3600) {
+  async generateDownloadUrl(filename, expiresIn = 3600) {
     try {
-      const params = {
-        Bucket: this.bucket,
-        Key: key,
-        Expires: expiresIn
-      };
-
-      const url = await this.s3.getSignedUrlPromise('getObject', params);
+      const filePath = path.join(this.baseDir, 'optimized', filename);
       
-      logger.info(`Generated download URL for: ${key}`);
+      // Check if file exists
+      try {
+        await fs.access(filePath);
+      } catch (error) {
+        throw new Error('File not found');
+      }
       
-      return url;
+      // For local storage, we return a direct URL
+      const downloadUrl = `${this.publicUrl}/uploads/optimized/${filename}`;
+      
+      logger.info(`Generated download URL for: ${filename}`);
+      
+      return downloadUrl;
 
     } catch (error) {
-      logger.error('S3 presigned URL generation error:', error);
+      logger.error('Local download URL generation error:', error);
       throw new Error(`Failed to generate download URL: ${error.message}`);
     }
   }
 
   /**
-   * Delete file from S3
-   * @param {string} key - S3 key
+   * Delete file from local storage
+   * @param {string} filename - Filename
    * @returns {Object} - Delete result
    */
-  async deleteFile(key) {
+  async deleteFile(filename) {
     try {
-      const params = {
-        Bucket: this.bucket,
-        Key: key
-      };
-
-      await this.s3.deleteObject(params).promise();
+      const filePath = path.join(this.baseDir, 'optimized', filename);
+      const metadataPath = filePath + '.meta.json';
       
-      logger.info(`File deleted successfully: ${key}`);
+      // Delete file and metadata
+      await Promise.all([
+        fs.unlink(filePath).catch(() => {}), // Ignore if file doesn't exist
+        fs.unlink(metadataPath).catch(() => {}) // Ignore if metadata doesn't exist
+      ]);
+      
+      logger.info(`File deleted successfully: ${filename}`);
       
       return {
         success: true,
-        key: key
+        filename: filename
       };
 
     } catch (error) {
-      logger.error('S3 delete error:', error);
+      logger.error('Local delete error:', error);
       throw new Error(`Delete failed: ${error.message}`);
     }
   }
 
   /**
-   * Delete multiple files from S3
-   * @param {Array} keys - Array of S3 keys
+   * Delete multiple files from local storage
+   * @param {Array} filenames - Array of filenames
    * @returns {Object} - Delete result
    */
-  async deleteMultipleFiles(keys) {
+  async deleteMultipleFiles(filenames) {
     try {
-      if (!keys || keys.length === 0) {
+      if (!filenames || filenames.length === 0) {
         return { success: true, deleted: 0 };
       }
 
-      const params = {
-        Bucket: this.bucket,
-        Delete: {
-          Objects: keys.map(key => ({ Key: key })),
-          Quiet: false
-        }
-      };
-
-      const result = await this.s3.deleteObjects(params).promise();
+      const deletePromises = filenames.map(filename => this.deleteFile(filename));
+      const results = await Promise.allSettled(deletePromises);
       
-      logger.info(`Deleted ${result.Deleted.length} files from S3`);
+      const deleted = results.filter(result => result.status === 'fulfilled').length;
+      const errors = results.filter(result => result.status === 'rejected').length;
+      
+      logger.info(`Deleted ${deleted} files from local storage`);
       
       return {
         success: true,
-        deleted: result.Deleted.length,
-        errors: result.Errors || []
+        deleted,
+        errors
       };
 
     } catch (error) {
-      logger.error('S3 bulk delete error:', error);
+      logger.error('Local bulk delete error:', error);
       throw new Error(`Bulk delete failed: ${error.message}`);
     }
   }
 
   /**
-   * Check if file exists in S3
-   * @param {string} key - S3 key
+   * Check if file exists in local storage
+   * @param {string} filename - Filename
    * @returns {boolean} - File existence
    */
-  async fileExists(key) {
+  async fileExists(filename) {
     try {
-      const params = {
-        Bucket: this.bucket,
-        Key: key
-      };
-
-      await this.s3.headObject(params).promise();
+      const filePath = path.join(this.baseDir, 'optimized', filename);
+      await fs.access(filePath);
       return true;
-
     } catch (error) {
-      if (error.code === 'NotFound' || error.statusCode === 404) {
-        return false;
-      }
-      throw error;
+      return false;
     }
   }
 
   /**
-   * Get file metadata from S3
-   * @param {string} key - S3 key
+   * Get file metadata from local storage
+   * @param {string} filename - Filename
    * @returns {Object} - File metadata
    */
-  async getFileMetadata(key) {
+  async getFileMetadata(filename) {
     try {
-      const params = {
-        Bucket: this.bucket,
-        Key: key
-      };
-
-      const result = await this.s3.headObject(params).promise();
+      const filePath = path.join(this.baseDir, 'optimized', filename);
+      const metadataPath = filePath + '.meta.json';
+      
+      const [stats, metadataContent] = await Promise.all([
+        fs.stat(filePath),
+        fs.readFile(metadataPath, 'utf8')
+      ]);
+      
+      const metadata = JSON.parse(metadataContent);
       
       return {
         success: true,
-        key: key,
-        size: result.ContentLength,
-        contentType: result.ContentType,
-        lastModified: result.LastModified,
-        etag: result.ETag,
-        metadata: result.Metadata || {}
+        filename: filename,
+        size: stats.size,
+        contentType: metadata.contentType,
+        lastModified: stats.mtime,
+        metadata: metadata
       };
 
     } catch (error) {
-      logger.error('S3 metadata retrieval error:', error);
+      logger.error('Local metadata retrieval error:', error);
       throw new Error(`Failed to get file metadata: ${error.message}`);
     }
   }
 
   /**
-   * Copy file within S3
-   * @param {string} sourceKey - Source S3 key
-   * @param {string} destinationKey - Destination S3 key
+   * Copy file within local storage
+   * @param {string} sourceFilename - Source filename
+   * @param {string} destinationFilename - Destination filename
    * @returns {Object} - Copy result
    */
-  async copyFile(sourceKey, destinationKey) {
+  async copyFile(sourceFilename, destinationFilename) {
     try {
-      const params = {
-        Bucket: this.bucket,
-        CopySource: `${this.bucket}/${sourceKey}`,
-        Key: destinationKey
-      };
-
-      const result = await this.s3.copyObject(params).promise();
+      const sourcePath = path.join(this.baseDir, 'optimized', sourceFilename);
+      const destPath = path.join(this.baseDir, 'optimized', destinationFilename);
       
-      logger.info(`File copied successfully: ${sourceKey} -> ${destinationKey}`);
+      await fs.copyFile(sourcePath, destPath);
+      
+      // Copy metadata if it exists
+      const sourceMetaPath = sourcePath + '.meta.json';
+      const destMetaPath = destPath + '.meta.json';
+      
+      try {
+        await fs.copyFile(sourceMetaPath, destMetaPath);
+      } catch (error) {
+        // Metadata doesn't exist, that's okay
+      }
+      
+      logger.info(`File copied successfully: ${sourceFilename} -> ${destinationFilename}`);
       
       return {
         success: true,
-        sourceKey: sourceKey,
-        destinationKey: destinationKey,
-        etag: result.ETag
+        sourceFilename: sourceFilename,
+        destinationFilename: destinationFilename
       };
 
     } catch (error) {
-      logger.error('S3 copy error:', error);
+      logger.error('Local copy error:', error);
       throw new Error(`Copy failed: ${error.message}`);
     }
   }
 
   /**
-   * List files in S3 bucket with prefix
-   * @param {string} prefix - Key prefix
-   * @param {number} maxKeys - Maximum number of keys to return
+   * List files in local storage
+   * @param {string} prefix - File prefix
+   * @param {number} maxFiles - Maximum number of files to return
    * @returns {Object} - List result
    */
-  async listFiles(prefix = '', maxKeys = 1000) {
+  async listFiles(prefix = '', maxFiles = 1000) {
     try {
-      const params = {
-        Bucket: this.bucket,
-        Prefix: prefix,
-        MaxKeys: maxKeys
-      };
-
-      const result = await this.s3.listObjectsV2(params).promise();
+      const optimizedDir = path.join(this.baseDir, 'optimized');
+      
+      try {
+        await fs.access(optimizedDir);
+      } catch (error) {
+        return {
+          success: true,
+          files: [],
+          count: 0,
+          isTruncated: false
+        };
+      }
+      
+      const files = await fs.readdir(optimizedDir);
+      
+      // Filter by prefix and exclude metadata files
+      const filteredFiles = files
+        .filter(file => file.startsWith(prefix) && !file.endsWith('.meta.json'))
+        .slice(0, maxFiles);
+      
+      // Get file stats
+      const fileStats = await Promise.all(
+        filteredFiles.map(async (filename) => {
+          const filePath = path.join(optimizedDir, filename);
+          const stats = await fs.stat(filePath);
+          return {
+            Key: filename,
+            Size: stats.size,
+            LastModified: stats.mtime
+          };
+        })
+      );
       
       return {
         success: true,
-        files: result.Contents || [],
-        count: result.KeyCount,
-        isTruncated: result.IsTruncated,
-        nextContinuationToken: result.NextContinuationToken
+        files: fileStats,
+        count: fileStats.length,
+        isTruncated: fileStats.length >= maxFiles
       };
 
     } catch (error) {
-      logger.error('S3 list files error:', error);
+      logger.error('Local list files error:', error);
       throw new Error(`Failed to list files: ${error.message}`);
     }
   }
@@ -277,7 +316,7 @@ class StorageService {
    * @param {string} originalName - Original filename
    * @param {string} format - File format
    * @param {string} prefix - Key prefix
-   * @returns {string} - Unique S3 key
+   * @returns {string} - Unique filename
    */
   generateKey(originalName, format, prefix = 'uploads') {
     const timestamp = Date.now();
@@ -285,7 +324,7 @@ class StorageService {
     const extension = format === 'jpeg' ? 'jpg' : format;
     const sanitizedName = originalName.replace(/[^a-zA-Z0-9.-]/g, '_');
     
-    return `${prefix}/${timestamp}/${uuid}-${sanitizedName}.${extension}`;
+    return `${timestamp}-${uuid}-${sanitizedName}.${extension}`;
   }
 
   /**
@@ -296,16 +335,16 @@ class StorageService {
   async cleanupExpiredFiles(expirationDate) {
     try {
       const files = await this.listFiles();
-      const expiredKeys = [];
+      const expiredFiles = [];
       
       for (const file of files.files) {
         if (file.LastModified < expirationDate) {
-          expiredKeys.push(file.Key);
+          expiredFiles.push(file.Key);
         }
       }
       
-      if (expiredKeys.length > 0) {
-        const result = await this.deleteMultipleFiles(expiredKeys);
+      if (expiredFiles.length > 0) {
+        const result = await this.deleteMultipleFiles(expiredFiles);
         logger.info(`Cleaned up ${result.deleted} expired files`);
         return result;
       }
@@ -317,16 +356,16 @@ class StorageService {
       };
 
     } catch (error) {
-      logger.error('S3 cleanup error:', error);
+      logger.error('Local cleanup error:', error);
       throw new Error(`Cleanup failed: ${error.message}`);
     }
   }
 
   /**
-   * Get bucket statistics
-   * @returns {Object} - Bucket statistics
+   * Get storage statistics
+   * @returns {Object} - Storage statistics
    */
-  async getBucketStats() {
+  async getStorageStats() {
     try {
       const files = await this.listFiles();
       let totalSize = 0;
@@ -339,30 +378,57 @@ class StorageService {
         success: true,
         fileCount: files.count,
         totalSize: totalSize,
-        bucket: this.bucket,
-        region: this.region
+        storagePath: this.baseDir,
+        publicUrl: this.publicUrl
       };
 
     } catch (error) {
-      logger.error('S3 bucket stats error:', error);
-      throw new Error(`Failed to get bucket stats: ${error.message}`);
+      logger.error('Local storage stats error:', error);
+      throw new Error(`Failed to get storage stats: ${error.message}`);
     }
   }
 
   /**
-   * Test S3 connection
+   * Test local storage connection
    * @returns {boolean} - Connection status
    */
   async testConnection() {
     try {
-      await this.s3.headBucket({ Bucket: this.bucket }).promise();
-      logger.info('S3 connection test successful');
+      await this.ensureDirectories();
+      logger.info('Local storage connection test successful');
       return true;
     } catch (error) {
-      logger.error('S3 connection test failed:', error);
+      logger.error('Local storage connection test failed:', error);
       return false;
     }
   }
+
+  /**
+   * Serve static files (for Express middleware)
+   */
+  getStaticMiddleware() {
+    return (req, res, next) => {
+      if (req.path.startsWith('/uploads/')) {
+        const filePath = path.join(this.baseDir, req.path.replace('/uploads/', ''));
+        
+        // Check if file exists
+        fs.access(filePath)
+          .then(() => {
+            // Set appropriate headers
+            res.setHeader('Cache-Control', 'public, max-age=3600');
+            res.setHeader('Expires', new Date(Date.now() + 3600000).toUTCString());
+            
+            // Serve the file
+            res.sendFile(filePath);
+          })
+          .catch(() => {
+            res.status(404).json({ error: 'File not found' });
+          });
+      } else {
+        next();
+      }
+    };
+  }
 }
 
-module.exports = new StorageService(); 
+module.exports = new LocalStorageService(); 

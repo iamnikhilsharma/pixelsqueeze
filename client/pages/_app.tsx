@@ -1,7 +1,7 @@
 import type { AppProps } from 'next/app';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from '@/store/authStore';
+import { AuthProvider } from '@/components/AuthProvider';
 import '@/styles/globals.css';
 
 // Create a client

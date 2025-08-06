@@ -112,34 +112,20 @@ module.exports = {
         'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
         'medium': '0 4px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
         'strong': '0 10px 40px -10px rgba(0, 0, 0, 0.15), 0 2px 10px -2px rgba(0, 0, 0, 0.05)',
-        'glow': '0 0 20px rgba(59, 130, 246, 0.3)',
-        'glow-success': '0 0 20px rgba(34, 197, 94, 0.3)',
-        'glow-error': '0 0 20px rgba(239, 68, 68, 0.3)',
       },
-      backdropBlur: {
-        xs: '2px',
+      borderRadius: {
+        'xl': '1rem',
+        '2xl': '1.5rem',
+        '3xl': '2rem',
       },
       spacing: {
         '18': '4.5rem',
         '88': '22rem',
         '128': '32rem',
       },
-      maxWidth: {
-        '8xl': '88rem',
-        '9xl': '96rem',
-      },
-      zIndex: {
-        '60': '60',
-        '70': '70',
-        '80': '80',
-        '90': '90',
-        '100': '100',
-      },
     },
   },
   plugins: [
     require('@tailwindcss/forms'),
-    require('@tailwindcss/typography'),
-    require('@tailwindcss/aspect-ratio'),
   ],
-}; 
+} 

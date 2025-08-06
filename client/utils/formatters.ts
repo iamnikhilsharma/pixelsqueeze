@@ -13,23 +13,25 @@ export function formatBytes(bytes: number, decimals: number = 2): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-/**
- * Format number with commas
- */
 export function formatNumber(num: number): string {
-  return num.toLocaleString();
+  return new Intl.NumberFormat().format(num);
 }
 
-/**
- * Format percentage
- */
-export function formatPercentage(value: number, decimals: number = 1): string {
-  return `${value.toFixed(decimals)}%`;
+export function formatPercentage(value: number, total: number): string {
+  if (total === 0) return '0%';
+  return Math.round((value / total) * 100) + '%';
 }
 
-/**
- * Format date to relative time
- */
+export function formatDate(date: string | Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(date));
+}
+
 export function formatRelativeTime(date: string | Date): string {
   const now = new Date();
   const targetDate = new Date(date);
@@ -37,49 +39,27 @@ export function formatRelativeTime(date: string | Date): string {
 
   if (diffInSeconds < 60) {
     return 'just now';
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60);
+    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600);
+    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  } else if (diffInSeconds < 2592000) {
+    const days = Math.floor(diffInSeconds / 86400);
+    return `${days} day${days > 1 ? 's' : ''} ago`;
+  } else {
+    return formatDate(date);
   }
-
-  const diffInMinutes = Math.floor(diffInSeconds / 60);
-  if (diffInMinutes < 60) {
-    return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
-  }
-
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) {
-    return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-  }
-
-  const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 7) {
-    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
-  }
-
-  const diffInWeeks = Math.floor(diffInDays / 7);
-  if (diffInWeeks < 4) {
-    return `${diffInWeeks} week${diffInWeeks > 1 ? 's' : ''} ago`;
-  }
-
-  const diffInMonths = Math.floor(diffInDays / 30);
-  if (diffInMonths < 12) {
-    return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
-  }
-
-  const diffInYears = Math.floor(diffInDays / 365);
-  return `${diffInYears} year${diffInYears > 1 ? 's' : ''} ago`;
 }
 
-/**
- * Format date to readable format
- */
-export function formatDate(date: string | Date, options: Intl.DateTimeFormatOptions = {}): string {
-  const defaultOptions: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    ...options,
-  };
+export function formatFileSize(bytes: number): string {
+  return formatBytes(bytes);
+}
 
-  return new Date(date).toLocaleDateString(undefined, defaultOptions);
+export function formatCompressionRatio(originalSize: number, optimizedSize: number): string {
+  const ratio = ((originalSize - optimizedSize) / originalSize) * 100;
+  return `${Math.round(ratio)}% smaller`;
 }
 
 /**
@@ -138,21 +118,6 @@ export function formatCurrency(amount: number, currency: string = 'USD'): string
     style: 'currency',
     currency,
   }).format(amount);
-}
-
-/**
- * Format file size with appropriate unit
- */
-export function formatFileSize(bytes: number): string {
-  return formatBytes(bytes);
-}
-
-/**
- * Format compression ratio
- */
-export function formatCompressionRatio(original: number, compressed: number): string {
-  const ratio = ((original - compressed) / original) * 100;
-  return formatPercentage(ratio);
 }
 
 /**
