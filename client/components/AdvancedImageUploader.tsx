@@ -128,7 +128,7 @@ export default function AdvancedImageUploader({ onImagesProcessed }: AdvancedIma
       const authData = localStorage.getItem('pixelsqueeze-auth');
       const token = authData ? JSON.parse(authData).state.token : '';
       
-      const response = await fetch('/api/advanced/batch-optimize', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/advanced/batch-optimize`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

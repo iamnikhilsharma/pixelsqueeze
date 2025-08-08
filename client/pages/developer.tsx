@@ -63,7 +63,7 @@ export default function DeveloperDashboard() {
       const token = authData ? JSON.parse(authData).state.token : '';
       
       // Load API keys
-      const keysResponse = await fetch('/api/developer/keys', {
+      const keysResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/developer/keys`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -74,7 +74,7 @@ export default function DeveloperDashboard() {
       }
 
       // Load usage stats
-      const usageResponse = await fetch('/api/developer/usage', {
+      const usageResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/developer/usage`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -96,7 +96,7 @@ export default function DeveloperDashboard() {
       const authData = localStorage.getItem('pixelsqueeze-auth');
       const token = authData ? JSON.parse(authData).state.token : '';
       
-      const response = await fetch('/api/developer/keys', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/developer/keys`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
