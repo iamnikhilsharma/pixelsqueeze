@@ -135,9 +135,11 @@ export const useAuthStore = create<AuthStore>()(
         const { token } = get();
         
         if (!token) {
-          set({ isAuthenticated: false });
+          set({ isAuthenticated: false, isLoading: false });
           return;
         }
+
+        set({ isLoading: true });
 
         try {
           // Set auth header
@@ -150,8 +152,10 @@ export const useAuthStore = create<AuthStore>()(
             user,
             isAuthenticated: true,
             isLoading: false,
+            error: null,
           });
-        } catch (error) {
+        } catch (error: any) {
+          console.error('Auth check failed:', error);
           // Token is invalid, clear auth state
           delete axios.defaults.headers.common['Authorization'];
           set({
@@ -159,6 +163,7 @@ export const useAuthStore = create<AuthStore>()(
             token: null,
             isAuthenticated: false,
             isLoading: false,
+            error: null,
           });
         }
       },
@@ -170,7 +175,12 @@ export const useAuthStore = create<AuthStore>()(
         token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
-
+      onRehydrateStorage: () => (state) => {
+        // When state is rehydrated, ensure axios headers are set if we have a token
+        if (state?.token) {
+          axios.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
+        }
+      },
     }
   )
 );

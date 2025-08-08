@@ -7,21 +7,29 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const { checkAuth, isAuthenticated, token } = useAuthStore();
+  const { checkAuth, token } = useAuthStore();
 
   useEffect(() => {
-    // Ensure axios has Authorization set on mount and whenever token changes
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    } else {
-      delete axios.defaults.headers.common['Authorization'];
-    }
+    const initializeAuth = async () => {
+      // Ensure axios has Authorization set on mount
+      if (token) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        
+        // Always check auth if we have a token
+        // This handles cases where the persisted state might be incomplete
+        try {
+          await checkAuth();
+        } catch (error) {
+          console.error('Auth check failed:', error);
+          // If checkAuth fails, it will clear the auth state automatically
+        }
+      } else {
+        delete axios.defaults.headers.common['Authorization'];
+      }
+    };
 
-    // Verify token if not yet authenticated
-    if (token && !isAuthenticated) {
-      checkAuth();
-    }
-  }, [token, isAuthenticated, checkAuth]);
+    initializeAuth();
+  }, [token, checkAuth]);
 
   return <>{children}</>;
 }; 

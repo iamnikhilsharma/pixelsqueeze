@@ -19,11 +19,25 @@ import {
 
 export default function Dashboard() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, checkAuth } = useAuthStore();
   const [stats, setStats] = useState<any>(null);
   const [recentImages, setRecentImages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'upload' | 'stats' | 'images'>('upload');
+
+  // Check authentication on component mount
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        await checkAuth();
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        router.push('/login');
+      }
+    };
+
+    initAuth();
+  }, [checkAuth, router]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,10 +68,12 @@ export default function Dashboard() {
       }
     };
 
-    fetchData();
-    const interval = setInterval(fetchData, 30000); // Refetch every 30 seconds
-    return () => clearInterval(interval);
-  }, [isAuthenticated, router]);
+    if (isAuthenticated) {
+      fetchData();
+      const interval = setInterval(fetchData, 30000); // Refetch every 30 seconds
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated]); // Remove router from dependencies
 
   if (!isAuthenticated) {
     return (
