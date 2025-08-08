@@ -215,11 +215,16 @@ export default function AdvancedImageUploader({ onImagesProcessed }: AdvancedIma
     completedImages.forEach(image => {
       if (image.result?.downloadUrl) {
         const link = document.createElement('a');
-        link.href = `${buildApiUrl('')}${image.result.downloadUrl}`;
+        // Construct the full URL for download
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const cleanBaseUrl = baseUrl.replace(/\/$/, ''); // Remove trailing slash
+        link.href = `${cleanBaseUrl}${image.result.downloadUrl}`;
         link.download = `optimized_${image.file.name}`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+      } else {
+        console.error('No download URL found for image:', image);
       }
     });
   };

@@ -75,8 +75,50 @@ router.post('/batch-optimize', authenticateToken, upload.array('images', 20), as
 
     console.log(`Completed processing ${results.length} images`);
 
-    // Send final results
-    res.write(`data: ${JSON.stringify({ type: 'complete', results })}\n\n`);
+    // Ensure uploads directory exists
+    const uploadsDir = path.join(__dirname, '../uploads');
+    try {
+      await fs.mkdir(uploadsDir, { recursive: true });
+    } catch (error) {
+      console.error('Error creating uploads directory:', error);
+    }
+
+    // Save optimized images and generate download URLs
+    const savedResults = [];
+    for (const result of results) {
+      if (result.error) {
+        savedResults.push(result);
+        continue;
+      }
+
+      try {
+        // Generate filename
+        const fileExtension = result.format || 'jpg';
+        const fileName = `optimized_${result.id}.${fileExtension}`;
+        const filePath = path.join(uploadsDir, fileName);
+        
+        // Save the optimized image
+        await fs.writeFile(filePath, result.buffer);
+        
+        // Add download URL to result
+        const savedResult = {
+          ...result,
+          downloadUrl: `/uploads/${fileName}`
+        };
+        
+        savedResults.push(savedResult);
+        console.log(`Saved optimized image: ${fileName}`);
+      } catch (error) {
+        console.error(`Error saving optimized image ${result.originalName}:`, error);
+        savedResults.push({
+          ...result,
+          error: `Failed to save optimized image: ${error.message}`
+        });
+      }
+    }
+
+    // Send final results with download URLs
+    res.write(`data: ${JSON.stringify({ type: 'complete', results: savedResults })}\n\n`);
     res.end();
 
   } catch (error) {
