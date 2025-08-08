@@ -76,7 +76,7 @@ router.post('/batch-optimize', authenticateToken, upload.array('images', 20), as
     console.log(`Completed processing ${results.length} images`);
 
     // Ensure uploads directory exists
-    const uploadsDir = path.join(__dirname, '../uploads');
+    const uploadsDir = path.join(__dirname, '../../uploads');
     try {
       await fs.mkdir(uploadsDir, { recursive: true });
     } catch (error) {
@@ -148,7 +148,7 @@ router.post('/convert-format', authenticateToken, upload.single('image'), async 
 
     // Save the converted file
     const fileName = `${result.id}.${targetFormat}`;
-    const filePath = path.join(__dirname, '../uploads', fileName);
+    const filePath = path.join(__dirname, '../../uploads', fileName);
     
     await fs.writeFile(filePath, result.buffer);
     
@@ -184,7 +184,7 @@ router.post('/add-watermark', authenticateToken, upload.fields([
 
     // Save watermark temporarily
     const watermarkFileName = `watermark_${Date.now()}.png`;
-    const watermarkPath = path.join(__dirname, '../uploads/temp', watermarkFileName);
+    const watermarkPath = path.join(__dirname, '../../uploads/temp', watermarkFileName);
     
     await fs.writeFile(watermarkPath, req.files.watermark[0].buffer);
     watermarkOptions.watermarkPath = watermarkPath;
@@ -193,7 +193,7 @@ router.post('/add-watermark', authenticateToken, upload.fields([
 
     // Save the watermarked image
     const fileName = `watermarked_${result.id}.png`;
-    const filePath = path.join(__dirname, '../uploads', fileName);
+    const filePath = path.join(__dirname, '../../uploads', fileName);
     
     await fs.writeFile(filePath, result.buffer);
     
@@ -251,7 +251,7 @@ router.post('/thumbnails', authenticateToken, upload.single('image'), async (req
     const savedThumbnails = [];
     for (const thumbnail of thumbnails) {
       const fileName = `thumb_${thumbnail.size}_${Date.now()}.${thumbnail.format}`;
-      const filePath = path.join(__dirname, '../uploads', fileName);
+      const filePath = path.join(__dirname, '../../uploads', fileName);
       
       await fs.writeFile(filePath, thumbnail.buffer);
       
@@ -349,7 +349,7 @@ router.post('/optimize-advanced', authenticateToken, upload.single('image'), asy
 
     // Save the optimized file
     const fileName = `advanced_${result.id}.${result.format}`;
-    const filePath = path.join(__dirname, '../uploads', fileName);
+    const filePath = path.join(__dirname, '../../uploads', fileName);
     
     await fs.writeFile(filePath, result.buffer);
     

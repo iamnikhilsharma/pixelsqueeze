@@ -407,23 +407,24 @@ class LocalStorageService {
    * Serve static files (for Express middleware)
    */
   getStaticMiddleware() {
-    return (req, res, next) => {
+    return async (req, res, next) => {
       if (req.path.startsWith('/uploads/')) {
         const filePath = path.join(this.baseDir, req.path.replace('/uploads/', ''));
         
-        // Check if file exists
-        fs.access(filePath)
-          .then(() => {
-            // Set appropriate headers
-            res.setHeader('Cache-Control', 'public, max-age=3600');
-            res.setHeader('Expires', new Date(Date.now() + 3600000).toUTCString());
-            
-            // Serve the file
-            res.sendFile(filePath);
-          })
-          .catch(() => {
-            res.status(404).json({ error: 'File not found' });
-          });
+        try {
+          // Check if file exists
+          await fs.access(filePath);
+          
+          // Set appropriate headers
+          res.setHeader('Cache-Control', 'public, max-age=3600');
+          res.setHeader('Expires', new Date(Date.now() + 3600000).toUTCString());
+          
+          // Serve the file
+          res.sendFile(filePath);
+        } catch (error) {
+          console.error(`File not found: ${filePath}`, error);
+          res.status(404).json({ error: 'File not found', path: req.path });
+        }
       } else {
         next();
       }
