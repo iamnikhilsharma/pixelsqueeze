@@ -10,6 +10,7 @@ const authRoutes = require('./routes/auth');
 const apiRoutes = require('./routes/api');
 const webhookRoutes = require('./routes/webhooks');
 const adminRoutes = require('./routes/admin');
+const advancedImageRoutes = require('./routes/advancedImage');
 const storageService = require('./services/storageService');
 
 const { errorHandler } = require('./middleware/errorHandler');
@@ -73,6 +74,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api', apiRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/advanced', advancedImageRoutes);
 
 // Frontend is deployed separately (e.g., Vercel). Do not serve client build here.
 

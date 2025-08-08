@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs').promises;
 const advancedImageProcessor = require('../services/advancedImageProcessor');
 const { authenticateToken } = require('../middleware/auth');
 
@@ -33,6 +33,8 @@ router.post('/batch-optimize', authenticateToken, upload.array('images', 20), as
       return res.status(400).json({ error: 'No images provided' });
     }
 
+    console.log(`Processing ${req.files.length} images for user ${req.user.email}`);
+
     const options = {
       quality: parseInt(req.body.quality) || 80,
       format: req.body.format || 'auto',
@@ -53,6 +55,8 @@ router.post('/batch-optimize', authenticateToken, upload.array('images', 20), as
       gamma: parseFloat(req.body.gamma) || 1
     };
 
+    console.log('Processing options:', options);
+
     // Set up Server-Sent Events for progress tracking
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
@@ -64,9 +68,12 @@ router.post('/batch-optimize', authenticateToken, upload.array('images', 20), as
       req.files,
       options,
       (progress) => {
+        console.log('Progress:', progress);
         res.write(`data: ${JSON.stringify(progress)}\n\n`);
       }
     );
+
+    console.log(`Completed processing ${results.length} images`);
 
     // Send final results
     res.write(`data: ${JSON.stringify({ type: 'complete', results })}\n\n`);
@@ -101,7 +108,7 @@ router.post('/convert-format', authenticateToken, upload.single('image'), async 
     const fileName = `${result.id}.${targetFormat}`;
     const filePath = path.join(__dirname, '../uploads', fileName);
     
-    fs.writeFileSync(filePath, result.buffer);
+    await fs.writeFile(filePath, result.buffer);
     
     result.downloadUrl = `/uploads/${fileName}`;
 
@@ -137,7 +144,7 @@ router.post('/add-watermark', authenticateToken, upload.fields([
     const watermarkFileName = `watermark_${Date.now()}.png`;
     const watermarkPath = path.join(__dirname, '../uploads/temp', watermarkFileName);
     
-    fs.writeFileSync(watermarkPath, req.files.watermark[0].buffer);
+    await fs.writeFile(watermarkPath, req.files.watermark[0].buffer);
     watermarkOptions.watermarkPath = watermarkPath;
 
     const result = await advancedImageProcessor.addWatermark(req.files.image[0], watermarkOptions);
@@ -146,10 +153,10 @@ router.post('/add-watermark', authenticateToken, upload.fields([
     const fileName = `watermarked_${result.id}.png`;
     const filePath = path.join(__dirname, '../uploads', fileName);
     
-    fs.writeFileSync(filePath, result.buffer);
+    await fs.writeFile(filePath, result.buffer);
     
     // Clean up temporary watermark
-    fs.unlinkSync(watermarkPath);
+    await fs.unlink(watermarkPath);
     
     result.downloadUrl = `/uploads/${fileName}`;
 
@@ -204,7 +211,7 @@ router.post('/thumbnails', authenticateToken, upload.single('image'), async (req
       const fileName = `thumb_${thumbnail.size}_${Date.now()}.${thumbnail.format}`;
       const filePath = path.join(__dirname, '../uploads', fileName);
       
-      fs.writeFileSync(filePath, thumbnail.buffer);
+      await fs.writeFile(filePath, thumbnail.buffer);
       
       savedThumbnails.push({
         ...thumbnail,
@@ -302,7 +309,7 @@ router.post('/optimize-advanced', authenticateToken, upload.single('image'), asy
     const fileName = `advanced_${result.id}.${result.format}`;
     const filePath = path.join(__dirname, '../uploads', fileName);
     
-    fs.writeFileSync(filePath, result.buffer);
+    await fs.writeFile(filePath, result.buffer);
     
     result.downloadUrl = `/uploads/${fileName}`;
 

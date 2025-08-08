@@ -34,6 +34,8 @@ class AdvancedImageProcessor {
     } = options;
 
     try {
+      console.log(`Processing image: ${file.originalname}, size: ${file.buffer.length} bytes`);
+      
       let image = sharp(file.buffer);
 
       // Apply transformations
@@ -79,6 +81,7 @@ class AdvancedImageProcessor {
 
       // Determine output format
       const outputFormat = this.determineOutputFormat(file.originalname, format);
+      console.log(`Output format: ${outputFormat}`);
       
       // Apply format-specific optimizations
       image = this.applyFormatOptimizations(image, outputFormat, {
@@ -99,6 +102,8 @@ class AdvancedImageProcessor {
       const optimizedSize = result.length;
       const compressionRatio = ((originalSize - optimizedSize) / originalSize) * 100;
 
+      console.log(`Optimized ${file.originalname}: ${originalSize} -> ${optimizedSize} bytes (${compressionRatio.toFixed(1)}% reduction)`);
+
       return {
         id: uuidv4(),
         originalName: file.originalname,
@@ -112,8 +117,8 @@ class AdvancedImageProcessor {
         buffer: result
       };
     } catch (error) {
-      console.error('Advanced image optimization error:', error);
-      throw new Error(`Failed to optimize image: ${error.message}`);
+      console.error(`Advanced image optimization error for ${file.originalname}:`, error);
+      throw new Error(`Failed to optimize image ${file.originalname}: ${error.message}`);
     }
   }
 
@@ -123,11 +128,15 @@ class AdvancedImageProcessor {
     const totalFiles = files.length;
     let processedFiles = 0;
 
+    console.log(`Starting batch optimization of ${totalFiles} files`);
+
     // Process files in batches to avoid memory issues
     const batchSize = this.maxConcurrentOperations;
     
     for (let i = 0; i < files.length; i += batchSize) {
       const batch = files.slice(i, i + batchSize);
+      console.log(`Processing batch ${Math.floor(i / batchSize) + 1} of ${Math.ceil(files.length / batchSize)}`);
+      
       const batchPromises = batch.map(async (file) => {
         try {
           const result = await this.optimizeImage(file, options);
@@ -173,6 +182,7 @@ class AdvancedImageProcessor {
       results.push(...batchResults);
     }
 
+    console.log(`Completed batch optimization. Processed ${results.length} files`);
     return results;
   }
 
