@@ -176,6 +176,42 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
+// Forgot password (development only)
+app.post('/api/auth/forgot-password', (req, res) => {
+  const { email } = req.body || {};
+  if (!email) {
+    return res.status(400).json({ error: 'Valid email is required' });
+  }
+  const user = users.get(email);
+  if (user) {
+    user.passwordResetToken = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    user.passwordResetExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+  }
+  return res.json({ success: true, message: 'If an account exists, a reset link has been sent.' });
+});
+
+// Reset password (development only)
+app.post('/api/auth/reset-password', (req, res) => {
+  const { token, password, confirmPassword } = req.body || {};
+  if (!token) return res.status(400).json({ error: 'Reset token is required' });
+  if (!password || password.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  }
+  if (password !== confirmPassword) {
+    return res.status(400).json({ error: 'Password confirmation does not match' });
+  }
+
+  const user = Array.from(users.values()).find(u => u.passwordResetToken === token && u.passwordResetExpires && u.passwordResetExpires > Date.now());
+  if (!user) {
+    return res.status(400).json({ error: 'Invalid or expired reset token' });
+  }
+  user.password = password;
+  user.passwordResetToken = null;
+  user.passwordResetExpires = null;
+  user.loginAttempts = 0;
+  return res.json({ success: true, message: 'Password reset successfully' });
+});
+
 // Get current user endpoint
 app.get('/api/auth/me', authenticateToken, (req, res) => {
   const user = users.get(req.user.apiKey);
