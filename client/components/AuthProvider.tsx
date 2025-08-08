@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import axios from 'axios';
 import { useAuthStore } from '@/store/authStore';
 
 interface AuthProviderProps {
@@ -9,11 +10,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { checkAuth, isAuthenticated, token } = useAuthStore();
 
   useEffect(() => {
-    // Only check auth if we have a token but are not authenticated
+    // Ensure axios has Authorization set on mount and whenever token changes
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete axios.defaults.headers.common['Authorization'];
+    }
+
+    // Verify token if not yet authenticated
     if (token && !isAuthenticated) {
       checkAuth();
     }
-  }, []); // Only run once on mount
+  }, [token, isAuthenticated, checkAuth]);
 
   return <>{children}</>;
 }; 

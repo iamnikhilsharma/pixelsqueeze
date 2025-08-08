@@ -30,7 +30,7 @@ export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery(
     ['userStats'],
     async () => {
-      const response = await axios.get(`${API_URL}/api/stats`);
+      const response = await axios.get(`${API_URL}/api/stats`, { withCredentials: false });
       return response.data.data;
     },
     {
@@ -43,7 +43,7 @@ export default function Dashboard() {
   const { data: recentImages, isLoading: imagesLoading } = useQuery(
     ['recentImages'],
     async () => {
-      const response = await axios.get(`${API_URL}/api/images?limit=5`);
+      const response = await axios.get(`${API_URL}/api/images?limit=5`, { withCredentials: false });
       return response.data.data;
     },
     {
