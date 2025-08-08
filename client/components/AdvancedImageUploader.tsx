@@ -33,7 +33,17 @@ interface AdvancedImageUploaderProps {
 export default function AdvancedImageUploader({ onImagesProcessed }: AdvancedImageUploaderProps) {
   const [images, setImages] = useState<ImageFile[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedPreset, setSelectedPreset] = useState('web-optimized');
+  const presets = {
+    'web-optimized': { quality: 85, format: 'webp', width: 1920, height: 1080 },
+    'social-media': { quality: 90, format: 'jpeg', width: 1200, height: 630 },
+    'thumbnail': { quality: 75, format: 'jpeg', width: 300, height: 300 },
+    'print-ready': { quality: 100, format: 'tiff', preserveMetadata: true },
+    'mobile-optimized': { quality: 80, format: 'webp', width: 800, height: 600 }
+  } as const;
+
+  type PresetKey = keyof typeof presets;
+  
+  const [selectedPreset, setSelectedPreset] = useState<PresetKey>('web-optimized');
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
 
@@ -57,14 +67,6 @@ export default function AdvancedImageUploader({ onImagesProcessed }: AdvancedIma
     saturation: 1,
     gamma: 1
   });
-
-  const presets = {
-    'web-optimized': { quality: 85, format: 'webp', width: 1920, height: 1080 },
-    'social-media': { quality: 90, format: 'jpeg', width: 1200, height: 630 },
-    'thumbnail': { quality: 75, format: 'jpeg', width: 300, height: 300 },
-    'print-ready': { quality: 100, format: 'tiff', preserveMetadata: true },
-    'mobile-optimized': { quality: 80, format: 'webp', width: 800, height: 600 }
-  };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newImages: ImageFile[] = acceptedFiles.map(file => ({
@@ -123,10 +125,13 @@ export default function AdvancedImageUploader({ onImagesProcessed }: AdvancedIma
         });
       }
 
+      const authData = localStorage.getItem('pixelsqueeze-auth');
+      const token = authData ? JSON.parse(authData).state.token : '';
+      
       const response = await fetch('/api/advanced/batch-optimize', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('pixelsqueeze-auth') ? JSON.parse(localStorage.getItem('pixelsqueeze-auth')).state.token : ''}`
+          'Authorization': `Bearer ${token}`
         },
         body: formData
       });
@@ -237,7 +242,7 @@ export default function AdvancedImageUploader({ onImagesProcessed }: AdvancedIma
           {Object.entries(presets).map(([key, preset]) => (
             <button
               key={key}
-              onClick={() => setSelectedPreset(key)}
+              onClick={() => setSelectedPreset(key as PresetKey)}
               className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
                 selectedPreset === key
                   ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -420,7 +425,7 @@ export default function AdvancedImageUploader({ onImagesProcessed }: AdvancedIma
                           <div className="text-xs text-gray-500">
                             <div>Original: {formatFileSize(image.result.originalSize)}</div>
                             <div>Optimized: {formatFileSize(image.result.optimizedSize)}</div>
-                            <div>Saved: {formatPercentage(image.result.compressionRatio)}</div>
+                            <div>Saved: {image.result.compressionRatio}%</div>
                           </div>
                         )}
                       </div>

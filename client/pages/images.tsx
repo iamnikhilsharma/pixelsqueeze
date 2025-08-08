@@ -312,7 +312,7 @@ export default function Images() {
                       size="sm"
                       className="flex-1"
                       onClick={(e) => {
-                        e.stopPropagation();
+                        e?.stopPropagation();
                         window.open(image.downloadUrl, '_blank');
                       }}
                     >
@@ -323,7 +323,7 @@ export default function Images() {
                       variant="ghost"
                       size="sm"
                       onClick={(e) => {
-                        e.stopPropagation();
+                        e?.stopPropagation();
                         // TODO: Implement view details
                         alert('View details coming soon!');
                       }}

@@ -8,6 +8,8 @@ const multer = require('multer');
 const imageProcessor = require('./services/imageProcessor');
 const stripeService = require('./services/stripeService');
 const advancedImageRoutes = require('./routes/advancedImage');
+const developerRoutes = require('./routes/developer');
+const stripeRoutes = require('./routes/stripe');
 require('dotenv').config();
 
 const app = express();
@@ -41,7 +43,7 @@ let imageIdCounter = 1;
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5000',
   credentials: true
 }));
 
@@ -346,6 +348,9 @@ app.use('/api/stripe', stripeRoutes);
 
 // Advanced image processing routes
 app.use('/api/advanced', advancedImageRoutes);
+
+// Developer API routes
+app.use('/api/developer', developerRoutes);
 
 // Billing routes
 app.get('/api/billing/plans', authenticateToken, async (req, res) => {

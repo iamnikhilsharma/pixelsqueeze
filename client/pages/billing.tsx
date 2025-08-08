@@ -377,6 +377,8 @@ export default function Billing() {
             </div>
           </div>
         </motion.div>
+          </>
+        )}
       </div>
     </Layout>
   );
