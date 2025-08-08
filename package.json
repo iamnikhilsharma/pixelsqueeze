@@ -10,6 +10,7 @@
     "client:dev": "cd client && npm run dev",
     "build": "cd client && npm run build",
     "start": "node server/index.js",
+    "reset:password": "node scripts/reset-password.js",
     "test": "jest",
     "docker:build": "docker build -t pixelsqueeze .",
     "docker:run": "docker run -p 3000:3000 -p 5000:5000 pixelsqueeze"
