@@ -1,20 +1,18 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CloudArrowUpIcon, 
-  PhotoIcon, 
-  CogIcon,
-  DocumentArrowDownIcon,
-  EyeIcon,
-  TrashIcon,
-  ArrowPathIcon,
+  PhotoIcon,
   CheckCircleIcon,
-  XCircleIcon
+  XCircleIcon,
+  ArrowDownTrayIcon,
+  Cog6ToothIcon
 } from '@heroicons/react/24/outline';
 import { Button } from './Button';
-import { formatFileSize, formatNumber, formatPercentage } from '../utils/formatters';
+import { formatBytes, buildApiUrl } from '@/utils/formatters';
 import toast from 'react-hot-toast';
+import { useAuthStore } from '@/store/authStore';
 
 interface ImageFile {
   id: string;
@@ -128,7 +126,7 @@ export default function AdvancedImageUploader({ onImagesProcessed }: AdvancedIma
       const authData = localStorage.getItem('pixelsqueeze-auth');
       const token = authData ? JSON.parse(authData).state.token : '';
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/advanced/batch-optimize`, {
+      const response = await fetch(buildApiUrl('/api/advanced/batch-optimize'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -217,7 +215,7 @@ export default function AdvancedImageUploader({ onImagesProcessed }: AdvancedIma
     completedImages.forEach(image => {
       if (image.result?.downloadUrl) {
         const link = document.createElement('a');
-        link.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${image.result.downloadUrl}`;
+        link.href = `${buildApiUrl('')}${image.result.downloadUrl}`;
         link.download = `optimized_${image.file.name}`;
         document.body.appendChild(link);
         link.click();
@@ -258,7 +256,7 @@ export default function AdvancedImageUploader({ onImagesProcessed }: AdvancedIma
           onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
           className="mt-4 flex items-center text-sm text-gray-600 hover:text-gray-900"
         >
-          <CogIcon className="h-4 w-4 mr-2" />
+          <Cog6ToothIcon className="h-4 w-4 mr-2" />
           {showAdvancedOptions ? 'Hide' : 'Show'} Advanced Options
         </button>
       </div>
@@ -361,7 +359,7 @@ export default function AdvancedImageUploader({ onImagesProcessed }: AdvancedIma
                 size="sm"
                 disabled={isProcessing}
               >
-                <TrashIcon className="h-4 w-4 mr-2" />
+                <XCircleIcon className="h-4 w-4 mr-2" />
                 Clear All
               </Button>
             </div>
@@ -388,7 +386,7 @@ export default function AdvancedImageUploader({ onImagesProcessed }: AdvancedIma
                     {image.file.name}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {formatFileSize(image.file.size)}
+                    {formatBytes(image.file.size)}
                   </p>
                   
                   {/* Status and Progress */}
@@ -403,7 +401,7 @@ export default function AdvancedImageUploader({ onImagesProcessed }: AdvancedIma
                     {image.status === 'processing' && (
                       <div className="space-y-1">
                         <div className="flex items-center text-sm text-blue-600">
-                          <ArrowPathIcon className="h-4 w-4 mr-1 animate-spin" />
+                          <ArrowDownTrayIcon className="h-4 w-4 mr-1 animate-spin" />
                           Processing...
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-1">
@@ -423,8 +421,8 @@ export default function AdvancedImageUploader({ onImagesProcessed }: AdvancedIma
                         </div>
                         {image.result && (
                           <div className="text-xs text-gray-500">
-                            <div>Original: {formatFileSize(image.result.originalSize)}</div>
-                            <div>Optimized: {formatFileSize(image.result.optimizedSize)}</div>
+                            <div>Original: {formatBytes(image.result.originalSize)}</div>
+                            <div>Optimized: {formatBytes(image.result.optimizedSize)}</div>
                             <div>Saved: {image.result.compressionRatio}%</div>
                           </div>
                         )}
@@ -445,7 +443,7 @@ export default function AdvancedImageUploader({ onImagesProcessed }: AdvancedIma
                   className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
                   disabled={isProcessing}
                 >
-                  <TrashIcon className="h-3 w-3" />
+                  <XCircleIcon className="h-3 w-3" />
                 </button>
               </motion.div>
             ))}
@@ -472,7 +470,7 @@ export default function AdvancedImageUploader({ onImagesProcessed }: AdvancedIma
                 variant="secondary"
                 size="lg"
               >
-                <DocumentArrowDownIcon className="h-5 w-5 mr-2" />
+                <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
                 Download All
               </Button>
             )}

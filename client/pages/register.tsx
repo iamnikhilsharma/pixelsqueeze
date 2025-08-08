@@ -6,18 +6,18 @@ import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/Button';
 import toast from 'react-hot-toast';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+import { buildApiUrl } from '@/utils/formatters';
 
 export default function Register() {
   const router = useRouter();
-  const { login } = useAuthStore();
+  const { register } = useAuthStore();
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
+    firstName: '',
+    lastName: '',
+    company: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -39,31 +39,18 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          password: formData.password,
-        }),
+      await register({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        company: formData.company,
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        login(data.data.user, data.data.token);
-        toast.success('Account created successfully!');
-        router.push('/dashboard');
-      } else {
-        toast.error(data.error || 'Registration failed');
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      toast.error('Network error. Please try again.');
+      
+      toast.success('Account created successfully!');
+      router.push('/dashboard');
+    } catch (error: any) {
+      toast.error(error.message || 'Registration failed');
     } finally {
       setIsLoading(false);
     }

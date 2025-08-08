@@ -1,56 +1,63 @@
-import React, { useState, useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/router';
+import { useAuthStore } from '@/store/authStore';
+import { Layout } from '@/components/Layout';
+import { StatsCard } from '@/components/StatsCard';
+import { RecentImages } from '@/components/RecentImages';
+import { Button } from '@/components/Button';
+import { buildApiUrl } from '@/utils/formatters';
+import { formatBytes, formatNumber } from '@/utils/formatters';
+import toast from 'react-hot-toast';
 import { 
   CloudArrowUpIcon, 
   PhotoIcon, 
   ChartBarIcon,
   CogIcon,
-  UserIcon,
   CreditCardIcon
 } from '@heroicons/react/24/outline';
-import { useAuthStore } from '@/store/authStore';
-import { useQuery } from 'react-query';
-import axios from 'axios';
-import toast from 'react-hot-toast';
-import { ImageUploader } from '@/components/ImageUploader';
-import { StatsCard } from '@/components/StatsCard';
-import { RecentImages } from '@/components/RecentImages';
-import { Layout } from '@/components/Layout';
-import { Button } from '@/components/Button';
-import { formatBytes, formatNumber } from '@/utils/formatters';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function Dashboard() {
+  const router = useRouter();
   const { user, isAuthenticated } = useAuthStore();
+  const [stats, setStats] = useState<any>(null);
+  const [recentImages, setRecentImages] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'upload' | 'stats' | 'images'>('upload');
 
-  // Fetch user statistics
-  const { data: stats, isLoading: statsLoading } = useQuery(
-    ['userStats'],
-    async () => {
-      const response = await axios.get(`${API_URL}/api/stats`, { withCredentials: false });
-      return response.data.data;
-    },
-    {
-      enabled: isAuthenticated,
-      refetchInterval: 30000, // Refetch every 30 seconds
-    }
-  );
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!isAuthenticated) {
+        router.push('/login');
+        return;
+      }
 
-  // Fetch recent images
-  const { data: recentImages, isLoading: imagesLoading } = useQuery(
-    ['recentImages'],
-    async () => {
-      const response = await axios.get(`${API_URL}/api/images?limit=5`, { withCredentials: false });
-      return response.data.data;
-    },
-    {
-      enabled: isAuthenticated,
-      refetchInterval: 60000, // Refetch every minute
-    }
-  );
+      try {
+        const statsRes = await fetch(buildApiUrl('/api/stats'));
+        if (!statsRes.ok) {
+          throw new Error('Failed to fetch stats');
+        }
+        const statsData = await statsRes.json();
+        setStats(statsData.data);
+
+        const imagesRes = await fetch(buildApiUrl('/api/images?limit=5'));
+        if (!imagesRes.ok) {
+          throw new Error('Failed to fetch recent images');
+        }
+        const imagesData = await imagesRes.json();
+        setRecentImages(imagesData.data.images || []);
+      } catch (error) {
+        toast.error('Failed to fetch data');
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 30000); // Refetch every 30 seconds
+    return () => clearInterval(interval);
+  }, [isAuthenticated, router]);
 
   if (!isAuthenticated) {
     return (
@@ -170,8 +177,6 @@ export default function Dashboard() {
         >
           {activeTab === 'upload' && (
             <div className="space-y-6">
-              <ImageUploader />
-              
               {/* Quick Stats */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="card">
@@ -301,7 +306,7 @@ export default function Dashboard() {
 
           {activeTab === 'images' && (
             <div className="space-y-6">
-              <RecentImages images={recentImages?.images || []} isLoading={imagesLoading} />
+              <RecentImages images={recentImages || []} isLoading={isLoading} />
             </div>
           )}
         </motion.div>

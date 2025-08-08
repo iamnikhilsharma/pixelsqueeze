@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import axios from 'axios';
+import { buildApiUrl } from '@/utils/formatters';
 
 export interface User {
   id: string;
@@ -52,8 +53,6 @@ interface RegisterData {
 
 type AuthStore = AuthState & AuthActions;
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
@@ -82,7 +81,7 @@ export const useAuthStore = create<AuthStore>()(
         set({ isLoading: true, error: null });
         
         try {
-          const response = await axios.post(`${API_URL}/api/auth/register`, userData);
+          const response = await axios.post(buildApiUrl('/api/auth/register'), userData);
           
           const { user, token } = response.data.data;
           
@@ -144,7 +143,7 @@ export const useAuthStore = create<AuthStore>()(
           // Set auth header
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           
-          const response = await axios.get(`${API_URL}/api/auth/me`);
+          const response = await axios.get(buildApiUrl('/api/auth/me'));
           const { user } = response.data.data;
           
           set({

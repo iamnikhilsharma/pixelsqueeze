@@ -12,9 +12,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from './Button';
-import { formatBytes } from '@/utils/formatters';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+import { formatBytes, buildApiUrl } from '@/utils/formatters';
 
 interface OptimizedImage {
   id: string;
@@ -46,7 +44,7 @@ export function ImageUploader() {
         formData.append('image', file);
         formData.append('quality', quality.toString());
 
-        const response = await axios.post(`${API_URL}/api/optimize`, formData, {
+        const response = await axios.post(buildApiUrl('/api/optimize'), formData, {
           headers: {
             'Authorization': `Bearer ${user.apiKey}`,
             'Content-Type': 'multipart/form-data',
@@ -81,7 +79,7 @@ export function ImageUploader() {
     if (optimizedImages.length === 0) return;
 
     try {
-      const response = await axios.post(`${API_URL}/api/download-batch`, {
+      const response = await axios.post(buildApiUrl('/api/download-batch'), {
         imageIds: optimizedImages.map(img => img.id)
       }, {
         headers: {
@@ -233,7 +231,7 @@ export function ImageUploader() {
                   <div className="flex items-center space-x-2">
                     <CheckCircleIcon className="h-5 w-5 text-green-500" />
                     <Button
-                      href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${image.downloadUrl}`}
+                      href={`${buildApiUrl('')}${image.downloadUrl}`}
                       variant="secondary"
                       size="sm"
                       download

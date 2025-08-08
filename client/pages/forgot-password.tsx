@@ -3,8 +3,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/Button';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+import { buildApiUrl } from '@/utils/formatters';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -18,7 +17,7 @@ export default function ForgotPasswordPage() {
     }
     setIsSubmitting(true);
     try {
-      await axios.post(`${API_URL}/api/auth/forgot-password`, { email });
+      await axios.post(buildApiUrl('/api/auth/forgot-password'), { email });
       toast.success('If an account exists, a reset link has been sent.');
     } catch (err: any) {
       const msg = err.response?.data?.error || 'Failed to request password reset';

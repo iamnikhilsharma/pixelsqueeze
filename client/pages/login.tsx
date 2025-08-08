@@ -6,8 +6,7 @@ import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/Button';
 import toast from 'react-hot-toast';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+import { buildApiUrl } from '@/utils/formatters';
 
 export default function Login() {
   const router = useRouter();
@@ -24,7 +23,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
+      const response = await fetch(buildApiUrl('/api/auth/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
