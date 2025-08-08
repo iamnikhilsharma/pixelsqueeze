@@ -1,7 +1,4 @@
 const sharp = require('sharp');
-const imagemin = require('imagemin');
-const imageminMozjpeg = require('imagemin-mozjpeg');
-const imageminPngquant = require('imagemin-pngquant');
 const path = require('path');
 const fs = require('fs').promises;
 const { v4: uuidv4 } = require('uuid');
@@ -59,10 +56,10 @@ class ImageProcessor {
         preserveMetadata
       );
 
-      // Further optimize with Imagemin if needed
-      if (outputFormat === 'jpg' || outputFormat === 'jpeg' || outputFormat === 'png') {
-        processedBuffer = await this.optimizeWithImagemin(processedBuffer, outputFormat, quality);
-      }
+    // Further optimize with Imagemin if needed
+    if (outputFormat === 'jpg' || outputFormat === 'jpeg' || outputFormat === 'png') {
+      processedBuffer = await this.optimizeWithImagemin(processedBuffer, outputFormat, quality);
+    }
 
       const processingTime = Date.now() - startTime;
       
@@ -154,32 +151,35 @@ class ImageProcessor {
    * Further optimize with Imagemin
    */
   async optimizeWithImagemin(buffer, format, quality) {
+    // Dynamically import ESM imagemin and plugins from CommonJS
+    const { default: imagemin } = await import('imagemin');
+
     const plugins = [];
-    
     if (format === 'jpeg' || format === 'jpg') {
+      const { default: imageminMozjpeg } = await import('imagemin-mozjpeg');
       plugins.push(
         imageminMozjpeg({
           quality,
-          progressive: true
+          progressive: true,
         })
       );
     } else if (format === 'png') {
+      const { default: imageminPngquant } = await import('imagemin-pngquant');
+      const q = Math.max(0, Math.min(1, quality / 100));
       plugins.push(
         imageminPngquant({
-          quality: [quality / 100, quality / 100],
-          strip: true
+          quality: [q, q],
         })
       );
     }
 
-    if (plugins.length > 0) {
-      const optimizedBuffers = await imagemin.buffer(buffer, {
-        plugins
-      });
-      return optimizedBuffers[0] || buffer;
+    if (plugins.length === 0) {
+      return buffer;
     }
 
-    return buffer;
+    // imagemin.buffer returns a Buffer in v8+
+    const optimized = await imagemin.buffer(buffer, { plugins });
+    return optimized || buffer;
   }
 
   /**
