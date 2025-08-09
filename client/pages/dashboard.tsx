@@ -13,7 +13,7 @@ import {
   CloudArrowUpIcon, 
   PhotoIcon, 
   ChartBarIcon,
-  CogIcon,
+  Cog6ToothIcon,
   CreditCardIcon
 } from '@heroicons/react/24/outline';
 
@@ -58,12 +58,13 @@ export default function Dashboard() {
           fetch(buildApiUrl('/api/images?limit=5'), { headers })
         ]);
 
-        if (!statsRes.ok) throw new Error('Failed to fetch stats');
-        if (!imagesRes.ok) throw new Error('Failed to fetch images');
+        const statsData = statsRes.ok ? await statsRes.json() : { data: null };
+        const imagesData = imagesRes.ok ? await imagesRes.json() : { data: { images: [] } };
 
-        const statsData = await statsRes.json();
-        const imagesData = await imagesRes.json();
-        setStats(statsData.data || {});
+        setStats(statsData?.data || {
+          usage: { monthlyImages: 0, monthlyBandwidth: 0, planLimit: 100, remainingImages: 0 },
+          statistics: { totalImages: 0, totalSizeSaved: 0, totalDownloads: 0, averageCompressionRatio: 0 }
+        });
         setRecentImages(imagesData.data?.images || []);
         setRetryCount(0);
       } catch (error) {
@@ -178,12 +179,12 @@ export default function Dashboard() {
                     </p>
                   </div>
                   <div className="flex space-x-3">
-                    <Button variant="secondary" size="sm">
+                    <Button variant="secondary" size="sm" href="/billing">
                       <CreditCardIcon className="w-4 h-4 mr-2" />
                       Manage Billing
                     </Button>
-                    <Button variant="ghost" size="sm">
-                      <CogIcon className="w-4 h-4 mr-2" />
+                    <Button variant="ghost" size="sm" href="/settings">
+                      <Cog6ToothIcon className="w-4 h-4 mr-2" />
                       Settings
                     </Button>
                   </div>
@@ -279,15 +280,11 @@ export default function Dashboard() {
                             {stats?.usage?.monthlyImages || 0} / {stats?.usage?.planLimit || 100}
                           </span>
                         </div>
-                        <div className="mt-2">
-                          <div className="progress-bar">
-                            <div 
-                              className="progress-bar-fill"
-                              style={{ 
-                                width: `${Math.min(100, ((stats?.usage?.monthlyImages || 0) / (stats?.usage?.planLimit || 100)) * 100)}%` 
-                              }}
-                            />
-                          </div>
+                        <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full" 
+                            style={{ width: `${Math.min(100, ((stats?.usage?.monthlyImages || 0) / (stats?.usage?.planLimit || 100)) * 100)}%` }}
+                          />
                         </div>
                       </div>
                       <div>
@@ -296,6 +293,9 @@ export default function Dashboard() {
                           <span className="font-medium">
                             {formatBytes(stats?.usage?.monthlyBandwidth || 0)}
                           </span>
+                        </div>
+                        <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                          <div className="bg-green-600 h-2 rounded-full" style={{ width: '100%' }} />
                         </div>
                       </div>
                       <div>
