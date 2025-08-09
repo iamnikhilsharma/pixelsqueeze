@@ -102,13 +102,38 @@ const tools: Tool[] = [
     icon: CogIcon,
     features: [
       'Web optimization',
-      'Social media formats',
-      'Print-ready settings',
-      'Mobile optimization'
+      'Print quality',
+      'Social media',
+      'E-commerce'
     ],
-    status: 'available'
+    status: 'premium'
   }
 ];
+
+const SegmentedControl = ({
+  value,
+  options,
+  onChange
+}: { value: string; options: Array<{ label: string; value: string }>; onChange: (v: string) => void }) => (
+  <div className="inline-flex rounded-md shadow-sm border overflow-hidden">
+    {options.map((opt, idx) => (
+      <button
+        key={opt.value}
+        type="button"
+        onClick={() => onChange(opt.value)}
+        className={
+          `px-3 py-1.5 text-xs whitespace-nowrap focus:outline-none ${
+            value === opt.value
+              ? 'bg-indigo-600 text-white'
+              : 'bg-white text-gray-700 hover:bg-gray-50'
+          } ${idx !== options.length - 1 ? 'border-r' : ''}`
+        }
+      >
+        {opt.label}
+      </button>
+    ))}
+  </div>
+);
 
 export default function AdvancedTools() {
   const router = useRouter();
@@ -195,31 +220,6 @@ export default function AdvancedTools() {
   ];
 
   const [wmActiveTab, setWmActiveTab] = useState<'image'|'text'>('image');
-
-  const SegmentedControl = ({
-    value,
-    options,
-    onChange
-  }: { value: string; options: Array<{ label: string; value: string }>; onChange: (v: string) => void }) => (
-    <div className="inline-flex rounded-md shadow-sm border overflow-hidden">
-      {options.map((opt, idx) => (
-        <button
-          key={opt.value}
-          type="button"
-          onClick={() => onChange(opt.value)}
-          className={
-            `px-3 py-1.5 text-xs whitespace-nowrap focus:outline-none ${
-              value === opt.value
-                ? 'bg-indigo-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            } ${idx !== options.length - 1 ? 'border-r' : ''}`
-          }
-        >
-          {opt.label}
-        </button>
-      ))}
-    </div>
-  );
 
   return (
     <Layout>
