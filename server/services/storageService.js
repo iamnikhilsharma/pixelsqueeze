@@ -408,25 +408,23 @@ class LocalStorageService {
    */
   getStaticMiddleware() {
     return async (req, res, next) => {
-      if (req.path.startsWith('/uploads/')) {
-        const filePath = path.join(this.baseDir, req.path.replace('/uploads/', ''));
+      // When mounted at '/uploads', req.path is relative to that mount
+      const relativePath = req.path.replace(/^\/+/, '');
+      const filePath = path.join(this.baseDir, relativePath);
+      
+      try {
+        // Check if file exists
+        await fs.access(filePath);
         
-        try {
-          // Check if file exists
-          await fs.access(filePath);
-          
-          // Set appropriate headers
-          res.setHeader('Cache-Control', 'public, max-age=3600');
-          res.setHeader('Expires', new Date(Date.now() + 3600000).toUTCString());
-          
-          // Serve the file
-          res.sendFile(filePath);
-        } catch (error) {
-          console.error(`File not found: ${filePath}`, error);
-          res.status(404).json({ error: 'File not found', path: req.path });
-        }
-      } else {
-        next();
+        // Set appropriate headers
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        res.setHeader('Expires', new Date(Date.now() + 3600000).toUTCString());
+        
+        // Serve the file
+        res.sendFile(filePath);
+      } catch (error) {
+        console.error(`File not found: ${filePath}`, error);
+        res.status(404).json({ error: 'File not found', path: req.originalUrl });
       }
     };
   }
