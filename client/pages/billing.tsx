@@ -13,8 +13,6 @@ import { Layout } from '@/components/Layout';
 import { Button } from '@/components/Button';
 import { useAuthStore } from '@/store/authStore';
 import { formatBytes, formatNumber, buildApiUrl } from '@/utils/formatters';
-import { stripeUtils } from '@/utils/stripe';
-import BillingPlans from '@/components/BillingPlans';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
@@ -134,28 +132,49 @@ export default function Billing() {
 
   const currentPlan = plans.find(plan => plan.id === user?.subscription?.plan) || plans[0];
 
-  const handleUpgrade = async (planId: string) => {
+  const startRazorpay = async (planId: string) => {
     setIsUpgrading(true);
     try {
-      // Map plan IDs to Stripe price IDs (you'll need to create these in your Stripe dashboard)
-      const priceIdMap: { [key: string]: string } = {
-        starter: process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER || 'price_starter',
-        pro: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO || 'price_pro',
-        enterprise: process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE || 'price_enterprise'
+      const authData = localStorage.getItem('pixelsqueeze-auth');
+      const token = authData ? JSON.parse(authData).state.token : '';
+      if (!token) throw new Error('Not authenticated');
+      const res = await fetch(buildApiUrl('/api/billing/razorpay/create-order'), {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: planId })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Order failed');
+      const order = data.data.order;
+      const options: any = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        name: 'PixelSqueeze',
+        description: `Upgrade to ${planId}`,
+        order_id: order.id,
+        handler: async (response: any) => {
+          try {
+            const verifyRes = await fetch(buildApiUrl('/api/billing/razorpay/verify'), {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...response, plan: planId })
+            });
+            const verifyData = await verifyRes.json();
+            if (!verifyData.success) throw new Error(verifyData.error || 'Verification failed');
+            toast.success('Payment successful! Plan updated');
+          } catch (e: any) {
+            toast.error(e.message || 'Verification failed');
+          }
+        },
+        theme: { color: '#22c55e' },
+        prefill: { name: `${user?.firstName} ${user?.lastName}`, email: user?.email },
       };
-
-      const priceId = priceIdMap[planId];
-      if (!priceId) {
-        throw new Error('Invalid plan selected');
-      }
-
-      const successUrl = `${window.location.origin}/billing?success=true`;
-      const cancelUrl = `${window.location.origin}/billing?canceled=true`;
-
-      await stripeUtils.redirectToCheckout(priceId, successUrl, cancelUrl);
-    } catch (error) {
-      console.error('Error upgrading plan:', error);
-      toast.error('Failed to upgrade plan. Please try again.');
+      // @ts-ignore
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (e: any) {
+      toast.error(e.message || 'Unable to start payment');
     } finally {
       setIsUpgrading(false);
     }
@@ -235,44 +254,7 @@ export default function Billing() {
                 <div className="mt-4 flex space-x-3">
                   <Button variant="primary" size="sm" onClick={async () => {
                     try {
-                      const authData = localStorage.getItem('pixelsqueeze-auth');
-                      const token = authData ? JSON.parse(authData).state.token : '';
-                      if (!token) throw new Error('Not authenticated');
-                      const res = await fetch(buildApiUrl('/api/billing/razorpay/create-order'), {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ plan: selectedPlan })
-                      });
-                      const data = await res.json();
-                      if (!data.success) throw new Error(data.error || 'Order failed');
-                      const order = data.data.order;
-                      const options: any = {
-                        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-                        amount: order.amount,
-                        currency: order.currency,
-                        name: 'PixelSqueeze',
-                        description: `Upgrade to ${selectedPlan}`,
-                        order_id: order.id,
-                        handler: async (response: any) => {
-                          try {
-                            const verifyRes = await fetch(buildApiUrl('/api/billing/razorpay/verify'), {
-                              method: 'POST',
-                              headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ ...response, plan: selectedPlan })
-                            });
-                            const verifyData = await verifyRes.json();
-                            if (!verifyData.success) throw new Error(verifyData.error || 'Verification failed');
-                            toast.success('Payment successful! Plan updated');
-                          } catch (e: any) {
-                            toast.error(e.message || 'Verification failed');
-                          }
-                        },
-                        theme: { color: '#22c55e' },
-                        prefill: { name: `${user?.firstName} ${user?.lastName}`, email: user?.email },
-                      };
-                      // @ts-ignore
-                      const rzp = new window.Razorpay(options);
-                      rzp.open();
+                      await startRazorpay(selectedPlan);
                     } catch (e: any) {
                       toast.error(e.message || 'Unable to start payment');
                     }
@@ -394,7 +376,7 @@ export default function Billing() {
                       variant={plan.popular ? "primary" : "secondary"}
                       size="lg"
                       className="w-full"
-                      onClick={() => handleUpgrade(plan.id)}
+                      onClick={() => startRazorpay(plan.id)}
                       loading={isUpgrading}
                     >
                       {plan.price === 0 ? 'Downgrade' : 'Upgrade'}
