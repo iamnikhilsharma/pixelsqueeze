@@ -3,6 +3,8 @@ const multer = require('multer');
 const axios = require('axios');
 const archiver = require('archiver');
 const { v4: uuidv4 } = require('uuid');
+const fs = require('fs');
+const fsPromises = require('fs/promises');
 
 const { authenticateToken, checkUsageLimit, checkFileSize, checkFileType } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/errorHandler');
@@ -582,8 +584,8 @@ router.delete('/images/:id',
 );
 
 /**
- * GET /api/download/:imageId
- * Download a specific optimized image
+ * GET /api/download/:imageId (secured)
+ * Streams the optimized file if owned by the current user
  */
 router.get('/download/:imageId',
   authenticateToken,
@@ -593,46 +595,51 @@ router.get('/download/:imageId',
 
     try {
       const image = await Image.findOne({ _id: imageId, user: user._id });
-      
-      if (!image) {
-        return res.status(404).json({
-          error: 'Image not found',
-          code: 'IMAGE_NOT_FOUND'
-        });
+      if (!image) return res.status(404).json({ error: 'Image not found' });
+      if (image.isExpired) return res.status(410).json({ error: 'Image expired' });
+
+      const filename = image.storage?.optimizedKey;
+      if (!filename) return res.status(404).json({ error: 'File key missing' });
+
+      const filePath = storageService.getOptimizedFilePath(filename);
+      try {
+        await fsPromises.access(filePath);
+      } catch {
+        return res.status(404).json({ error: 'File not found' });
       }
 
-      if (image.isExpired) {
-        return res.status(410).json({
-          error: 'Image download link has expired',
-          code: 'IMAGE_EXPIRED'
-        });
-      }
+      res.setHeader('Content-Type', `image/${image.optimizedFormat}`);
+      res.setHeader('Content-Disposition', `attachment; filename="optimized_${image.originalName}"`);
+      const stream = fs.createReadStream(filePath);
+      stream.pipe(res);
 
-      // Increment download count
       await image.incrementDownload();
-
-      // Generate fresh download URL
-      const downloadUrl = await storageService.generateDownloadUrl(
-        image.storage.optimizedKey,
-        24 * 60 * 60
-      );
-
-      res.json({
-        success: true,
-        data: {
-          downloadUrl,
-          expiresAt: image.expiresAt,
-          downloadCount: image.downloadCount + 1
-        }
-      });
-
     } catch (error) {
-      logger.error('Download error:', error);
-      res.status(500).json({
-        error: 'Failed to generate download link',
-        code: 'DOWNLOAD_ERROR',
-        details: error.message
-      });
+      logger.error('Secure download error:', error);
+      res.status(500).json({ error: 'Failed to download file' });
+    }
+  })
+);
+
+/**
+ * POST /api/images/:id/extend-expiry
+ * Extend expiry for an image by given hours (default 24)
+ */
+router.post('/images/:id/extend-expiry',
+  authenticateToken,
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { hours = 24 } = req.body || {};
+
+    try {
+      const image = await Image.findOne({ _id: id, user: req.user._id });
+      if (!image) return res.status(404).json({ error: 'Image not found' });
+
+      await image.extendExpiration(parseInt(hours) || 24);
+      res.json({ success: true, data: { expiresAt: image.expiresAt } });
+    } catch (error) {
+      logger.error('Extend expiry error:', error);
+      res.status(500).json({ error: 'Failed to extend expiry' });
     }
   })
 );

@@ -114,19 +114,31 @@ class LocalStorageService {
   }
 
   /**
+   * Resolve absolute path for an optimized file
+   */
+  getOptimizedFilePath(filename) {
+    // Preferred location: baseDir/optimized/filename
+    return path.join(this.baseDir, 'optimized', filename);
+  }
+
+  /**
    * Delete file from local storage
    * @param {string} filename - Filename
    * @returns {Object} - Delete result
    */
   async deleteFile(filename) {
     try {
-      const filePath = path.join(this.baseDir, 'optimized', filename);
-      const metadataPath = filePath + '.meta.json';
-      
-      // Delete file and metadata
+      const preferredPath = this.getOptimizedFilePath(filename);
+      const legacyPath = path.join(this.baseDir, filename);
+      const metadataPreferred = preferredPath + '.meta.json';
+      const metadataLegacy = legacyPath + '.meta.json';
+
+      // Try deleting both preferred and legacy locations (idempotent)
       await Promise.all([
-        fs.unlink(filePath).catch(() => {}), // Ignore if file doesn't exist
-        fs.unlink(metadataPath).catch(() => {}) // Ignore if metadata doesn't exist
+        fs.unlink(preferredPath).catch(() => {}),
+        fs.unlink(legacyPath).catch(() => {}),
+        fs.unlink(metadataPreferred).catch(() => {}),
+        fs.unlink(metadataLegacy).catch(() => {})
       ]);
       
       logger.info(`File deleted successfully: ${filename}`);

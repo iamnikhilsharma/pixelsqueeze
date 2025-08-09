@@ -411,22 +411,49 @@ export default function Images() {
                     </div>
                     <div className="flex items-center space-x-2">
                       {image.downloadUrl && (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => {
-                            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-                            const cleanBaseUrl = baseUrl.replace(/\/$/, '');
-                            const a = document.createElement('a');
-                            a.href = `${cleanBaseUrl}${image.downloadUrl}`;
-                            a.download = `optimized_${image.originalName}`;
-                            document.body.appendChild(a);
-                            a.click();
-                            a.remove();
-                          }}
-                        >
-                          <ArrowDownTrayIcon className="h-4 w-4 mr-1" /> Download
-                        </Button>
+                        <>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+                              const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+                              const a = document.createElement('a');
+                              a.href = `${cleanBaseUrl}/api/download/${image.id}`;
+                              a.download = `optimized_${image.originalName}`;
+                              document.body.appendChild(a);
+                              a.click();
+                              a.remove();
+                            }}
+                          >
+                            <ArrowDownTrayIcon className="h-4 w-4 mr-1" /> Download
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              try {
+                                const authData = localStorage.getItem('pixelsqueeze-auth');
+                                const token = authData ? JSON.parse(authData).state.token : '';
+                                if (!token) throw new Error('No authentication token');
+                                const res = await fetch(buildApiUrl(`/api/images/${image.id}/extend-expiry`), {
+                                  method: 'POST',
+                                  headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                  },
+                                  body: JSON.stringify({ hours: 24 })
+                                });
+                                if (!res.ok) throw new Error('Failed to extend');
+                                toast.success('Expiry extended by 24h');
+                              } catch (e) {
+                                toast.error('Failed to extend expiry');
+                              }
+                            }}
+                          >
+                            Extend 24h
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>
