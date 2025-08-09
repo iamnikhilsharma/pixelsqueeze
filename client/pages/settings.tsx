@@ -20,6 +20,10 @@ export default function Settings() {
   const router = useRouter();
   const { user, token, isAuthenticated, isLoading: authLoading, checkAuth } = useAuthStore();
 
+  const [activeTab, setActiveTab] = useState('profile');
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     (async () => {
       if (!token) {
@@ -31,12 +35,14 @@ export default function Settings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  if (!token || authLoading) return null;
-  if (!isAuthenticated) return null;
-
-  const [activeTab, setActiveTab] = useState('profile');
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  // Handle loading and authentication states
+  if (!token || authLoading) {
+    return null;
+  }
+  
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const [profileData, setProfileData] = useState({
     firstName: user?.firstName || '',

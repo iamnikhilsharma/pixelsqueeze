@@ -125,10 +125,22 @@ export default function Billing() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, hasRehydrated]);
 
-  if (!hasRehydrated) return <div className="min-h-screen"/>;
-  if (!token) return null;
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center text-gray-500">Checking session...</div>;
-  if (!isAuthenticated) return null;
+  // Handle loading and authentication states
+  if (!hasRehydrated) {
+    return <div className="min-h-screen"/>;
+  }
+  
+  if (!token) {
+    return null;
+  }
+  
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center text-gray-500">Checking session...</div>;
+  }
+  
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const currentPlan = plans.find(plan => plan.id === user?.subscription?.plan) || plans[0];
 
