@@ -186,6 +186,15 @@ export default function AdvancedTools() {
     { label: 'Tiled', value: 'tiled' },
     { label: 'Diagonal', value: 'diagonal' }
   ];
+  const positionOptions = [
+    { label: 'TL', value: 'top-left' },
+    { label: 'TR', value: 'top-right' },
+    { label: 'BL', value: 'bottom-left' },
+    { label: 'BR', value: 'bottom-right' },
+    { label: 'C', value: 'center' },
+  ];
+
+  const [wmActiveTab, setWmActiveTab] = useState<'image'|'text'>('image');
 
   const SegmentedControl = ({
     value,
@@ -199,7 +208,7 @@ export default function AdvancedTools() {
           type="button"
           onClick={() => onChange(opt.value)}
           className={
-            `px-3 py-1.5 text-sm focus:outline-none ${
+            `px-3 py-1.5 text-xs whitespace-nowrap focus:outline-none ${
               value === opt.value
                 ? 'bg-indigo-600 text-white'
                 : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -298,14 +307,25 @@ export default function AdvancedTools() {
               <div>
                 <div className="mb-4">
                   <div className="inline-flex rounded-lg overflow-hidden border">
-                    <button className="px-4 py-2 text-sm font-medium hover:bg-gray-50 border-r" onClick={() => { setTwResultUrl(null); setTwSavedUrl(null); }}>Image watermark</button>
-                    <button className="px-4 py-2 text-sm font-medium hover:bg-gray-50" onClick={() => { setWmResultUrl(null); setWmSavedUrl(null); }}>Text watermark</button>
+                    <button
+                      className={`px-4 py-2 text-sm font-medium ${wmActiveTab==='image' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-50'} border-r`}
+                      onClick={() => { setWmActiveTab('image'); setTwResultUrl(null); setTwSavedUrl(null); }}
+                    >
+                      Image watermark
+                    </button>
+                    <button
+                      className={`px-4 py-2 text-sm font-medium ${wmActiveTab==='text' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-50'}`}
+                      onClick={() => { setWmActiveTab('text'); setWmResultUrl(null); setWmSavedUrl(null); }}
+                    >
+                      Text watermark
+                    </button>
                   </div>
                 </div>
 
                 <div className="grid lg:grid-cols-2 gap-6">
                   {/* Left: Controls */}
                   <div className="space-y-4">
+                    {wmActiveTab === 'image' && (
                     <div className="bg-gray-50 rounded-lg p-4 border">
                       <h4 className="font-medium text-gray-900 mb-3">Image watermark</h4>
                       <div className="grid md:grid-cols-2 gap-3">
@@ -329,11 +349,7 @@ export default function AdvancedTools() {
                       <div className="grid md:grid-cols-5 gap-3 mt-3">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
-                          <SegmentedControl
-                            value={wmPosition}
-                            onChange={(v) => setWmPosition(v)}
-                            options={positions.map(p => ({ label: p.replace('-', ' '), value: p }))}
-                          />
+                          <SegmentedControl value={wmPosition} onChange={(v) => setWmPosition(v)} options={positionOptions} />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Style</label>
@@ -382,7 +398,9 @@ export default function AdvancedTools() {
                         }}>Apply & Save</Button>
                       </div>
                     </div>
+                    )}
 
+                    {wmActiveTab === 'text' && (
                     <div className="bg-gray-50 rounded-lg p-4 border">
                       <h4 className="font-medium text-gray-900 mb-3">Text watermark</h4>
                       <div className="grid md:grid-cols-2 gap-3">
@@ -402,11 +420,7 @@ export default function AdvancedTools() {
                       <div className="grid md:grid-cols-5 gap-3 mt-3">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
-                          <SegmentedControl
-                            value={twPosition}
-                            onChange={(v) => setTwPosition(v)}
-                            options={positions.map(p => ({ label: p.replace('-', ' '), value: p }))}
-                          />
+                          <SegmentedControl value={twPosition} onChange={(v) => setTwPosition(v)} options={positionOptions} />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Style</label>
@@ -495,6 +509,7 @@ export default function AdvancedTools() {
                         }}>Apply & Save</Button>
                       </div>
                     </div>
+                    )}
                   </div>
 
                   {/* Right: Preview */}
