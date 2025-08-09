@@ -389,6 +389,27 @@ export default function AdvancedTools() {
                           <input type="number" className="w-full border rounded px-2 py-1" value={twFontSize} onChange={(e)=> setTwFontSize(parseInt(e.target.value)||48)} />
                         </div>
                       </div>
+                      <div className="grid md:grid-cols-4 gap-3 mt-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Shadow color</label>
+                          <input type="color" defaultValue="#000000" onChange={(e)=> (e.target as HTMLInputElement).dataset.val = e.target.value} data-val="#000000" id="twShadowColor" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Shadow opacity</label>
+                          <input type="number" step="0.05" min="0" max="1" defaultValue={0.35} className="w-full border rounded px-2 py-1" id="twShadowOpacity" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Shadow blur</label>
+                          <input type="number" min="0" defaultValue={2} className="w-full border rounded px-2 py-1" id="twShadowBlur" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Shadow offset</label>
+                          <div className="flex space-x-2">
+                            <input type="number" defaultValue={2} className="w-full border rounded px-2 py-1" placeholder="X" id="twShadowOffsetX" />
+                            <input type="number" defaultValue={2} className="w-full border rounded px-2 py-1" placeholder="Y" id="twShadowOffsetY" />
+                          </div>
+                        </div>
+                      </div>
                       <div className="mt-3">
                         <Button variant="primary" loading={twLoading} onClick={async () => {
                           try {
@@ -406,6 +427,13 @@ export default function AdvancedTools() {
                             form.append('margin', String(twMargin));
                             form.append('color', twColor);
                             form.append('fontSize', String(twFontSize));
+                           // Shadow options
+                           const getVal = (id: string) => (document.getElementById(id) as HTMLInputElement)?.value;
+                           form.append('shadowColor', getVal('twShadowColor') || '#000000');
+                           form.append('shadowOpacity', getVal('twShadowOpacity') || '0.35');
+                           form.append('shadowBlur', getVal('twShadowBlur') || '2');
+                           form.append('shadowOffsetX', getVal('twShadowOffsetX') || '2');
+                           form.append('shadowOffsetY', getVal('twShadowOffsetY') || '2');
                             const res = await fetch(buildApiUrl('/api/advanced/watermark-text'), { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: form });
                             const data = await res.json();
                             if (!data.success) throw new Error(data.error || 'Failed');

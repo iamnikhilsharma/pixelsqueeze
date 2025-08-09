@@ -286,6 +286,11 @@ router.post('/watermark-text', authenticateToken, upload.single('image'), async 
       color: req.body.color || '#ffffff',
       fontSize: parseInt(req.body.fontSize) || 48,
       fontFamily: req.body.fontFamily || 'sans-serif',
+      shadowColor: req.body.shadowColor || '#000000',
+      shadowOpacity: req.body.shadowOpacity ? parseFloat(req.body.shadowOpacity) : 0.35,
+      shadowBlur: req.body.shadowBlur ? parseFloat(req.body.shadowBlur) : 2,
+      shadowOffsetX: req.body.shadowOffsetX ? parseFloat(req.body.shadowOffsetX) : 2,
+      shadowOffsetY: req.body.shadowOffsetY ? parseFloat(req.body.shadowOffsetY) : 2,
     };
 
     const result = await advancedImageProcessor.addTextWatermark(req.file, options);

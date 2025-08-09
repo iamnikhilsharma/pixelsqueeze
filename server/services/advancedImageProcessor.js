@@ -384,7 +384,12 @@ class AdvancedImageProcessor {
       style = 'single', // single | tiled | diagonal
       color = '#ffffff',
       fontSize = 48,
-      fontFamily = 'sans-serif'
+      fontFamily = 'sans-serif',
+      shadowColor = '#000000',
+      shadowOpacity = 0.35,
+      shadowBlur = 2,
+      shadowOffsetX = 2,
+      shadowOffsetY = 2
     } = watermarkOptions;
 
     const image = sharp(file.buffer);
@@ -398,10 +403,22 @@ class AdvancedImageProcessor {
 
     const svg = (w, h) => Buffer.from(
       `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="shadow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="${shadowBlur}" />
+            <feOffset dx="${shadowOffsetX}" dy="${shadowOffsetY}" result="offsetblur" />
+            <feFlood flood-color="${shadowColor}" flood-opacity="${shadowOpacity}" />
+            <feComposite in2="offsetblur" operator="in" />
+            <feMerge>
+              <feMergeNode />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
         <style>
           .tw { font-family: ${fontFamily}, 'DejaVu Sans', sans-serif; font-size: ${fontSize}px; fill: ${color}; fill-opacity: ${opacity}; dominant-baseline: middle; paint-order: stroke fill; }
         </style>
-        <text x="50%" y="50%" text-anchor="middle" class="tw">${String(text).replace(/&/g, '&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</text>
+        <text x="50%" y="50%" text-anchor="middle" class="tw" filter="url(#shadow)">${String(text).replace(/&/g, '&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</text>
       </svg>`
     );
 
