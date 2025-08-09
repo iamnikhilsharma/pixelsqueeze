@@ -16,10 +16,9 @@ import { Layout } from '@/components/Layout';
 import { Button } from '@/components/Button';
 import AdvancedImageUploader from '@/components/AdvancedImageUploader';
 import { useAuthStore } from '@/store/authStore';
-import { formatFileSize, formatNumber } from '@/utils/formatters';
+import { formatFileSize, formatNumber, buildApiUrl } from '@/utils/formatters';
 import { useRouter } from 'next/router';
-import { toast } from 'react-toastify';
-import { buildApiUrl } from '@/utils/api';
+import toast from 'react-hot-toast';
 
 interface Tool {
   id: string;
@@ -136,7 +135,8 @@ export default function AdvancedTools() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  if (!token || isLoading) return null;
+  if (!token) return null;
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center text-gray-500">Checking session...</div>;
   if (!isAuthenticated) return null;
 
   const isPremiumUser = user?.subscription?.plan !== 'free';

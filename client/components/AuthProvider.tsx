@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuthStore } from '@/store/authStore';
 
@@ -8,20 +8,19 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { checkAuth, token } = useAuthStore();
+  const didInit = useRef(false);
 
   useEffect(() => {
+    if (didInit.current) return;
+    didInit.current = true;
+
     const initializeAuth = async () => {
-      // Ensure axios has Authorization set on mount
       if (token) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        
-        // Always check auth if we have a token
-        // This handles cases where the persisted state might be incomplete
         try {
           await checkAuth();
         } catch (error) {
-          console.error('Auth check failed:', error);
-          // If checkAuth fails, it will clear the auth state automatically
+          // handled in store
         }
       } else {
         delete axios.defaults.headers.common['Authorization'];
@@ -29,7 +28,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     initializeAuth();
-  }, [token, checkAuth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return <>{children}</>;
 }; 

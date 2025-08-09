@@ -132,7 +132,7 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       checkAuth: async () => {
-        const { token } = get();
+        const { token, isAuthenticated } = get();
         
         if (!token) {
           set({ isAuthenticated: false, isLoading: false });
@@ -155,16 +155,22 @@ export const useAuthStore = create<AuthStore>()(
             error: null,
           });
         } catch (error: any) {
-          console.error('Auth check failed:', error);
-          // Token is invalid, clear auth state
-          delete axios.defaults.headers.common['Authorization'];
-          set({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            isLoading: false,
-            error: null,
-          });
+          const status = error?.response?.status;
+          if (status === 401 || status === 403) {
+            // Token invalid/expired: clear auth
+            delete axios.defaults.headers.common['Authorization'];
+            set({
+              user: null,
+              token: null,
+              isAuthenticated: false,
+              isLoading: false,
+              error: null,
+            });
+          } else {
+            // Transient or network error: do not log out
+            console.error('Auth check transient error:', error?.message || error);
+            set({ isLoading: false, error: null, isAuthenticated });
+          }
         }
       },
     }),
