@@ -4,7 +4,7 @@ const axios = require('axios');
 const archiver = require('archiver');
 const { v4: uuidv4 } = require('uuid');
 
-const { authenticateApiKey, checkUsageLimit, checkFileSize, checkFileType } = require('../middleware/auth');
+const { authenticateToken, checkUsageLimit, checkFileSize, checkFileType } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/errorHandler');
 const imageProcessor = require('../utils/imageProcessor');
 const storageService = require('../services/storageService');
@@ -38,7 +38,7 @@ const upload = multer({
  * Upload and optimize a single image
  */
 router.post('/optimize', 
-  authenticateApiKey,
+  authenticateToken,
   checkUsageLimit,
   upload.single('image'),
   checkFileSize,
@@ -147,7 +147,7 @@ router.post('/optimize',
  * Upload and optimize multiple images
  */
 router.post('/optimize-multiple',
-  authenticateApiKey,
+  authenticateToken,
   checkUsageLimit,
   upload.array('images', 10),
   checkFileSize,
@@ -299,7 +299,7 @@ router.post('/optimize-multiple',
  * Optimize image from URL
  */
 router.post('/optimize-url',
-  authenticateApiKey,
+  authenticateToken,
   checkUsageLimit,
   asyncHandler(async (req, res) => {
     const { imageUrl, quality = 80, format = 'auto', preserveMetadata = false } = req.body;
@@ -419,7 +419,7 @@ router.post('/optimize-url',
  * Get user's usage statistics
  */
 router.get('/stats',
-  authenticateApiKey,
+  authenticateToken,
   asyncHandler(async (req, res) => {
     const user = req.user;
     const { period = 'month' } = req.query;
@@ -503,7 +503,7 @@ router.get('/stats',
  * Get user's processed images
  */
 router.get('/images',
-  authenticateApiKey,
+  authenticateToken,
   asyncHandler(async (req, res) => {
     const user = req.user;
     const { page = 1, limit = 20, status } = req.query;
@@ -553,7 +553,7 @@ router.get('/images',
  * Download a specific optimized image
  */
 router.get('/download/:imageId',
-  authenticateApiKey,
+  authenticateToken,
   asyncHandler(async (req, res) => {
     const { imageId } = req.params;
     const user = req.user;
@@ -609,7 +609,7 @@ router.get('/download/:imageId',
  * Download multiple images as ZIP
  */
 router.post('/download-batch',
-  authenticateApiKey,
+  authenticateToken,
   asyncHandler(async (req, res) => {
     const { imageIds } = req.body;
     const user = req.user;

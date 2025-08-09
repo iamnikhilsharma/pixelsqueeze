@@ -47,14 +47,31 @@ export default function Dashboard() {
       }
 
       try {
-        const statsRes = await fetch(buildApiUrl('/api/stats'));
+        // Get auth token
+        const authData = localStorage.getItem('pixelsqueeze-auth');
+        const token = authData ? JSON.parse(authData).state.token : '';
+        
+        if (!token) {
+          throw new Error('No authentication token');
+        }
+
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        };
+
+        const statsRes = await fetch(buildApiUrl('/api/stats'), {
+          headers
+        });
         if (!statsRes.ok) {
           throw new Error('Failed to fetch stats');
         }
         const statsData = await statsRes.json();
         setStats(statsData.data);
 
-        const imagesRes = await fetch(buildApiUrl('/api/images?limit=5'));
+        const imagesRes = await fetch(buildApiUrl('/api/images?limit=5'), {
+          headers
+        });
         if (!imagesRes.ok) {
           throw new Error('Failed to fetch recent images');
         }

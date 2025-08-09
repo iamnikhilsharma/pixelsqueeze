@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   MagnifyingGlassIcon,
@@ -12,54 +12,93 @@ import {
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/Button';
 import { useAuthStore } from '@/store/authStore';
-import { formatBytes, formatDate } from '@/utils/formatters';
+import { formatBytes, formatDate, buildApiUrl } from '@/utils/formatters';
+import toast from 'react-hot-toast';
 
-// Mock data for demonstration
-const mockImages = [
-  {
-    id: '1',
-    name: 'hero-image.jpg',
-    originalSize: 2048576,
-    optimizedSize: 512000,
-    compressionRatio: 75,
-    format: 'JPEG',
-    dimensions: '1920x1080',
-    createdAt: new Date('2024-01-15'),
-    downloadUrl: '/uploads/optimized_1.jpg'
-  },
-  {
-    id: '2',
-    name: 'logo.png',
-    originalSize: 512000,
-    optimizedSize: 128000,
-    compressionRatio: 75,
-    format: 'PNG',
-    dimensions: '800x600',
-    createdAt: new Date('2024-01-14'),
-    downloadUrl: '/uploads/optimized_2.jpg'
-  },
-  {
-    id: '3',
-    name: 'banner.webp',
-    originalSize: 1024000,
-    optimizedSize: 256000,
-    compressionRatio: 75,
-    format: 'WebP',
-    dimensions: '1200x400',
-    createdAt: new Date('2024-01-13'),
-    downloadUrl: '/uploads/optimized_3.jpg'
-  }
-];
+interface ImageData {
+  id: string;
+  originalName: string;
+  originalSize: number;
+  optimizedSize: number;
+  compressionRatio: number;
+  format: string;
+  dimensions?: string;
+  createdAt: string;
+  downloadUrl?: string;
+  status: string;
+}
 
 export default function Images() {
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
+  const [images, setImages] = useState<ImageData[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFormat, setSelectedFormat] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
-  const filteredImages = mockImages.filter(image => {
-    const matchesSearch = image.name.toLowerCase().includes(searchTerm.toLowerCase());
+  // Fetch user's images
+  useEffect(() => {
+    const fetchImages = async () => {
+      if (!isAuthenticated) return;
+
+      try {
+        const authData = localStorage.getItem('pixelsqueeze-auth');
+        const token = authData ? JSON.parse(authData).state.token : '';
+        
+        if (!token) {
+          throw new Error('No authentication token');
+        }
+
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        };
+
+        const response = await fetch(buildApiUrl(`/api/images?page=${page}&limit=20`), {
+          headers
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch images');
+        }
+
+        const data = await response.json();
+        const newImages = data.data.images.map((img: any) => ({
+          id: img._id,
+          originalName: img.originalName,
+          originalSize: img.originalSize,
+          optimizedSize: img.optimizedSize,
+          compressionRatio: img.compressionRatio,
+          format: img.format,
+          dimensions: img.dimensions,
+          createdAt: img.createdAt,
+          downloadUrl: img.downloadUrl,
+          status: img.status
+        }));
+
+        if (page === 1) {
+          setImages(newImages);
+        } else {
+          setImages(prev => [...prev, ...newImages]);
+        }
+
+        setHasMore(data.data.pagination.page < data.data.pagination.pages);
+      } catch (error) {
+        console.error('Error fetching images:', error);
+        toast.error('Failed to fetch images');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchImages();
+  }, [isAuthenticated, page]);
+
+  const filteredImages = images.filter(image => {
+    const matchesSearch = image.originalName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFormat = selectedFormat === 'all' || image.format.toLowerCase() === selectedFormat;
     return matchesSearch && matchesFormat;
   });
@@ -67,14 +106,14 @@ export default function Images() {
   const sortedImages = [...filteredImages].sort((a, b) => {
     switch (sortBy) {
       case 'name':
-        return a.name.localeCompare(b.name);
+        return a.originalName.localeCompare(b.originalName);
       case 'size':
         return b.originalSize - a.originalSize;
       case 'compression':
         return b.compressionRatio - a.compressionRatio;
       case 'date':
       default:
-        return b.createdAt.getTime() - a.createdAt.getTime();
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     }
   });
 
@@ -95,14 +134,30 @@ export default function Images() {
   };
 
   const handleDownloadSelected = () => {
-    // TODO: Implement batch download
-    alert(`Downloading ${selectedImages.length} images...`);
+    selectedImages.forEach(imageId => {
+      const image = images.find(img => img.id === imageId);
+      if (image?.downloadUrl) {
+        const link = document.createElement('a');
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+        link.href = `${cleanBaseUrl}${image.downloadUrl}`;
+        link.download = `optimized_${image.originalName}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    });
+    toast.success(`Downloading ${selectedImages.length} images...`);
   };
 
   const handleDeleteSelected = () => {
-    if (confirm(`Are you sure you want to delete ${selectedImages.length} images?`)) {
-      // TODO: Implement delete
-      alert('Delete functionality coming soon!');
+    // TODO: Implement batch delete
+    toast.error('Delete functionality not implemented yet');
+  };
+
+  const loadMore = () => {
+    if (hasMore && !loading) {
+      setPage(prev => prev + 1);
     }
   };
 
@@ -129,7 +184,7 @@ export default function Images() {
                 <PhotoIcon className="h-8 w-8 text-blue-600" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Total Images</p>
-                  <p className="text-2xl font-bold text-gray-900">{mockImages.length}</p>
+                  <p className="text-2xl font-bold text-gray-900">{images.length}</p>
                 </div>
               </div>
             </div>
@@ -139,7 +194,7 @@ export default function Images() {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Space Saved</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {formatBytes(mockImages.reduce((acc, img) => acc + (img.originalSize - img.optimizedSize), 0))}
+                    {formatBytes(images.reduce((acc, img) => acc + (img.originalSize - img.optimizedSize), 0))}
                   </p>
                 </div>
               </div>
@@ -150,7 +205,7 @@ export default function Images() {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Avg. Compression</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {Math.round(mockImages.reduce((acc, img) => acc + img.compressionRatio, 0) / mockImages.length)}%
+                    {Math.round(images.reduce((acc, img) => acc + img.compressionRatio, 0) / images.length)}%
                   </p>
                 </div>
               </div>
@@ -161,7 +216,7 @@ export default function Images() {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">This Month</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {mockImages.filter(img => img.createdAt.getMonth() === new Date().getMonth()).length}
+                    {images.filter(img => new Date(img.createdAt).getMonth() === new Date().getMonth()).length}
                   </p>
                 </div>
               </div>
@@ -243,7 +298,15 @@ export default function Images() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          {sortedImages.length === 0 ? (
+          {loading && page === 1 ? (
+            <div className="text-center py-12">
+              <PhotoIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Loading images...</h3>
+              <p className="text-gray-500">
+                Fetching your images from the server.
+              </p>
+            </div>
+          ) : sortedImages.length === 0 ? (
             <div className="text-center py-12">
               <PhotoIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No images found</h3>
@@ -276,7 +339,7 @@ export default function Images() {
 
                   {/* Image Info */}
                   <div className="space-y-2">
-                    <h3 className="font-medium text-gray-900 truncate">{image.name}</h3>
+                    <h3 className="font-medium text-gray-900 truncate">{image.originalName}</h3>
                     <div className="text-sm text-gray-500 space-y-1">
                       <div className="flex justify-between">
                         <span>Original:</span>
@@ -300,7 +363,7 @@ export default function Images() {
                       </div>
                       <div className="flex justify-between">
                         <span>Date:</span>
-                        <span>{formatDate(image.createdAt)}</span>
+                        <span>{formatDate(new Date(image.createdAt))}</span>
                       </div>
                     </div>
                   </div>
