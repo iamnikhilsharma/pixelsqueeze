@@ -291,6 +291,7 @@ router.post('/watermark-text', authenticateToken, upload.single('image'), async 
       shadowBlur: req.body.shadowBlur ? parseFloat(req.body.shadowBlur) : 2,
       shadowOffsetX: req.body.shadowOffsetX ? parseFloat(req.body.shadowOffsetX) : 2,
       shadowOffsetY: req.body.shadowOffsetY ? parseFloat(req.body.shadowOffsetY) : 2,
+      diagonalAngle: req.body.diagonalAngle ? parseFloat(req.body.diagonalAngle) : 30,
     };
 
     const result = await advancedImageProcessor.addTextWatermark(req.file, options);

@@ -389,7 +389,8 @@ class AdvancedImageProcessor {
       shadowOpacity = 0.35,
       shadowBlur = 2,
       shadowOffsetX = 2,
-      shadowOffsetY = 2
+      shadowOffsetY = 2,
+      diagonalAngle = 30
     } = watermarkOptions;
 
     const image = sharp(file.buffer);
@@ -440,19 +441,27 @@ class AdvancedImageProcessor {
 
     // Build pattern for tiled / diagonal
     const composites = [];
-    const step = Math.round(Math.max(estTextWidth, estTextHeight) + margin);
 
     if (style === 'tiled') {
+      const step = Math.round(Math.max(estTextWidth, estTextHeight) + margin);
       for (let y = margin; y < imgH; y += step) {
         for (let x = margin; x < imgW; x += step) {
           composites.push({ input: singleBuffer, left: x, top: y, blend: 'over' });
         }
       }
     } else if (style === 'diagonal') {
+      // Rotate the text element to make the diagonal pattern visually distinct
+      const rotated = await sharp(singleBuffer)
+        .rotate(-Math.abs(diagonalAngle), { background: { r: 0, g: 0, b: 0, alpha: 0 } })
+        .png()
+        .toBuffer();
+      const meta = await sharp(rotated).metadata();
+      const step = Math.round(Math.max(meta.width || estTextWidth, meta.height || estTextHeight) + margin);
+
       let row = 0;
       for (let y = margin; y < imgH; y += step, row++) {
         for (let x = margin + (row % 2 === 0 ? 0 : Math.floor(step / 2)); x < imgW; x += step) {
-          composites.push({ input: singleBuffer, left: x, top: y, blend: 'over' });
+          composites.push({ input: rotated, left: x, top: y, blend: 'over' });
         }
       }
     }
