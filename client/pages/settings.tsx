@@ -18,7 +18,7 @@ import { useRouter } from 'next/router';
 
 export default function Settings() {
   const router = useRouter();
-  const { user, token, isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { user, token, isAuthenticated, isLoading: authLoading, checkAuth } = useAuthStore();
 
   useEffect(() => {
     (async () => {
@@ -31,7 +31,7 @@ export default function Settings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  if (!token || isLoading) return null;
+  if (!token || authLoading) return null;
   if (!isAuthenticated) return null;
 
   const [activeTab, setActiveTab] = useState('profile');
