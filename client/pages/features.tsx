@@ -1,6 +1,7 @@
 import React from 'react';
 import MarketingLayout from '@/components/MarketingLayout';
 import { Button } from '@/components/Button';
+import { motion } from 'framer-motion';
 
 export default function FeaturesPage() {
   const features = [
@@ -16,25 +17,30 @@ export default function FeaturesPage() {
     <MarketingLayout>
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-10 items-center">
+          <motion.div
+            className="grid lg:grid-cols-2 gap-10 items-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Features</h1>
               <p className="mt-2 text-gray-600 max-w-2xl">Everything you need to optimize images for fast, beautiful websites and apps.</p>
               <ul className="mt-6 grid sm:grid-cols-2 gap-4">
-                {features.map((f) => (
-                  <li key={f.title} className="rounded-xl border border-gray-200 p-4 bg-white">
+                {features.map((f, i) => (
+                  <motion.li key={f.title} className="rounded-xl border border-gray-200 p-4 bg-white" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.05 * i }}>
                     <div className="h-8 w-8 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center font-bold">✓</div>
                     <h3 className="mt-2 font-semibold text-gray-900">{f.title}</h3>
                     <p className="text-sm text-gray-600">{f.detail}</p>
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
               <div className="mt-6"><Button href="/register" variant="primary">Start free</Button></div>
             </div>
-            <div>
+            <motion.div initial={{ opacity: 0, scale: 0.98 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
               <img src="/illustrations/features.svg" alt="Features" className="w-full rounded-xl border border-gray-200" />
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
@@ -46,12 +52,12 @@ export default function FeaturesPage() {
               { t: 'Speed', d: 'Optimized pipeline for fast processing and delivery.'},
               { t: 'Reliability', d: 'Secure downloads and robust error handling.'},
               { t: 'Developer Experience', d: 'Clean API, docs, and examples.'},
-            ].map((i) => (
-              <div key={i.t} className="rounded-xl border border-gray-200 p-6 bg-white">
+            ].map((i, idx) => (
+              <motion.div key={i.t} className="rounded-xl border border-gray-200 p-6 bg-white" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.05 * idx }}>
                 <div className="h-8 w-8 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center font-bold">✓</div>
                 <div className="mt-2 font-semibold text-gray-900">{i.t}</div>
                 <div className="text-sm text-gray-600">{i.d}</div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
