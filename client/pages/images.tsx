@@ -150,9 +150,32 @@ export default function Images() {
     toast.success(`Downloading ${selectedImages.length} images...`);
   };
 
-  const handleDeleteSelected = () => {
-    // TODO: Implement batch delete
-    toast.error('Delete functionality not implemented yet');
+  const handleDeleteSelected = async () => {
+    if (selectedImages.length === 0) return;
+    if (!confirm(`Delete ${selectedImages.length} image(s)? This cannot be undone.`)) return;
+
+    try {
+      const authData = localStorage.getItem('pixelsqueeze-auth');
+      const token = authData ? JSON.parse(authData).state.token : '';
+      if (!token) throw new Error('No authentication token');
+
+      const headers = { 'Authorization': `Bearer ${token}` };
+
+      await Promise.all(selectedImages.map(async (id) => {
+        const res = await fetch(buildApiUrl(`/api/images/${id}`), {
+          method: 'DELETE',
+          headers,
+        });
+        if (!res.ok) throw new Error('Failed to delete');
+      }));
+
+      setImages(prev => prev.filter(img => !selectedImages.includes(img.id)));
+      setSelectedImages([]);
+      toast.success('Deleted successfully');
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete images');
+    }
   };
 
   const loadMore = () => {

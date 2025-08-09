@@ -549,6 +549,37 @@ router.get('/images',
 );
 
 /**
+ * DELETE /api/images/:id
+ * Delete a user's image (local storage)
+ */
+router.delete('/images/:id',
+  authenticateToken,
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const user = req.user;
+
+    try {
+      const image = await Image.findOne({ _id: id, user: user._id });
+      if (!image) {
+        return res.status(404).json({ error: 'Image not found' });
+      }
+
+      // Delete file from local storage if we have a key
+      if (image.storage?.optimizedKey) {
+        await storageService.deleteFile(image.storage.optimizedKey);
+      }
+
+      await image.deleteOne();
+
+      res.json({ success: true });
+    } catch (error) {
+      logger.error('Delete image error:', error);
+      res.status(500).json({ error: 'Failed to delete image' });
+    }
+  })
+);
+
+/**
  * GET /api/download/:imageId
  * Download a specific optimized image
  */

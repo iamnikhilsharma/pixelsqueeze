@@ -5,6 +5,8 @@ const path = require('path');
 const fs = require('fs').promises;
 const advancedImageProcessor = require('../services/advancedImageProcessor');
 const { authenticateToken } = require('../middleware/auth');
+const Image = require('../models/Image');
+const storageService = require('../services/storageService');
 
 // Configure multer for multiple file uploads
 const upload = multer({
@@ -83,7 +85,7 @@ router.post('/batch-optimize', authenticateToken, upload.array('images', 20), as
       console.error('Error creating uploads directory:', error);
     }
 
-    // Save optimized images and generate download URLs
+    // Save optimized images to disk, persist in DB, and generate download URLs
     const savedResults = [];
     for (const result of results) {
       if (result.error) {
@@ -93,21 +95,47 @@ router.post('/batch-optimize', authenticateToken, upload.array('images', 20), as
 
       try {
         // Generate filename
-        const fileExtension = result.format || 'jpg';
-        const fileName = `optimized_${result.id}.${fileExtension}`;
-        const filePath = path.join(uploadsDir, fileName);
-        
-        // Save the optimized image
+        const fileExtension = result.format === 'jpeg' ? 'jpg' : result.format || 'jpg';
+        const filename = `optimized_${result.id}.${fileExtension}`;
+        const filePath = path.join(uploadsDir, filename);
+
+        // Save the optimized buffer to local storage
         await fs.writeFile(filePath, result.buffer);
-        
-        // Add download URL to result
+
+        // Persist to DB (expires in 24h by default)
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        const imageDoc = new Image({
+          user: req.user._id,
+          originalName: result.originalName,
+          originalSize: result.originalSize,
+          originalFormat: (path.extname(result.originalName).replace('.', '') || 'jpg').toLowerCase(),
+          optimizedSize: result.optimizedSize,
+          optimizedFormat: fileExtension,
+          compressionRatio: Math.round(result.compressionRatio),
+          quality: options.quality,
+          dimensions: { optimized: { width: result.width || undefined, height: result.height || undefined } },
+          storage: {
+            optimizedKey: filename,
+            bucket: 'local',
+            region: 'local'
+          },
+          downloadUrl: `/uploads/${filename}`,
+          expiresAt,
+          metadata: { preserved: !!options.preserveMetadata },
+          processingTime: result.processingTime,
+          status: 'completed'
+        });
+
+        await imageDoc.save();
+
         const savedResult = {
           ...result,
-          downloadUrl: `/uploads/${fileName}`
+          downloadUrl: `/uploads/${filename}`,
+          id: imageDoc._id
         };
-        
+
         savedResults.push(savedResult);
-        console.log(`Saved optimized image: ${fileName}`);
+        console.log(`Saved optimized image and DB record: ${filename}`);
       } catch (error) {
         console.error(`Error saving optimized image ${result.originalName}:`, error);
         savedResults.push({
@@ -117,7 +145,7 @@ router.post('/batch-optimize', authenticateToken, upload.array('images', 20), as
       }
     }
 
-    // Send final results with download URLs
+    // Send final results with download URLs and DB ids
     res.write(`data: ${JSON.stringify({ type: 'complete', results: savedResults })}\n\n`);
     res.end();
 

@@ -35,6 +35,7 @@ class AdvancedImageProcessor {
 
     try {
       console.log(`Processing image: ${file.originalname}, size: ${file.buffer.length} bytes`);
+      const startedAt = Date.now();
       
       let image = sharp(file.buffer);
 
@@ -101,8 +102,9 @@ class AdvancedImageProcessor {
       const originalSize = file.buffer.length;
       const optimizedSize = result.length;
       const compressionRatio = ((originalSize - optimizedSize) / originalSize) * 100;
+      const processingTime = Date.now() - startedAt;
 
-      console.log(`Optimized ${file.originalname}: ${originalSize} -> ${optimizedSize} bytes (${compressionRatio.toFixed(1)}% reduction)`);
+      console.log(`Optimized ${file.originalname}: ${originalSize} -> ${optimizedSize} bytes (${compressionRatio.toFixed(1)}% reduction) in ${processingTime}ms`);
 
       return {
         id: uuidv4(),
@@ -114,7 +116,8 @@ class AdvancedImageProcessor {
         width: width || null,
         height: height || null,
         quality,
-        buffer: result
+        buffer: result,
+        processingTime
       };
     } catch (error) {
       console.error(`Advanced image optimization error for ${file.originalname}:`, error);
