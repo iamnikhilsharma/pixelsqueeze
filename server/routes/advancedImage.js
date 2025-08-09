@@ -127,6 +127,8 @@ router.post('/batch-optimize', authenticateToken, upload.array('images', 20), as
         });
 
         await imageDoc.save();
+        // Increment user usage for each processed image
+        try { await req.user.incrementUsage(result.originalSize || 0); } catch {}
 
         const savedResult = {
           ...result,
@@ -381,6 +383,9 @@ router.post('/optimize-advanced', authenticateToken, upload.single('image'), asy
     
     await fs.writeFile(filePath, result.buffer);
     
+    // Increment usage (count + bandwidth based on original file size)
+    try { await req.user.incrementUsage(req.file.size || 0); } catch {}
+
     result.downloadUrl = `/uploads/${fileName}`;
 
     res.json({
