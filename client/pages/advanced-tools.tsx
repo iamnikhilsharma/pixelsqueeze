@@ -126,6 +126,7 @@ export default function AdvancedTools() {
   const [wmResultUrl, setWmResultUrl] = useState<string | null>(null);
   const [wmSavedUrl, setWmSavedUrl] = useState<string | null>(null);
   const [wmLoading, setWmLoading] = useState(false);
+  const [wmMargin, setWmMargin] = useState(20);
 
   // Text watermark state
   const [twImage, setTwImage] = useState<File | null>(null);
