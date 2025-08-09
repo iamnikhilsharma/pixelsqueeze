@@ -163,6 +163,20 @@ export default function AdvancedTools() {
     return false;
   };
 
+  const getToolStatus = (tool: Tool) => {
+    if (tool.status === 'available') return 'Available';
+    if (tool.status === 'premium' && isPremiumUser) return 'Available';
+    if (tool.status === 'premium' && !isPremiumUser) return 'Premium Only';
+    return 'Coming Soon';
+  };
+
+  const getToolStatusColor = (tool: Tool) => {
+    if (tool.status === 'available') return 'text-green-600 bg-green-100';
+    if (tool.status === 'premium' && isPremiumUser) return 'text-green-600 bg-green-100';
+    if (tool.status === 'premium' && !isPremiumUser) return 'text-orange-600 bg-orange-100';
+    return 'text-gray-600 bg-gray-100';
+  };
+
   const handleImagesProcessed = (results: any[]) => setProcessedResults(results);
 
   const positions = ['top-left','top-right','bottom-left','bottom-right','center'];
