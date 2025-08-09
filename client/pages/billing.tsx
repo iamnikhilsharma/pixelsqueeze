@@ -12,7 +12,7 @@ import {
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/Button';
 import { useAuthStore } from '@/store/authStore';
-import { formatBytes, formatNumber } from '@/utils/formatters';
+import { formatBytes, formatNumber, buildApiUrl } from '@/utils/formatters';
 import { stripeUtils } from '@/utils/stripe';
 import BillingPlans from '@/components/BillingPlans';
 import toast from 'react-hot-toast';
