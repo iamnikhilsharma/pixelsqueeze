@@ -271,6 +271,33 @@ router.post('/watermark', authenticateToken, upload.fields([
   }
 });
 
+// Text watermark endpoint
+router.post('/watermark-text', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Image is required' });
+
+    const options = {
+      text: req.body.text || 'PixelSqueeze',
+      position: req.body.position || 'bottom-right',
+      opacity: parseFloat(req.body.opacity) || 0.7,
+      size: parseFloat(req.body.size) || 0.15,
+      margin: parseInt(req.body.margin) || 20,
+      style: req.body.style || 'single',
+      color: req.body.color || '#ffffff',
+      fontSize: parseInt(req.body.fontSize) || 48,
+      fontFamily: req.body.fontFamily || 'sans-serif',
+    };
+
+    const result = await advancedImageProcessor.addTextWatermark(req.file, options);
+    const upload = await storageService.uploadFile(result.buffer, `watermarked_text_${Date.now()}.png`, 'image/png', { folder: 'watermarked' });
+
+    res.json({ success: true, data: { key: upload.key, url: upload.url } });
+  } catch (e) {
+    console.error('Text watermark error:', e);
+    res.status(500).json({ error: 'Failed to add text watermark', details: e.message });
+  }
+});
+
 // Image analysis
 router.post('/analyze', authenticateToken, upload.single('image'), async (req, res) => {
   try {

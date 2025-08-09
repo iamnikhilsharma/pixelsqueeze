@@ -115,24 +115,36 @@ export default function AdvancedTools() {
   const { user, token, isAuthenticated, isLoading, checkAuth, hasRehydrated } = useAuthStore();
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [processedResults, setProcessedResults] = useState<any[]>([]);
+
+  // Image watermark state
   const [wmImage, setWmImage] = useState<File | null>(null);
   const [wmFile, setWmFile] = useState<File | null>(null);
   const [wmPosition, setWmPosition] = useState('bottom-right');
   const [wmOpacity, setWmOpacity] = useState(0.7);
   const [wmSize, setWmSize] = useState(0.2);
-  const [wmMargin, setWmMargin] = useState(20);
-  const [wmResultUrl, setWmResultUrl] = useState<string | null>(null);
-  const [wmLoading, setWmLoading] = useState(false);
   const [wmStyle, setWmStyle] = useState<'single'|'tiled'|'diagonal'>('single');
+  const [wmResultUrl, setWmResultUrl] = useState<string | null>(null);
   const [wmSavedUrl, setWmSavedUrl] = useState<string | null>(null);
+  const [wmLoading, setWmLoading] = useState(false);
+
+  // Text watermark state
+  const [twImage, setTwImage] = useState<File | null>(null);
+  const [twText, setTwText] = useState('PixelSqueeze');
+  const [twPosition, setTwPosition] = useState('bottom-right');
+  const [twOpacity, setTwOpacity] = useState(0.7);
+  const [twSize, setTwSize] = useState(0.15);
+  const [twMargin, setTwMargin] = useState(20);
+  const [twStyle, setTwStyle] = useState<'single'|'tiled'|'diagonal'>('single');
+  const [twColor, setTwColor] = useState('#ffffff');
+  const [twFontSize, setTwFontSize] = useState(48);
+  const [twResultUrl, setTwResultUrl] = useState<string | null>(null);
+  const [twSavedUrl, setTwSavedUrl] = useState<string | null>(null);
+  const [twLoading, setTwLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
       if (!hasRehydrated) return;
-      if (!token) {
-        router.replace('/login');
-        return;
-      }
+      if (!token) { router.replace('/login'); return; }
       await checkAuth();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -145,29 +157,9 @@ export default function AdvancedTools() {
 
   const isPremiumUser = user?.subscription?.plan !== 'free';
 
-  const handleImagesProcessed = (results: any[]) => {
-    setProcessedResults(results);
-  };
+  const handleImagesProcessed = (results: any[]) => setProcessedResults(results);
 
-  const getToolStatus = (tool: Tool) => {
-    if (tool.status === 'available') return 'Available';
-    if (tool.status === 'premium' && isPremiumUser) return 'Available';
-    if (tool.status === 'premium' && !isPremiumUser) return 'Premium Only';
-    return 'Coming Soon';
-  };
-
-  const getToolStatusColor = (tool: Tool) => {
-    if (tool.status === 'available') return 'text-green-600 bg-green-100';
-    if (tool.status === 'premium' && isPremiumUser) return 'text-green-600 bg-green-100';
-    if (tool.status === 'premium' && !isPremiumUser) return 'text-orange-600 bg-orange-100';
-    return 'text-gray-600 bg-gray-100';
-  };
-
-  const canUseTool = (tool: Tool) => {
-    if (tool.status === 'available') return true;
-    if (tool.status === 'premium' && isPremiumUser) return true;
-    return false;
-  };
+  const positions = ['top-left','top-right','bottom-left','bottom-right','center'];
 
   return (
     <Layout>
@@ -233,32 +225,17 @@ export default function AdvancedTools() {
 
         {/* Selected Tool Interface */}
         {selectedTool && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-lg border border-gray-200 p-6"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-indigo-100 rounded-lg">
-                  {React.createElement(tools.find(t => t.id === selectedTool)?.icon || PhotoIcon, {
-                    className: "h-6 w-6 text-indigo-600"
-                  })}
+                  {React.createElement(tools.find(t => t.id === selectedTool)?.icon || PhotoIcon, { className: "h-6 w-6 text-indigo-600" })}
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {tools.find(t => t.id === selectedTool)?.name}
-                </h2>
+                <h2 className="text-xl font-semibold text-gray-900">{tools.find(t => t.id === selectedTool)?.name}</h2>
               </div>
-              <Button
-                onClick={() => setSelectedTool(null)}
-                variant="outline"
-                size="sm"
-              >
-                Close
-              </Button>
+              <Button onClick={() => setSelectedTool(null)} variant="outline" size="sm">Close</Button>
             </div>
 
-            {/* Tool-specific interface */}
             {selectedTool === 'batch-processing' && (
               <div>
                 <AdvancedImageUploader onImagesProcessed={handleImagesProcessed} />
@@ -266,111 +243,179 @@ export default function AdvancedTools() {
               </div>
             )}
 
-            {selectedTool === 'format-conversion' && (
-              <div className="text-center py-12">
-                <DocumentArrowDownIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Format Conversion</h3>
-                <p className="text-gray-600 mb-4">
-                  Convert your images to different formats with quality control
-                </p>
-                <Button variant="primary">
-                  Coming Soon
-                </Button>
-              </div>
-            )}
-
             {selectedTool === 'watermarking' && (
-              <div className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Image</label>
-                    <input type="file" accept="image/*" onChange={(e) => setWmImage(e.target.files?.[0] || null)} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Watermark (PNG)</label>
-                    <input type="file" accept="image/png" onChange={(e) => setWmFile(e.target.files?.[0] || null)} />
+              <div>
+                <div className="mb-4">
+                  <div className="inline-flex rounded-lg overflow-hidden border">
+                    <button className="px-4 py-2 text-sm font-medium hover:bg-gray-50 border-r" onClick={() => { setTwResultUrl(null); setTwSavedUrl(null); }}>Image watermark</button>
+                    <button className="px-4 py-2 text-sm font-medium hover:bg-gray-50" onClick={() => { setWmResultUrl(null); setWmSavedUrl(null); }}>Text watermark</button>
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-5 gap-4">
-                  <div className="md:col-span-1">
-                    <label className="block text-sm font-medium text-gray-700">Position</label>
-                    <select value={wmPosition} onChange={(e) => setWmPosition(e.target.value)} className="w-full border rounded px-2 py-1">
-                      {['top-left','top-right','bottom-left','bottom-right','center'].map(p => <option key={p} value={p}>{p}</option>)}
-                    </select>
+                <div className="grid lg:grid-cols-2 gap-6">
+                  {/* Left: Controls */}
+                  <div className="space-y-4">
+                    <div className="bg-gray-50 rounded-lg p-4 border">
+                      <h4 className="font-medium text-gray-900 mb-3">Image watermark</h4>
+                      <div className="grid md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Image</label>
+                          <input type="file" accept="image/*" onChange={(e) => setWmImage(e.target.files?.[0] || null)} />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Watermark (PNG)</label>
+                          <input type="file" accept="image/png" onChange={(e) => setWmFile(e.target.files?.[0] || null)} />
+                        </div>
+                      </div>
+                      <div className="grid md:grid-cols-5 gap-3 mt-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Position</label>
+                          <select value={wmPosition} onChange={(e) => setWmPosition(e.target.value)} className="w-full border rounded px-2 py-1">{positions.map(p=> <option key={p}>{p}</option>)}</select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Style</label>
+                          <select value={wmStyle} onChange={(e) => setWmStyle(e.target.value as any)} className="w-full border rounded px-2 py-1">
+                            <option value="single">Single</option>
+                            <option value="tiled">Tiled</option>
+                            <option value="diagonal">Diagonal</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Opacity ({Math.round(wmOpacity*100)}%)</label>
+                          <input type="range" min="0.1" max="1" step="0.05" value={wmOpacity} onChange={(e) => setWmOpacity(parseFloat(e.target.value))} className="w-full" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Size ({Math.round(wmSize*100)}%)</label>
+                          <input type="range" min="0.05" max="0.5" step="0.05" value={wmSize} onChange={(e) => setWmSize(parseFloat(e.target.value))} className="w-full" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Margin ({wmMargin}px)</label>
+                          <input type="range" min="0" max="100" step="2" value={wmMargin} onChange={(e) => setWmMargin(parseInt(e.target.value))} className="w-full" />
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <Button variant="primary" loading={wmLoading} onClick={async () => {
+                          try {
+                            if (!wmImage || !wmFile) { toast.error('Select image and watermark'); return; }
+                            setWmLoading(true);
+                            const authData = localStorage.getItem('pixelsqueeze-auth');
+                            const token = authData ? JSON.parse(authData).state.token : '';
+                            const form = new FormData();
+                            form.append('image', wmImage);
+                            form.append('watermark', wmFile);
+                            form.append('position', wmPosition);
+                            form.append('style', wmStyle);
+                            form.append('opacity', String(wmOpacity));
+                            form.append('size', String(wmSize));
+                            form.append('margin', String(wmMargin));
+                            const res = await fetch(buildApiUrl('/api/advanced/watermark'), { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: form });
+                            const data = await res.json();
+                            if (!data.success) throw new Error(data.error || 'Failed');
+                            setWmSavedUrl(data.data?.url || null);
+                            setWmResultUrl(null);
+                            toast.success('Watermark saved');
+                          } catch (e: any) { toast.error(e.message || 'Failed'); } finally { setWmLoading(false); }
+                        }}>Apply & Save</Button>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-lg p-4 border">
+                      <h4 className="font-medium text-gray-900 mb-3">Text watermark</h4>
+                      <div className="grid md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Image</label>
+                          <input type="file" accept="image/*" onChange={(e) => setTwImage(e.target.files?.[0] || null)} />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Watermark text</label>
+                          <input className="w-full border rounded px-3 py-2" value={twText} onChange={(e) => setTwText(e.target.value)} />
+                        </div>
+                      </div>
+                      <div className="grid md:grid-cols-5 gap-3 mt-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Position</label>
+                          <select value={twPosition} onChange={(e) => setTwPosition(e.target.value)} className="w-full border rounded px-2 py-1">{positions.map(p=> <option key={p}>{p}</option>)}</select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Style</label>
+                          <select value={twStyle} onChange={(e) => setTwStyle(e.target.value as any)} className="w-full border rounded px-2 py-1">
+                            <option value="single">Single</option>
+                            <option value="tiled">Tiled</option>
+                            <option value="diagonal">Diagonal</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Opacity ({Math.round(twOpacity*100)}%)</label>
+                          <input type="range" min="0.1" max="1" step="0.05" value={twOpacity} onChange={(e) => setTwOpacity(parseFloat(e.target.value))} className="w-full" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Size ({Math.round(twSize*100)}%)</label>
+                          <input type="range" min="0.05" max="0.5" step="0.05" value={twSize} onChange={(e) => setTwSize(parseFloat(e.target.value))} className="w-full" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Margin ({twMargin}px)</label>
+                          <input type="range" min="0" max="100" step="2" value={twMargin} onChange={(e) => setTwMargin(parseInt(e.target.value))} className="w-full" />
+                        </div>
+                      </div>
+                      <div className="grid md:grid-cols-3 gap-3 mt-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Color</label>
+                          <input type="color" value={twColor} onChange={(e)=> setTwColor(e.target.value)} />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700">Font size</label>
+                          <input type="number" className="w-full border rounded px-2 py-1" value={twFontSize} onChange={(e)=> setTwFontSize(parseInt(e.target.value)||48)} />
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <Button variant="primary" loading={twLoading} onClick={async () => {
+                          try {
+                            if (!twImage) { toast.error('Select image'); return; }
+                            setTwLoading(true);
+                            const authData = localStorage.getItem('pixelsqueeze-auth');
+                            const token = authData ? JSON.parse(authData).state.token : '';
+                            const form = new FormData();
+                            form.append('image', twImage);
+                            form.append('text', twText);
+                            form.append('position', twPosition);
+                            form.append('style', twStyle);
+                            form.append('opacity', String(twOpacity));
+                            form.append('size', String(twSize));
+                            form.append('margin', String(twMargin));
+                            form.append('color', twColor);
+                            form.append('fontSize', String(twFontSize));
+                            const res = await fetch(buildApiUrl('/api/advanced/watermark-text'), { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: form });
+                            const data = await res.json();
+                            if (!data.success) throw new Error(data.error || 'Failed');
+                            setTwSavedUrl(data.data?.url || null);
+                            setTwResultUrl(null);
+                            toast.success('Text watermark saved');
+                          } catch (e: any) { toast.error(e.message || 'Failed'); } finally { setTwLoading(false); }
+                        }}>Apply & Save</Button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="md:col-span-1">
-                    <label className="block text-sm font-medium text-gray-700">Style</label>
-                    <select value={wmStyle} onChange={(e) => setWmStyle(e.target.value as any)} className="w-full border rounded px-2 py-1">
-                      <option value="single">Single</option>
-                      <option value="tiled">Tiled</option>
-                      <option value="diagonal">Diagonal</option>
-                    </select>
-                  </div>
-                  <div className="md:col-span-1">
-                    <label className="block text-sm font-medium text-gray-700">Opacity ({Math.round(wmOpacity*100)}%)</label>
-                    <input type="range" min="0.1" max="1" step="0.05" value={wmOpacity} onChange={(e) => setWmOpacity(parseFloat(e.target.value))} className="w-full" />
-                  </div>
-                  <div className="md:col-span-1">
-                    <label className="block text-sm font-medium text-gray-700">Size ({Math.round(wmSize*100)}%)</label>
-                    <input type="range" min="0.05" max="0.5" step="0.05" value={wmSize} onChange={(e) => setWmSize(parseFloat(e.target.value))} className="w-full" />
-                  </div>
-                  <div className="md:col-span-1">
-                    <label className="block text-sm font-medium text-gray-700">Margin ({wmMargin}px)</label>
-                    <input type="range" min="0" max="100" step="2" value={wmMargin} onChange={(e) => setWmMargin(parseInt(e.target.value))} className="w-full" />
+
+                  {/* Right: Preview */}
+                  <div className="bg-gray-50 rounded-lg p-4 border">
+                    <h4 className="font-medium text-gray-900 mb-3">Preview</h4>
+                    <div className="aspect-video bg-white rounded-lg border flex items-center justify-center text-gray-400">
+                      <span>Preview will appear after applying. Saved URLs will show below.</span>
+                    </div>
+                    {wmSavedUrl && (
+                      <div className="mt-3">
+                        <p className="text-sm text-gray-600">Image watermark URL:</p>
+                        <a className="text-blue-600 underline break-all" href={wmSavedUrl} target="_blank" rel="noreferrer">{wmSavedUrl}</a>
+                      </div>
+                    )}
+                    {twSavedUrl && (
+                      <div className="mt-3">
+                        <p className="text-sm text-gray-600">Text watermark URL:</p>
+                        <a className="text-blue-600 underline break-all" href={twSavedUrl} target="_blank" rel="noreferrer">{twSavedUrl}</a>
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                <div>
-                  <Button
-                    variant="primary"
-                    loading={wmLoading}
-                    onClick={async () => {
-                      try {
-                        if (!wmImage || !wmFile) {
-                          toast.error('Select image and watermark');
-                          return;
-                        }
-                        setWmLoading(true);
-                        const authData = localStorage.getItem('pixelsqueeze-auth');
-                        const token = authData ? JSON.parse(authData).state.token : '';
-                        if (!token) throw new Error('No authentication token');
-                        const form = new FormData();
-                        form.append('image', wmImage);
-                        form.append('watermark', wmFile);
-                        form.append('position', wmPosition);
-                        form.append('style', wmStyle);
-                        form.append('opacity', String(wmOpacity));
-                        form.append('size', String(wmSize));
-                        form.append('margin', String(wmMargin));
-                        const res = await fetch(buildApiUrl('/api/advanced/watermark'), {
-                          method: 'POST',
-                          headers: { 'Authorization': `Bearer ${token}` },
-                          body: form,
-                        });
-                        if (!res.ok) throw new Error('Failed to add watermark');
-                        const data = await res.json();
-                        setWmSavedUrl(data.data?.url || null);
-                        setWmResultUrl(null);
-                        toast.success('Watermark added');
-                      } catch (e) {
-                        console.error(e);
-                        toast.error('Failed to add watermark');
-                      } finally {
-                        setWmLoading(false);
-                      }
-                    }}
-                  >
-                    Add Watermark
-                  </Button>
-                </div>
-
-                {wmSavedUrl && (
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-600">Saved watermarked image:</p>
-                    <a className="text-blue-600 underline break-all" href={wmSavedUrl} target="_blank" rel="noreferrer">{wmSavedUrl}</a>
-                  </div>
-                )}
               </div>
             )}
 

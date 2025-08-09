@@ -374,6 +374,89 @@ class AdvancedImageProcessor {
     };
   }
 
+  async addTextWatermark(file, watermarkOptions = {}) {
+    const {
+      text = 'PixelSqueeze',
+      position = 'bottom-right',
+      opacity = 0.7,
+      size = 0.15, // fraction of image width that text box should roughly occupy
+      margin = 20,
+      style = 'single', // single | tiled | diagonal
+      color = '#ffffff',
+      fontSize = 48,
+      fontFamily = 'sans-serif'
+    } = watermarkOptions;
+
+    const image = sharp(file.buffer);
+    const imageMetadata = await image.metadata();
+    const imgW = imageMetadata.width || 0;
+    const imgH = imageMetadata.height || 0;
+
+    // Estimate text box width from fontSize and text length
+    const estTextWidth = Math.max(50, Math.min(imgW, Math.round((imgW * size))));
+    const estTextHeight = Math.round(fontSize * 1.4);
+
+    const svg = (w, h) => Buffer.from(
+      `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+        <style>
+          .tw { font-family: ${fontFamily}; font-size: ${fontSize}px; fill: ${color}; fill-opacity: ${opacity}; dominant-baseline: middle; }
+        </style>
+        <text x="50%" y="50%" text-anchor="middle" class="tw">${text.replace(/&/g, '&amp;')}</text>
+      </svg>`
+    );
+
+    // Base single watermark buffer
+    const singleBuffer = await sharp(svg(estTextWidth, estTextHeight)).png().toBuffer();
+
+    if (style === 'single') {
+      const pos = this.calculateWatermarkPosition(imgW, imgH, estTextWidth, estTextHeight, position, margin);
+      const out = await image.composite([{ input: singleBuffer, left: pos.x, top: pos.y, blend: 'over' }]).png().toBuffer();
+      return {
+        id: uuidv4(),
+        originalName: file.originalname,
+        originalSize: file.buffer.length,
+        watermarkedSize: out.length,
+        watermarkStyle: style,
+        buffer: out
+      };
+    }
+
+    // Build pattern for tiled / diagonal
+    const composites = [];
+    const step = Math.round(Math.max(estTextWidth, estTextHeight) + margin);
+
+    if (style === 'tiled') {
+      for (let y = margin; y < imgH; y += step) {
+        for (let x = margin; x < imgW; x += step) {
+          composites.push({ input: singleBuffer, left: x, top: y, blend: 'over' });
+        }
+      }
+    } else if (style === 'diagonal') {
+      let row = 0;
+      for (let y = margin; y < imgH; y += step, row++) {
+        for (let x = margin + (row % 2 === 0 ? 0 : Math.floor(step / 2)); x < imgW; x += step) {
+          composites.push({ input: singleBuffer, left: x, top: y, blend: 'over' });
+        }
+      }
+    }
+
+    const pattern = await sharp({ create: { width: imgW, height: imgH, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+      .png()
+      .composite(composites)
+      .png()
+      .toBuffer();
+
+    const final = await image.composite([{ input: pattern, blend: 'over' }]).png().toBuffer();
+    return {
+      id: uuidv4(),
+      originalName: file.originalname,
+      originalSize: file.buffer.length,
+      watermarkedSize: final.length,
+      watermarkStyle: style,
+      buffer: final
+    };
+  }
+
   // Create custom optimization presets
   createPreset(name, options) {
     const presets = {
