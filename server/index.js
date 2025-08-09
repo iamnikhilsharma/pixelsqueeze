@@ -12,33 +12,50 @@ const webhookRoutes = require('./routes/webhooks');
 const adminRoutes = require('./routes/admin');
 const advancedImageRoutes = require('./routes/advancedImage');
 const storageService = require('./services/storageService');
+const sentry = require('./services/sentry');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { logger } = require('./utils/logger');
-const { startCleanupJob } = require('./services/cleanupJob');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Trust proxy (Render/other hosts sit behind a proxy). Needed for rate limiter to read X-Forwarded-For
+// Trust proxy
 app.set('trust proxy', 1);
+
+// Sentry request handler (if configured)
+if (sentry.requestHandler) {
+  app.use(sentry.requestHandler);
+}
 
 // Security middleware
 app.use(helmet());
+
+// CORS with multi-origin and wildcard support
+function buildCorsOrigin() {
+  const raw = process.env.CORS_ORIGIN || 'http://localhost:3000';
+  const list = raw.split(',').map(s => s.trim()).filter(Boolean);
+  const patterns = list.map(item => {
+    if (item.includes('*')) {
+      // Convert wildcard to regex
+      const escaped = item.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+      return new RegExp(`^${escaped}$`);
+    }
+    return item;
+  });
+
+  return function(origin, callback) {
+    if (!origin) return callback(null, true); // allow non-browser tools
+    const allowed = patterns.some(p => (p instanceof RegExp ? p.test(origin) : p === origin));
+    if (allowed) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  };
+}
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: buildCorsOrigin(),
   credentials: true
 }));
-
-// Start background jobs
-afterInit();
-function afterInit() {
-  try {
-    startCleanupJob();
-  } catch (err) {
-    logger.error('Failed to start cleanup job:', err);
-  }
-}
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -46,85 +63,54 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.API_RATE_LIMIT_WINDOW) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.API_RATE_LIMIT) || 100, // limit each IP to 100 requests per windowMs
-  message: {
-    error: 'Too many requests from this IP, please try again later.'
-  },
+  windowMs: parseInt(process.env.API_RATE_LIMIT_WINDOW) || 15 * 60 * 1000,
+  max: parseInt(process.env.API_RATE_LIMIT) || 100,
+  message: { error: 'Too many requests from this IP, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
-
 app.use('/api/', limiter);
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => {
-  logger.info('Connected to MongoDB');
-})
-.catch((error) => {
-  logger.error('MongoDB connection error:', error);
-  process.exit(1);
-});
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+.then(() => { logger.info('Connected to MongoDB'); })
+.catch((error) => { logger.error('MongoDB connection error:', error); process.exit(1); });
 
-// Health check endpoint
+// Health check
 app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV
-  });
+  res.json({ status: 'OK', timestamp: new Date().toISOString(), uptime: process.uptime(), environment: process.env.NODE_ENV });
 });
 
-// Local storage static file serving
+// Static uploads
 app.use('/uploads', storageService.getStaticMiddleware());
 
-// API routes
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api', apiRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/advanced', advancedImageRoutes);
 
-// Frontend is deployed separately (e.g., Vercel). Do not serve client build here.
+// Sentry error handler (before our error handler)
+if (sentry.errorHandler) {
+  app.use(sentry.errorHandler);
+}
 
-// Error handling middleware
+// Error handling
 app.use(errorHandler);
 
-// 404 handler
+// 404
 app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Route not found',
-    path: req.originalUrl
-  });
+  res.status(404).json({ error: 'Route not found', path: req.originalUrl });
 });
 
-// Start server
 app.listen(PORT, () => {
   logger.info(`PixelSqueeze server running on port ${PORT}`);
   logger.info(`Environment: ${process.env.NODE_ENV}`);
   logger.info(`Local storage path: ${process.env.LOCAL_STORAGE_PATH || path.join(__dirname, '../uploads')}`);
 });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received, shutting down gracefully');
-  mongoose.connection.close(() => {
-    logger.info('MongoDB connection closed');
-    process.exit(0);
-  });
-});
-
-process.on('SIGINT', () => {
-  logger.info('SIGINT received, shutting down gracefully');
-  mongoose.connection.close(() => {
-    logger.info('MongoDB connection closed');
-    process.exit(0);
-  });
-});
+process.on('SIGTERM', () => { logger.info('SIGTERM received, shutting down gracefully'); mongoose.connection.close(() => { logger.info('MongoDB connection closed'); process.exit(0); }); });
+process.on('SIGINT', () => { logger.info('SIGINT received, shutting down gracefully'); mongoose.connection.close(() => { logger.info('MongoDB connection closed'); process.exit(0); }); });
 
 module.exports = app; 

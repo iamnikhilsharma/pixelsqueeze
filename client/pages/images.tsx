@@ -24,9 +24,21 @@ interface ImageData {
   format: string;
   dimensions?: string;
   createdAt: string;
+  expiresAt?: string;
   downloadUrl?: string;
   status: string;
 }
+
+const isExpired = (expiresAt?: string) => expiresAt ? new Date(expiresAt).getTime() < Date.now() : false;
+
+const formatCountdown = (expiresAt?: string) => {
+  if (!expiresAt) return '';
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (ms <= 0) return 'Expired';
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  return `${h}h ${m}m`;
+};
 
 export default function Images() {
   const { user, isAuthenticated } = useAuthStore();
@@ -75,6 +87,7 @@ export default function Images() {
           format: img.format,
           dimensions: img.dimensions,
           createdAt: img.createdAt,
+          expiresAt: img.expiresAt,
           downloadUrl: img.downloadUrl,
           status: img.status
         }));
@@ -447,10 +460,10 @@ export default function Images() {
                     </div>
                     <div className="flex items-center justify-between mt-2">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${image.status === 'completed' ? 'bg-green-100 text-green-700' : image.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                        {image.status}
+                        {isExpired(image.expiresAt) ? 'expired' : image.status}
                       </span>
                       {image.status === 'completed' && (
-                        <span className="text-xs text-gray-500">Expires soon</span>
+                        <span className="text-xs text-gray-500">{formatCountdown(image.expiresAt)}</span>
                       )}
                     </div>
                   </div>
@@ -471,7 +484,9 @@ export default function Images() {
                           <Button
                             variant="secondary"
                             size="sm"
+                            disabled={isExpired(image.expiresAt)}
                             onClick={() => {
+                              if (isExpired(image.expiresAt)) return;
                               const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
                               const cleanBaseUrl = baseUrl.replace(/\/$/, '');
                               const a = document.createElement('a');

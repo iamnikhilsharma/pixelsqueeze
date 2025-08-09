@@ -257,3 +257,12 @@ MIT License - see LICENSE file for details.
 - Email: support@pixelsqueeze.com
 - Documentation: https://docs.pixelsqueeze.com
 - API Status: https://status.pixelsqueeze.com 
+
+## CI/CD
+
+- GitHub Actions (example):
+  - Add a workflow (e.g., `.github/workflows/ci.yml`) that runs `npm ci`, `npm run build`, and lints/tests.
+  - Configure environment variables in GitHub secrets for any needed checks.
+- Auto-deploy:
+  - Render (server): connect repo, set start command `npm start`, set environment variables (including SMTP, SENTRY_DSN, CORS_ORIGIN), enable auto-deploy on push to `main`.
+  - Vercel (client): import `client/`, set `NEXT_PUBLIC_API_URL`, enable preview deployments, and production on `main`. 

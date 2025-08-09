@@ -531,7 +531,19 @@ router.get('/images',
       res.json({
         success: true,
         data: {
-          images,
+          images: images.map(img => ({
+            _id: img._id,
+            originalName: img.originalName,
+            originalSize: img.originalSize,
+            optimizedSize: img.optimizedSize,
+            compressionRatio: img.compressionRatio,
+            format: img.optimizedFormat || img.format,
+            dimensions: img.dimensions,
+            createdAt: img.createdAt,
+            expiresAt: img.expiresAt,
+            downloadUrl: img.downloadUrl,
+            status: img.status
+          })),
           pagination: {
             page: parseInt(page),
             limit: parseInt(limit),
@@ -543,11 +555,7 @@ router.get('/images',
 
     } catch (error) {
       logger.error('Images retrieval error:', error);
-      res.status(500).json({
-        error: 'Failed to retrieve images',
-        code: 'IMAGES_ERROR',
-        details: error.message
-      });
+      res.status(500).json({ error: 'Failed to retrieve images', code: 'IMAGES_ERROR', details: error.message });
     }
   })
 );
