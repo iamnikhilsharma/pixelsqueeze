@@ -1,13 +1,15 @@
 # Multi-stage build for PixelSqueeze Backend
 FROM node:18-alpine AS base
 
-# Install dependencies for native modules and healthcheck
+# Install dependencies for native modules, fonts, and healthcheck
 RUN apk add --no-cache \
     python3 \
     make \
     g++ \
     libc6-compat \
-    curl
+    curl \
+    fontconfig \
+    ttf-dejavu
 
 # Set working directory
 WORKDIR /app

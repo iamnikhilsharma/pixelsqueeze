@@ -399,9 +399,9 @@ class AdvancedImageProcessor {
     const svg = (w, h) => Buffer.from(
       `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
         <style>
-          .tw { font-family: ${fontFamily}; font-size: ${fontSize}px; fill: ${color}; fill-opacity: ${opacity}; dominant-baseline: middle; }
+          .tw { font-family: ${fontFamily}, 'DejaVu Sans', sans-serif; font-size: ${fontSize}px; fill: ${color}; fill-opacity: ${opacity}; dominant-baseline: middle; paint-order: stroke fill; }
         </style>
-        <text x="50%" y="50%" text-anchor="middle" class="tw">${text.replace(/&/g, '&amp;')}</text>
+        <text x="50%" y="50%" text-anchor="middle" class="tw">${String(text).replace(/&/g, '&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</text>
       </svg>`
     );
 
