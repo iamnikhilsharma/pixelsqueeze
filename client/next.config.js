@@ -52,17 +52,6 @@ const nextConfig = {
       },
     ];
   },
-
-  // Redirects
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/dashboard',
-        permanent: false,
-      },
-    ];
-  },
 };
 
 module.exports = nextConfig; 

@@ -17,7 +17,7 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { user, logout } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: ChartBarIcon },
@@ -36,7 +36,7 @@ export function Layout({ children }: LayoutProps) {
             {/* Logo */}
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <a href="/dashboard" className="flex items-center space-x-2">
+                <a href="/" className="flex items-center space-x-2">
                   <img src="/icon.svg" alt="PixelSqueeze" className="h-8 w-8" />
                   <h1 className="text-xl font-bold text-gray-900">
                     PixelSqueeze
@@ -46,17 +46,19 @@ export function Layout({ children }: LayoutProps) {
             </div>
 
             {/* Navigation */}
-            <nav className="hidden md:flex space-x-8">
-              {navigation.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  {item.name}
-                </a>
-              ))}
-            </nav>
+            {isAuthenticated && (
+              <nav className="hidden md:flex space-x-8">
+                {navigation.map((item) => (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    {item.name}
+                  </a>
+                ))}
+              </nav>
+            )}
 
             {/* User menu */}
             <div className="flex items-center space-x-4">
@@ -83,19 +85,21 @@ export function Layout({ children }: LayoutProps) {
       </header>
 
       {/* Mobile navigation */}
-      <div className="md:hidden bg-white border-b border-gray-200">
-        <div className="px-2 pt-2 pb-3 space-y-1">
-          {navigation.map((item) => (
-            <a
-              key={item.name}
-              href={item.href}
-              className="text-gray-500 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
-            >
-              {item.name}
-            </a>
-          ))}
+      {isAuthenticated && (
+        <div className="md:hidden bg-white border-b border-gray-200">
+          <div className="px-2 pt-2 pb-3 space-y-1">
+            {navigation.map((item) => (
+              <a
+                key={item.name}
+                href={item.href}
+                className="text-gray-500 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
+              >
+                {item.name}
+              </a>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Main content */}
       <main className="flex-1">
