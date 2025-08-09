@@ -9,7 +9,7 @@ import {
   ShieldCheckIcon,
   StarIcon
 } from '@heroicons/react/24/outline';
-import { Layout } from '@/components/Layout';
+import Layout from '@/components/Layout';
 import { Button } from '@/components/Button';
 import { useAuthStore } from '@/store/authStore';
 import { formatBytes, formatNumber, buildApiUrl } from '@/utils/formatters';
