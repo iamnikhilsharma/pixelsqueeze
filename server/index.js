@@ -15,6 +15,7 @@ const storageService = require('./services/storageService');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { logger } = require('./utils/logger');
+const { startCleanupJob } = require('./services/cleanupJob');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,6 +29,16 @@ app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   credentials: true
 }));
+
+// Start background jobs
+afterInit();
+function afterInit() {
+  try {
+    startCleanupJob();
+  } catch (err) {
+    logger.error('Failed to start cleanup job:', err);
+  }
+}
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));

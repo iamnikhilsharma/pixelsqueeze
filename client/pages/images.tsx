@@ -389,6 +389,14 @@ export default function Images() {
                         <span>{formatDate(new Date(image.createdAt))}</span>
                       </div>
                     </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${image.status === 'completed' ? 'bg-green-100 text-green-700' : image.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        {image.status}
+                      </span>
+                      {image.status === 'completed' && (
+                        <span className="text-xs text-gray-500">Expires soon</span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Actions */}
