@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const stripeService = require('../services/stripeService');
 const { authenticateToken } = require('../middleware/auth');
+const razorpayService = require('../services/razorpayService');
 
 // Get subscription plans
 router.get('/plans', authenticateToken, async (req, res) => {
@@ -468,6 +469,43 @@ router.get('/customer', authenticateToken, async (req, res) => {
       success: false,
       error: error.message || 'Failed to get customer'
     });
+  }
+});
+
+// Create Razorpay order
+router.post('/razorpay/create-order', authenticateToken, async (req, res) => {
+  try {
+    const { plan = 'starter' } = req.body || {};
+    const planAmountMap = { starter: 900, pro: 2900, enterprise: 9900 }; // INR (in rupees)
+    const amountInPaise = (planAmountMap[plan] || 900) * 100;
+
+    const order = await razorpayService.createOrder(amountInPaise, 'INR', `user_${req.user._id}_${plan}`);
+    res.json({ success: true, data: { order } });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message || 'Failed to create order' });
+  }
+});
+
+// Verify Razorpay payment
+router.post('/razorpay/verify', authenticateToken, async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan } = req.body;
+    const ok = razorpayService.verifySignature({
+      orderId: razorpay_order_id,
+      paymentId: razorpay_payment_id,
+      signature: razorpay_signature,
+    });
+
+    if (!ok) return res.status(400).json({ success: false, error: 'Invalid signature' });
+
+    // TODO: mark subscription active for user; simple stub
+    req.user.subscription.plan = plan || req.user.subscription.plan;
+    req.user.subscription.status = 'active';
+    await req.user.save();
+
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message || 'Verification failed' });
   }
 });
 
