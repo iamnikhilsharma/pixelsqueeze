@@ -19,6 +19,7 @@ export default function Register() {
     lastName: '',
     company: '',
   });
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,6 +34,11 @@ export default function Register() {
 
     if (formData.password.length < 6) {
       toast.error('Password must be at least 6 characters long');
+      return;
+    }
+
+    if (!agreeTerms) {
+      toast.error('You must agree to the Terms and Privacy Policy');
       return;
     }
 
@@ -205,7 +211,8 @@ export default function Register() {
               id="agree-terms"
               name="agree-terms"
               type="checkbox"
-              required
+              checked={agreeTerms}
+              onChange={(e) => setAgreeTerms(e.target.checked)}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label htmlFor="agree-terms" className="ml-2 block text-sm text-gray-900">
