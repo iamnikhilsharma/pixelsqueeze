@@ -645,6 +645,33 @@ router.post('/images/:id/extend-expiry',
 );
 
 /**
+ * POST /api/images/extend-expiry
+ * Bulk extend expiry for a list of image IDs (default +24h)
+ */
+router.post('/images/extend-expiry',
+  authenticateToken,
+  asyncHandler(async (req, res) => {
+    const { imageIds = [], hours = 24 } = req.body || {};
+    if (!Array.isArray(imageIds) || imageIds.length === 0) {
+      return res.status(400).json({ error: 'imageIds array is required' });
+    }
+
+    try {
+      const images = await Image.find({ _id: { $in: imageIds }, user: req.user._id });
+      const extended = [];
+      for (const img of images) {
+        await img.extendExpiration(parseInt(hours) || 24);
+        extended.push({ id: img._id, expiresAt: img.expiresAt });
+      }
+      return res.json({ success: true, data: { extended } });
+    } catch (error) {
+      logger.error('Bulk extend expiry error:', error);
+      res.status(500).json({ error: 'Failed to extend expiry' });
+    }
+  })
+);
+
+/**
  * POST /api/download-batch
  * Download multiple images as ZIP
  */

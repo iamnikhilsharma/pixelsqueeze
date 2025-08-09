@@ -209,6 +209,12 @@ export default function Images() {
     }
   };
 
+  const getExpiryCountdown = (createdAt: string) => {
+    // With current model, expires is 24h from creation unless extended; we don't have expiresAt here yet.
+    // If backend returns expiresAt later, this can be replaced. For now, show placeholder.
+    return '';
+  };
+
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -316,26 +322,51 @@ export default function Images() {
               </div>
 
               {/* Bulk Actions */}
-              {selectedImages.length > 0 && (
-                <div className="flex space-x-2">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={handleDownloadSelected}
-                  >
-                    <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
-                    Download ({selectedImages.length})
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDeleteSelected}
-                  >
-                    <TrashIcon className="h-4 w-4 mr-2" />
-                    Delete
-                  </Button>
-                </div>
-              )}
+                  {selectedImages.length > 0 && (
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={handleDownloadSelected}
+                      >
+                        <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
+                        Download ({selectedImages.length})
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDeleteSelected}
+                      >
+                        <TrashIcon className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            const authData = localStorage.getItem('pixelsqueeze-auth');
+                            const token = authData ? JSON.parse(authData).state.token : '';
+                            if (!token) throw new Error('No authentication token');
+                            const res = await fetch(buildApiUrl('/api/images/extend-expiry'), {
+                              method: 'POST',
+                              headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                              },
+                              body: JSON.stringify({ imageIds: selectedImages, hours: 24 })
+                            });
+                            if (!res.ok) throw new Error('Failed to extend');
+                            toast.success('Extended expiry for selected');
+                          } catch (e) {
+                            toast.error('Failed to extend expiry');
+                          }
+                        }}
+                      >
+                        Extend 24h
+                      </Button>
+                    </div>
+                  )}
             </div>
           </div>
         </motion.div>
