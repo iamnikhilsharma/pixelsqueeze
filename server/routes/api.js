@@ -76,13 +76,16 @@ router.post('/optimize',
       const contentType = `image/${result.format === 'jpeg' ? 'jpeg' : result.format}`;
       const uploadResult = await storageService.uploadFile(
         result.buffer,
-        s3Key,
+        filename,
         contentType,
         { isPublic: false }
       );
 
+      // Use actual stored key
+      const storageKey = uploadResult.key;
+
       // Generate download URL
-      const downloadUrl = await storageService.generateDownloadUrl(s3Key, 24 * 60 * 60); // 24 hours
+      const downloadUrl = await storageService.generateDownloadUrl(storageKey, 24 * 60 * 60); // 24 hours
 
       // Calculate expiration time
       const expiresAt = new Date(Date.now() + parseInt(process.env.FILE_RETENTION_HOURS || 24) * 60 * 60 * 1000);
@@ -99,10 +102,8 @@ router.post('/optimize',
         quality: parseInt(quality),
         dimensions: result.dimensions,
         storage: {
-          originalKey: null, // We don't store original
-          optimizedKey: s3Key,
-          bucket: uploadResult.bucket,
-          region: process.env.AWS_REGION
+          originalKey: null,
+          optimizedKey: storageKey,
         },
         downloadUrl,
         expiresAt,
@@ -207,15 +208,17 @@ router.post('/optimize-multiple',
 
           // Upload optimized image to S3
           const contentType = `image/${result.format === 'jpeg' ? 'jpeg' : result.format}`;
-          await storageService.uploadFile(
+          const uploadResult = await storageService.uploadFile(
             result.buffer,
-            s3Key,
+            filename,
             contentType,
             { isPublic: false }
           );
 
+          const storageKey = uploadResult.key;
+
           // Generate download URL
-          const downloadUrl = await storageService.generateDownloadUrl(s3Key, 24 * 60 * 60);
+          const downloadUrl = await storageService.generateDownloadUrl(storageKey, 24 * 60 * 60);
 
           // Calculate expiration time
           const expiresAt = new Date(Date.now() + parseInt(process.env.FILE_RETENTION_HOURS || 24) * 60 * 60 * 1000);
@@ -232,9 +235,7 @@ router.post('/optimize-multiple',
             quality: parseInt(quality),
             dimensions: result.dimensions,
             storage: {
-              optimizedKey: s3Key,
-              bucket: process.env.AWS_S3_BUCKET,
-              region: process.env.AWS_REGION
+              optimizedKey: storageKey,
             },
             downloadUrl,
             expiresAt,
@@ -347,15 +348,17 @@ router.post('/optimize-url',
 
       // Upload optimized image to S3
       const uploadContentType = `image/${result.format === 'jpeg' ? 'jpeg' : result.format}`;
-      await storageService.uploadFile(
+      const uploadResult = await storageService.uploadFile(
         result.buffer,
-        s3Key,
+        filename,
         uploadContentType,
         { isPublic: false }
       );
 
+      const storageKey = uploadResult.key;
+
       // Generate download URL
-      const downloadUrl = await storageService.generateDownloadUrl(s3Key, 24 * 60 * 60);
+      const downloadUrl = await storageService.generateDownloadUrl(storageKey, 24 * 60 * 60);
 
       // Calculate expiration time
       const expiresAt = new Date(Date.now() + parseInt(process.env.FILE_RETENTION_HOURS || 24) * 60 * 60 * 1000);
@@ -372,9 +375,7 @@ router.post('/optimize-url',
         quality: parseInt(quality),
         dimensions: result.dimensions,
         storage: {
-          optimizedKey: s3Key,
-          bucket: process.env.AWS_S3_BUCKET,
-          region: process.env.AWS_REGION
+          optimizedKey: storageKey,
         },
         downloadUrl,
         expiresAt,
