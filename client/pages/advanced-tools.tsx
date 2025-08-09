@@ -179,11 +179,6 @@ export default function AdvancedTools() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, hasRehydrated]);
 
-  if (!hasRehydrated) return <div className="min-h-screen"/>;
-  if (!token) return null;
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center text-gray-500">Checking session...</div>;
-  if (!isAuthenticated) return null;
-
   const isPremiumUser = user?.subscription?.plan !== 'free';
 
   const canUseTool = (tool: Tool) => {
@@ -224,6 +219,14 @@ export default function AdvancedTools() {
 
   return (
     <Layout>
+      {/* Loading and authentication states */}
+      {!hasRehydrated && <div className="min-h-screen"/>}
+      {!token && null}
+      {isLoading && <div className="min-h-screen flex items-center justify-center text-gray-500">Checking session...</div>}
+      {!isAuthenticated && null}
+      
+      {/* Main content - only render when authenticated */}
+      {hasRehydrated && token && !isLoading && isAuthenticated && (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -440,7 +443,7 @@ export default function AdvancedTools() {
                           <input type="range" min="0.05" max="0.5" step="0.05" value={twSize} onChange={(e) => setTwSize(parseFloat(e.target.value))} className="w-full accent-indigo-600" />
                         </div>
                         <div>
-                          <label className="flex items-center justify-between text-sm font-medium text-gray-700"><span>Margin</span><span className="text-gray-500">{twMargin}px</span></label>
+                          <label className="flex items-center justify-between text-sm font-medium text-gray-700"><span>Margin</span><span className="text-gray-500">{Math.round(twMargin*100)}%</span></label>
                           <input type="range" min="0" max="100" step="2" value={twMargin} onChange={(e) => setTwMargin(parseInt(e.target.value))} className="w-full accent-indigo-600" />
                         </div>
                       </div>
@@ -657,6 +660,7 @@ export default function AdvancedTools() {
           </motion.div>
         )}
       </div>
+      )}
     </Layout>
   );
 } 
