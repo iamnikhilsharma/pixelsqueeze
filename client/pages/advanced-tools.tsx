@@ -167,6 +167,9 @@ export default function AdvancedTools() {
   const [twSavedUrl, setTwSavedUrl] = useState<string | null>(null);
   const [twLoading, setTwLoading] = useState(false);
 
+  // Watermark tab state
+  const [wmActiveTab, setWmActiveTab] = useState<'image'|'text'>('image');
+
   useEffect(() => {
     (async () => {
       if (!hasRehydrated) return;
@@ -191,7 +194,7 @@ export default function AdvancedTools() {
 
   const getToolStatus = (tool: Tool) => {
     if (tool.status === 'available') return 'Available';
-    if (tool.status === 'premium' && isPremiumUser) return 'Available';
+    if (tool.status === 'premium' && isPremiumUser) return 'Premium Only';
     if (tool.status === 'premium' && !isPremiumUser) return 'Premium Only';
     return 'Coming Soon';
   };
@@ -218,8 +221,6 @@ export default function AdvancedTools() {
     { label: 'BR', value: 'bottom-right' },
     { label: 'C', value: 'center' },
   ];
-
-  const [wmActiveTab, setWmActiveTab] = useState<'image'|'text'>('image');
 
   return (
     <Layout>
