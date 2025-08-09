@@ -11,6 +11,7 @@ const apiRoutes = require('./routes/api');
 const webhookRoutes = require('./routes/webhooks');
 const adminRoutes = require('./routes/admin');
 const advancedImageRoutes = require('./routes/advancedImage');
+const billingRoutes = require('./routes/billing');
 const storageService = require('./services/storageService');
 const sentry = require('./services/sentry');
 
@@ -37,7 +38,6 @@ function buildCorsOrigin() {
   const list = raw.split(',').map(s => s.trim()).filter(Boolean);
   const patterns = list.map(item => {
     if (item.includes('*')) {
-      // Convert wildcard to regex
       const escaped = item.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
       return new RegExp(`^${escaped}$`);
     }
@@ -45,17 +45,14 @@ function buildCorsOrigin() {
   });
 
   return function(origin, callback) {
-    if (!origin) return callback(null, true); // allow non-browser tools
+    if (!origin) return callback(null, true);
     const allowed = patterns.some(p => (p instanceof RegExp ? p.test(origin) : p === origin));
     if (allowed) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
   };
 }
 
-app.use(cors({
-  origin: buildCorsOrigin(),
-  credentials: true
-}));
+app.use(cors({ origin: buildCorsOrigin(), credentials: true }));
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -90,6 +87,7 @@ app.use('/api', apiRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/advanced', advancedImageRoutes);
+app.use('/api/billing', billingRoutes);
 
 // Sentry error handler (before our error handler)
 if (sentry.errorHandler) {
