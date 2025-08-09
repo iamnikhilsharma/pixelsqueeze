@@ -221,22 +221,11 @@ router.post('/add-watermark', authenticateToken, upload.fields([
 
     const result = await advancedImageProcessor.addWatermark(req.files.image[0], watermarkOptions);
 
-    // Save the watermarked image
-    const fileName = `watermarked_${result.id}.png`;
-    const filePath = path.join(__dirname, '../../uploads', fileName);
-    
-    await fs.writeFile(filePath, result.buffer);
-    
     // Clean up temporary watermark
     await fs.unlink(watermarkPath);
-    
-    result.downloadUrl = `/uploads/${fileName}`;
 
-    res.json({
-      success: true,
-      data: result
-    });
-
+    res.setHeader('Content-Type', 'image/png');
+    return res.send(Buffer.from(result.buffer));
   } catch (error) {
     console.error('Watermark error:', error);
     res.status(500).json({ error: 'Failed to add watermark', details: error.message });

@@ -233,31 +233,46 @@ class AdvancedImageProcessor {
     } = watermarkOptions;
 
     try {
-      if (!watermarkPath || !fs.existsSync(watermarkPath)) {
-        throw new Error('Watermark file not found');
+      if (!watermarkPath) {
+        throw new Error('Watermark file not provided');
       }
 
       const image = sharp(file.buffer);
-      const watermark = sharp(watermarkPath);
+      const watermark = sharp(watermarkPath).ensureAlpha();
       
       // Get image dimensions
       const imageMetadata = await image.metadata();
       const watermarkMetadata = await watermark.metadata();
       
       // Calculate watermark size
-      const watermarkWidth = Math.round(imageMetadata.width * size);
-      const watermarkHeight = Math.round((watermarkWidth * watermarkMetadata.height) / watermarkMetadata.width);
+      const watermarkWidth = Math.round((imageMetadata.width || 0) * size);
+      const watermarkHeight = Math.round((watermarkWidth * (watermarkMetadata.height || 1)) / (watermarkMetadata.width || 1));
       
-      // Resize watermark
-      const resizedWatermark = await watermark
+      // Resize watermark and apply opacity by multiplying alpha channel
+      const resized = await watermark
         .resize(watermarkWidth, watermarkHeight)
+        .png()
+        .toBuffer();
+
+      // Create an alpha overlay for opacity control
+      const alphaOverlay = await sharp({
+        create: {
+          width: watermarkWidth,
+          height: watermarkHeight,
+          channels: 4,
+          background: { r: 255, g: 255, b: 255, alpha: opacity }
+        }
+      }).png().toBuffer();
+
+      const resizedWatermark = await sharp(resized)
+        .composite([{ input: alphaOverlay, blend: 'dest-in' }])
         .png()
         .toBuffer();
 
       // Calculate position
       const positionCoords = this.calculateWatermarkPosition(
-        imageMetadata.width,
-        imageMetadata.height,
+        imageMetadata.width || 0,
+        imageMetadata.height || 0,
         watermarkWidth,
         watermarkHeight,
         position,
