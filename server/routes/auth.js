@@ -8,6 +8,7 @@ const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/errorHandler');
 const User = require('../models/User');
 const { logger } = require('../utils/logger');
+const { sendPasswordResetEmail } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -301,8 +302,13 @@ router.post('/forgot-password',
       // Generate password reset token
       await user.generatePasswordResetToken();
 
-      // TODO: Send password reset email
-      // For now, just return success
+      // Send password reset email (best effort)
+      try {
+        await sendPasswordResetEmail(user.email, user.passwordResetToken);
+      } catch (e) {
+        // Do not leak errors; log already handled in service
+      }
+
       logger.info(`Password reset requested for: ${email}`);
 
       res.json({

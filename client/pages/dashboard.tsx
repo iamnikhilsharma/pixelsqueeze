@@ -24,6 +24,7 @@ export default function Dashboard() {
   const [recentImages, setRecentImages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'upload' | 'stats' | 'images'>('upload');
+  const [retryCount, setRetryCount] = useState(0);
 
   // Check authentication on component mount
   useEffect(() => {
@@ -47,39 +48,32 @@ export default function Dashboard() {
       }
 
       try {
-        // Get auth token
         const authData = localStorage.getItem('pixelsqueeze-auth');
         const token = authData ? JSON.parse(authData).state.token : '';
-        
-        if (!token) {
-          throw new Error('No authentication token');
-        }
+        if (!token) throw new Error('No authentication token');
+        const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-        const headers = {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        };
+        const [statsRes, imagesRes] = await Promise.all([
+          fetch(buildApiUrl('/api/stats'), { headers }),
+          fetch(buildApiUrl('/api/images?limit=5'), { headers })
+        ]);
 
-        const statsRes = await fetch(buildApiUrl('/api/stats'), {
-          headers
-        });
-        if (!statsRes.ok) {
-          throw new Error('Failed to fetch stats');
-        }
+        if (!statsRes.ok) throw new Error('Failed to fetch stats');
+        if (!imagesRes.ok) throw new Error('Failed to fetch images');
+
         const statsData = await statsRes.json();
-        setStats(statsData.data);
-
-        const imagesRes = await fetch(buildApiUrl('/api/images?limit=5'), {
-          headers
-        });
-        if (!imagesRes.ok) {
-          throw new Error('Failed to fetch recent images');
-        }
         const imagesData = await imagesRes.json();
-        setRecentImages(imagesData.data.images || []);
+        setStats(statsData.data || {});
+        setRecentImages(imagesData.data?.images || []);
+        setRetryCount(0);
       } catch (error) {
-        toast.error('Failed to fetch data');
         console.error(error);
+        if (retryCount < 3) {
+          setRetryCount(retryCount + 1);
+          setTimeout(fetchData, (retryCount + 1) * 1000);
+        } else {
+          toast.error('Failed to fetch data');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -87,10 +81,28 @@ export default function Dashboard() {
 
     if (isAuthenticated) {
       fetchData();
-      const interval = setInterval(fetchData, 30000); // Refetch every 30 seconds
+      const interval = setInterval(fetchData, 30000);
       return () => clearInterval(interval);
     }
-  }, [isAuthenticated]); // Remove router from dependencies
+  }, [isAuthenticated, retryCount]);
+
+  // skeleton state
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-200 rounded w-1/3" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="h-24 bg-gray-200 rounded" />
+              <div className="h-24 bg-gray-200 rounded" />
+              <div className="h-24 bg-gray-200 rounded" />
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
