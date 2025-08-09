@@ -157,6 +157,12 @@ export default function AdvancedTools() {
 
   const isPremiumUser = user?.subscription?.plan !== 'free';
 
+  const canUseTool = (tool: Tool) => {
+    if (tool.status === 'available') return true;
+    if (tool.status === 'premium' && isPremiumUser) return true;
+    return false;
+  };
+
   const handleImagesProcessed = (results: any[]) => setProcessedResults(results);
 
   const positions = ['top-left','top-right','bottom-left','bottom-right','center'];
