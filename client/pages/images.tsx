@@ -50,7 +50,7 @@ const formatCountdown = (expiresAt?: string, nowMs?: number) => {
 
 export default function Images() {
   const router = useRouter();
-  const { user, token, isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { user, token, isAuthenticated, isLoading, checkAuth, hasRehydrated } = useAuthStore();
   const [images, setImages] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -63,6 +63,7 @@ export default function Images() {
 
   useEffect(() => {
     (async () => {
+      if (!hasRehydrated) return;
       if (!token) {
         router.replace('/login');
         return;
@@ -70,8 +71,9 @@ export default function Images() {
       await checkAuth();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, hasRehydrated]);
 
+  if (!hasRehydrated) return <div className="min-h-screen"/>;
   if (!token) return null;
   if (isLoading) return <div className="min-h-screen flex items-center justify-center text-gray-500">Checking session...</div>;
   if (!isAuthenticated) return null;

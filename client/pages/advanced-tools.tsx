@@ -112,7 +112,7 @@ const tools: Tool[] = [
 
 export default function AdvancedTools() {
   const router = useRouter();
-  const { user, token, isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { user, token, isAuthenticated, isLoading, checkAuth, hasRehydrated } = useAuthStore();
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [processedResults, setProcessedResults] = useState<any[]>([]);
   const [wmImage, setWmImage] = useState<File | null>(null);
@@ -128,6 +128,7 @@ export default function AdvancedTools() {
 
   useEffect(() => {
     (async () => {
+      if (!hasRehydrated) return;
       if (!token) {
         router.replace('/login');
         return;
@@ -135,8 +136,9 @@ export default function AdvancedTools() {
       await checkAuth();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, hasRehydrated]);
 
+  if (!hasRehydrated) return <div className="min-h-screen"/>;
   if (!token) return null;
   if (isLoading) return <div className="min-h-screen flex items-center justify-center text-gray-500">Checking session...</div>;
   if (!isAuthenticated) return null;

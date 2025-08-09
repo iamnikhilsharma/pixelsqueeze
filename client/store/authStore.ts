@@ -32,6 +32,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  hasRehydrated: boolean;
 }
 
 interface AuthActions {
@@ -62,6 +63,7 @@ export const useAuthStore = create<AuthStore>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      hasRehydrated: false,
 
       // Actions
       login: (userData: any, token: string) => {
@@ -73,7 +75,6 @@ export const useAuthStore = create<AuthStore>()(
           error: null,
         });
 
-        // Set auth header for future requests
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       },
 
@@ -93,81 +94,46 @@ export const useAuthStore = create<AuthStore>()(
             error: null,
           });
 
-          // Set auth header for future requests
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         } catch (error: any) {
           const errorMessage = error.response?.data?.error || 'Registration failed';
-          set({
-            isLoading: false,
-            error: errorMessage,
-          });
+          set({ isLoading: false, error: errorMessage });
           throw new Error(errorMessage);
         }
       },
 
       logout: () => {
-        // Clear auth header
         delete axios.defaults.headers.common['Authorization'];
-        
-        set({
-          user: null,
-          token: null,
-          isAuthenticated: false,
-          isLoading: false,
-          error: null,
-        });
+        set({ user: null, token: null, isAuthenticated: false, isLoading: false, error: null });
       },
 
       updateUser: (userData: Partial<User>) => {
         const currentUser = get().user;
         if (currentUser) {
-          set({
-            user: { ...currentUser, ...userData },
-          });
+          set({ user: { ...currentUser, ...userData } });
         }
       },
 
-      clearError: () => {
-        set({ error: null });
-      },
+      clearError: () => { set({ error: null }); },
 
       checkAuth: async () => {
         const { token, isAuthenticated } = get();
-        
         if (!token) {
           set({ isAuthenticated: false, isLoading: false });
           return;
         }
-
         set({ isLoading: true });
-
         try {
-          // Set auth header
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          
           const response = await axios.get(buildApiUrl('/api/auth/me'));
           const { user } = response.data.data;
-          
-          set({
-            user,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          });
+          set({ user, isAuthenticated: true, isLoading: false, error: null });
         } catch (error: any) {
           const status = error?.response?.status;
           if (status === 401 || status === 403) {
-            // Token invalid/expired: clear auth
             delete axios.defaults.headers.common['Authorization'];
-            set({
-              user: null,
-              token: null,
-              isAuthenticated: false,
-              isLoading: false,
-              error: null,
-            });
+            set({ user: null, token: null, isAuthenticated: false, isLoading: false, error: null });
           } else {
-            // Transient or network error: do not log out
             console.error('Auth check transient error:', error?.message || error);
             set({ isLoading: false, error: null, isAuthenticated });
           }
@@ -176,16 +142,20 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: 'pixelsqueeze-auth',
-      partialize: (state) => ({
-        user: state.user,
-        token: state.token,
-        isAuthenticated: state.isAuthenticated,
-      }),
-      onRehydrateStorage: () => (state) => {
-        // When state is rehydrated, ensure axios headers are set if we have a token
+      partialize: (state) => ({ user: state.user, token: state.token, isAuthenticated: state.isAuthenticated }),
+      onRehydrateStorage: () => (state, error) => {
         if (state?.token) {
           axios.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
+        } else {
+          delete axios.defaults.headers.common['Authorization'];
         }
+        // Mark rehydration complete
+        try {
+          // set may not be available here, so use a microtask to ensure store exists
+          Promise.resolve().then(() => {
+            useAuthStore.setState({ hasRehydrated: true });
+          });
+        } catch {}
       },
     }
   )
