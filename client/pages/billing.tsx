@@ -109,19 +109,23 @@ const plans = [
 
 export default function Billing() {
   const router = useRouter();
-  const { user, isAuthenticated, checkAuth } = useAuthStore();
+  const { user, token, isAuthenticated, isLoading, checkAuth } = useAuthStore();
   const [selectedPlan, setSelectedPlan] = useState(user?.subscription?.plan || 'free');
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     (async () => {
+      if (!token) {
+        router.replace('/login');
+        return;
+      }
       await checkAuth();
-      if (!isAuthenticated) router.replace('/login');
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [token]);
 
+  if (!token || isLoading) return null;
   if (!isAuthenticated) return null;
 
   const currentPlan = plans.find(plan => plan.id === user?.subscription?.plan) || plans[0];

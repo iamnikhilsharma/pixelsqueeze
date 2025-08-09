@@ -18,16 +18,20 @@ import { useRouter } from 'next/router';
 
 export default function Settings() {
   const router = useRouter();
-  const { user, isAuthenticated, checkAuth } = useAuthStore();
+  const { user, token, isAuthenticated, isLoading, checkAuth } = useAuthStore();
 
   useEffect(() => {
     (async () => {
+      if (!token) {
+        router.replace('/login');
+        return;
+      }
       await checkAuth();
-      if (!isAuthenticated) router.replace('/login');
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [token]);
 
+  if (!token || isLoading) return null;
   if (!isAuthenticated) return null;
 
   const [activeTab, setActiveTab] = useState('profile');

@@ -111,21 +111,23 @@ const tools: Tool[] = [
 
 export default function AdvancedTools() {
   const router = useRouter();
-  const { user, isAuthenticated, checkAuth } = useAuthStore();
+  const { user, token, isAuthenticated, isLoading, checkAuth } = useAuthStore();
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [processedResults, setProcessedResults] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
+      if (!token) {
+        router.replace('/login');
+        return;
+      }
       await checkAuth();
-      if (!isAuthenticated) router.replace('/login');
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [token]);
 
-  if (!isAuthenticated) {
-    return null;
-  }
+  if (!token || isLoading) return null;
+  if (!isAuthenticated) return null;
 
   const isPremiumUser = user?.subscription?.plan !== 'free';
 
