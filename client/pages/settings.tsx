@@ -18,7 +18,7 @@ import { useRouter } from 'next/router';
 
 export default function Settings() {
   const router = useRouter();
-  const { isAuthenticated, checkAuth } = useAuthStore();
+  const { user, isAuthenticated, checkAuth } = useAuthStore();
 
   useEffect(() => {
     (async () => {
