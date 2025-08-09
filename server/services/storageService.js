@@ -423,15 +423,27 @@ class LocalStorageService {
       // When mounted at '/uploads', req.path is relative to that mount
       const relativePath = req.path.replace(/^\/+/, '');
       const filePath = path.join(this.baseDir, relativePath);
-      
+
       try {
+        // Pre-flight for any odd embeds
+        if (req.method === 'OPTIONS') {
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+          res.setHeader('Access-Control-Allow-Headers', 'Origin, Range');
+          return res.status(204).end();
+        }
+
         // Check if file exists
         await fs.access(filePath);
-        
+
+        // CORS/CORP headers to allow <img src> from other origins (e.g., Vercel)
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+
         // Set appropriate headers
         res.setHeader('Cache-Control', 'public, max-age=3600');
         res.setHeader('Expires', new Date(Date.now() + 3600000).toUTCString());
-        
+
         // Serve the file
         res.sendFile(filePath);
       } catch (error) {
