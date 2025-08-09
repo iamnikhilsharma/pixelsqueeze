@@ -332,7 +332,8 @@ export default function AdvancedTools() {
                             const res = await fetch(buildApiUrl('/api/advanced/watermark'), { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: form });
                             const data = await res.json();
                             if (!data.success) throw new Error(data.error || 'Failed');
-                            setWmSavedUrl(data.data?.url || null);
+                            const savedUrl = data.data?.key ? buildApiUrl(`/uploads/${data.data.key}`) : (data.data?.url || null);
+                            setWmSavedUrl(savedUrl);
                             setWmResultUrl(null);
                             toast.success('Watermark saved');
                           } catch (e: any) { toast.error(e.message || 'Failed'); } finally { setWmLoading(false); }
@@ -408,7 +409,8 @@ export default function AdvancedTools() {
                             const res = await fetch(buildApiUrl('/api/advanced/watermark-text'), { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: form });
                             const data = await res.json();
                             if (!data.success) throw new Error(data.error || 'Failed');
-                            setTwSavedUrl(data.data?.url || null);
+                            const savedUrl = data.data?.key ? buildApiUrl(`/uploads/${data.data.key}`) : (data.data?.url || null);
+                            setTwSavedUrl(savedUrl);
                             setTwResultUrl(null);
                             toast.success('Text watermark saved');
                           } catch (e: any) { toast.error(e.message || 'Failed'); } finally { setTwLoading(false); }
