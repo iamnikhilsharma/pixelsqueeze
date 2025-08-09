@@ -1,12 +1,13 @@
 # Multi-stage build for PixelSqueeze Backend
 FROM node:18-alpine AS base
 
-# Install dependencies for native modules
+# Install dependencies for native modules and healthcheck
 RUN apk add --no-cache \
     python3 \
     make \
     g++ \
-    libc6-compat
+    libc6-compat \
+    curl
 
 # Set working directory
 WORKDIR /app
@@ -55,9 +56,9 @@ USER nodejs
 # Expose port
 EXPOSE 5000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:5000/health || exit 1
+# Health check (allow more startup time)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD curl -fsS http://localhost:5000/health || exit 1
 
 # Start production server
 CMD ["npm", "start"] 
