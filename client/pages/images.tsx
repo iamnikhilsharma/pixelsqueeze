@@ -502,16 +502,36 @@ export default function Images() {
                             variant="secondary"
                             size="sm"
                             disabled={isExpired(image.expiresAt)}
-                            onClick={() => {
+                            onClick={async () => {
                               if (isExpired(image.expiresAt)) return;
-                              const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-                              const cleanBaseUrl = baseUrl.replace(/\/$/, '');
-                              const a = document.createElement('a');
-                              a.href = `${cleanBaseUrl}/api/download/${image.id}`;
-                              a.download = `optimized_${image.originalName}`;
-                              document.body.appendChild(a);
-                              a.click();
-                              a.remove();
+                              try {
+                                const authData = localStorage.getItem('pixelsqueeze-auth');
+                                const token = authData ? JSON.parse(authData).state.token : '';
+                                if (!token) throw new Error('No authentication token');
+
+                                const res = await fetch(buildApiUrl(`/api/download/${image.id}`), {
+                                  method: 'GET',
+                                  headers: { 'Authorization': `Bearer ${token}` }
+                                });
+
+                                if (!res.ok) {
+                                  const errText = await res.text();
+                                  throw new Error(errText || 'Failed to download');
+                                }
+
+                                const blob = await res.blob();
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `optimized_${image.originalName}`;
+                                document.body.appendChild(a);
+                                a.click();
+                                a.remove();
+                                window.URL.revokeObjectURL(url);
+                              } catch (e) {
+                                console.error(e);
+                                toast.error('Download failed');
+                              }
                             }}
                           >
                             <ArrowDownTrayIcon className="h-4 w-4 mr-1" /> Download
