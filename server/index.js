@@ -19,6 +19,9 @@ const { logger } = require('./utils/logger');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy (Render/other hosts sit behind a proxy). Needed for rate limiter to read X-Forwarded-For
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 app.use(cors({
