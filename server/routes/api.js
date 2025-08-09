@@ -607,13 +607,27 @@ router.get('/download/:imageId',
       if (!image) return res.status(404).json({ error: 'Image not found' });
       if (image.isExpired) return res.status(410).json({ error: 'Image expired' });
 
-      const filename = image.storage?.optimizedKey;
-      if (!filename) return res.status(404).json({ error: 'File key missing' });
+      const key = image.storage?.optimizedKey;
+      if (!key) return res.status(404).json({ error: 'File key missing' });
 
-      const filePath = storageService.getOptimizedFilePath(filename);
-      try {
-        await fs.promises.access(filePath);
-      } catch {
+      // Try multiple candidate paths for backward compatibility
+      const candidates = [];
+      const baseKey = path.basename(key);
+      candidates.push(storageService.getOptimizedFilePath(baseKey));
+      candidates.push(path.join(storageService.baseDir, baseKey));
+      candidates.push(storageService.getOptimizedFilePath(key));
+      candidates.push(path.join(storageService.baseDir, key));
+
+      let filePath = null;
+      for (const candidate of candidates) {
+        try {
+          await fs.promises.access(candidate);
+          filePath = candidate;
+          break;
+        } catch {}
+      }
+
+      if (!filePath) {
         return res.status(404).json({ error: 'File not found' });
       }
 
