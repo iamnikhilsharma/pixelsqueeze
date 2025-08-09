@@ -31,6 +31,24 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
+
+      <section className="py-12 bg-primary-50/60">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-gray-900 text-center">FAQ</h2>
+          <div className="mt-6 divide-y divide-gray-200 rounded-xl border border-gray-200 bg-white">
+            {[
+              { q: 'Can I change plans anytime?', a: 'Yes, you can upgrade or downgrade at any time.'},
+              { q: 'Do you offer annual billing?', a: 'Contact support for annual discounts on Pro and Enterprise.'},
+              { q: 'What happens if I exceed limits?', a: 'We stop processing and notify you; upgrade to continue.'},
+            ].map((f) => (
+              <div key={f.q} className="p-6">
+                <div className="font-medium text-gray-900">{f.q}</div>
+                <div className="mt-1 text-gray-600 text-sm">{f.a}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </MarketingLayout>
   );
 }
