@@ -133,21 +133,46 @@ export default function Images() {
     );
   };
 
-  const handleDownloadSelected = () => {
-    selectedImages.forEach(imageId => {
-      const image = images.find(img => img.id === imageId);
-      if (image?.downloadUrl) {
-        const link = document.createElement('a');
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        const cleanBaseUrl = baseUrl.replace(/\/$/, '');
-        link.href = `${cleanBaseUrl}${image.downloadUrl}`;
-        link.download = `optimized_${image.originalName}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+  const handleDownloadSelected = async () => {
+    if (selectedImages.length === 0) return;
+
+    try {
+      const authData = localStorage.getItem('pixelsqueeze-auth');
+      const token = authData ? JSON.parse(authData).state.token : '';
+      if (!token) throw new Error('No authentication token');
+
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+
+      // Stream zip download directly
+      const formRes = await fetch(`${cleanBaseUrl}/api/download-batch`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ imageIds: selectedImages })
+      });
+
+      if (formRes.ok && formRes.headers.get('Content-Type')?.includes('application/zip')) {
+        const blob = await formRes.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'images.zip';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        toast.success('Downloading ZIP');
+      } else {
+        // Fallback: show message
+        toast.error('Failed to create ZIP');
       }
-    });
-    toast.success(`Downloading ${selectedImages.length} images...`);
+    } catch (error) {
+      console.error('Batch download error:', error);
+      toast.error('Failed to download');
+    }
   };
 
   const handleDeleteSelected = async () => {

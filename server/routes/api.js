@@ -4,7 +4,7 @@ const axios = require('axios');
 const archiver = require('archiver');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
-const fsPromises = require('fs/promises');
+const path = require('path');
 
 const { authenticateToken, checkUsageLimit, checkFileSize, checkFileType } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/errorHandler');
@@ -603,7 +603,7 @@ router.get('/download/:imageId',
 
       const filePath = storageService.getOptimizedFilePath(filename);
       try {
-        await fsPromises.access(filePath);
+        await fs.promises.access(filePath);
       } catch {
         return res.status(404).json({ error: 'File not found' });
       }
@@ -655,17 +655,11 @@ router.post('/download-batch',
     const user = req.user;
 
     if (!imageIds || !Array.isArray(imageIds) || imageIds.length === 0) {
-      return res.status(400).json({
-        error: 'Image IDs array is required',
-        code: 'NO_IMAGE_IDS'
-      });
+      return res.status(400).json({ error: 'Image IDs array is required', code: 'NO_IMAGE_IDS' });
     }
 
     if (imageIds.length > 50) {
-      return res.status(400).json({
-        error: 'Maximum 50 images allowed per batch download',
-        code: 'TOO_MANY_IMAGES'
-      });
+      return res.status(400).json({ error: 'Maximum 50 images allowed per batch download', code: 'TOO_MANY_IMAGES' });
     }
 
     try {
@@ -675,60 +669,45 @@ router.post('/download-batch',
         status: 'completed'
       });
 
-      if (images.length === 0) {
-        return res.status(404).json({
-          error: 'No valid images found',
-          code: 'NO_VALID_IMAGES'
-        });
+      // Filter out expired or missing files
+      const validImages = [];
+      for (const img of images) {
+        if (img.isExpired) continue;
+        const filename = img.storage?.optimizedKey;
+        if (!filename) continue;
+        const filePath = storageService.getOptimizedFilePath(filename);
+        try {
+          await fs.promises.access(filePath);
+          validImages.push({ img, filePath });
+        } catch {
+          logger.warn(`Batch zip: file missing ${filePath}`);
+        }
       }
-
-      // Filter out expired images
-      const validImages = images.filter(img => !img.isExpired);
 
       if (validImages.length === 0) {
-        return res.status(410).json({
-          error: 'All requested images have expired',
-          code: 'ALL_IMAGES_EXPIRED'
-        });
+        return res.status(404).json({ error: 'No valid images to download' });
       }
 
-      // Generate fresh download URLs
-      const downloadData = await Promise.all(
-        validImages.map(async (image) => {
-          const downloadUrl = await storageService.generateDownloadUrl(
-            image.storage.optimizedKey,
-            24 * 60 * 60
-          );
-          
-          await image.incrementDownload();
-          
-          return {
-            id: image._id,
-            originalName: image.originalName,
-            downloadUrl,
-            optimizedSize: image.optimizedSize,
-            format: image.optimizedFormat
-          };
-        })
-      );
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', 'attachment; filename="images.zip"');
 
-      res.json({
-        success: true,
-        data: {
-          totalRequested: imageIds.length,
-          validImages: validImages.length,
-          expiredImages: images.length - validImages.length,
-          downloads: downloadData
-        }
+      const archive = archiver('zip', { zlib: { level: 9 } });
+      archive.on('error', (err) => {
+        logger.error('Archiver error:', err);
+        res.status(500).end();
       });
+      archive.pipe(res);
 
+      for (const { img, filePath } of validImages) {
+        const entryName = `optimized_${path.parse(img.originalName).name}.${img.optimizedFormat || 'jpg'}`;
+        archive.append(fs.createReadStream(filePath), { name: entryName });
+        await img.incrementDownload();
+      }
+
+      archive.finalize();
     } catch (error) {
       logger.error('Batch download error:', error);
-      res.status(500).json({
-        error: 'Failed to generate batch download links',
-        code: 'BATCH_DOWNLOAD_ERROR',
-        details: error.message
-      });
+      res.status(500).json({ error: 'Failed to create ZIP' });
     }
   })
 );
