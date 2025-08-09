@@ -30,7 +30,9 @@ if (sentry.requestHandler) {
 }
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 
 // CORS with multi-origin and wildcard support
 function buildCorsOrigin() {
