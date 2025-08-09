@@ -304,6 +304,76 @@ class AdvancedImageProcessor {
     }
   }
 
+  async addWatermarkWithStyle(file, watermarkOptions = {}) {
+    const {
+      watermarkPath,
+      position = 'bottom-right',
+      opacity = 0.7,
+      size = 0.2,
+      margin = 20,
+      style = 'single' // single | tiled | diagonal
+    } = watermarkOptions;
+
+    const baseResult = await this.addWatermark(file, { watermarkPath, position, opacity, size, margin });
+
+    if (style === 'single') return baseResult;
+
+    const image = sharp(file.buffer);
+    const imageMetadata = await image.metadata();
+    const imgW = imageMetadata.width || 0;
+    const imgH = imageMetadata.height || 0;
+
+    // build a pattern watermark buffer based on style
+    const wmBase = await sharp(watermarkPath).ensureAlpha().toBuffer();
+    const wmSize = Math.round(imgW * size);
+    const wmResized = await sharp(wmBase).resize({ width: wmSize }).png().toBuffer();
+
+    // Create a tiled canvas
+    const tileCanvas = await sharp({
+      create: { width: imgW, height: imgH, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } }
+    }).png().toBuffer();
+
+    const composites = [];
+
+    const stepX = wmSize + margin;
+    const stepY = Math.round((wmSize * 0.35) + margin);
+
+    if (style === 'tiled') {
+      for (let y = margin; y < imgH; y += stepX) {
+        for (let x = margin; x < imgW; x += stepX) {
+          composites.push({ input: wmResized, left: x, top: y, blend: 'over' });
+        }
+      }
+    } else if (style === 'diagonal') {
+      for (let y = margin, row = 0; y < imgH; y += stepX, row++) {
+        for (let x = margin + (row % 2 === 0 ? 0 : Math.floor(stepX / 2)); x < imgW; x += stepX) {
+          composites.push({ input: wmResized, left: x, top: y, blend: 'over' });
+        }
+      }
+    }
+
+    // Apply opacity via dest-in trick
+    const alphaOverlay = await sharp({
+      create: { width: wmSize, height: wmSize, channels: 4, background: { r: 255, g: 255, b: 255, alpha: opacity } }
+    }).png().toBuffer();
+    const wmResizedWithOpacity = await sharp(wmResized).composite([{ input: alphaOverlay, blend: 'dest-in' }]).png().toBuffer();
+
+    const patternBuffer = await sharp(tileCanvas).composite(
+      composites.map(c => ({ ...c, input: wmResizedWithOpacity }))
+    ).png().toBuffer();
+
+    const final = await image.composite([{ input: patternBuffer, blend: 'over' }]).png().toBuffer();
+
+    return {
+      id: uuidv4(),
+      originalName: file.originalname,
+      originalSize: file.buffer.length,
+      watermarkedSize: final.length,
+      watermarkStyle: style,
+      buffer: final
+    };
+  }
+
   // Create custom optimization presets
   createPreset(name, options) {
     const presets = {

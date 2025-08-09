@@ -17,6 +17,8 @@ class LocalStorageService {
     try {
       await fs.mkdir(this.baseDir, { recursive: true });
       await fs.mkdir(path.join(this.baseDir, 'optimized'), { recursive: true });
+      await fs.mkdir(path.join(this.baseDir, 'watermarked'), { recursive: true });
+      await fs.mkdir(path.join(this.baseDir, 'watermarks'), { recursive: true });
       await fs.mkdir(path.join(this.baseDir, 'temp'), { recursive: true });
       logger.info('Local storage directories created');
     } catch (error) {
@@ -36,42 +38,45 @@ class LocalStorageService {
     try {
       const {
         isPublic = false,
-        expiresIn = 24 * 60 * 60, // 24 hours
-        metadata = {}
+        expiresIn = 24 * 60 * 60, // 24 hours (unused for local)
+        metadata = {},
+        folder,
       } = options;
 
       // Generate unique filename
       const timestamp = Date.now();
       const uuid = uuidv4().split('-')[0];
-      const extension = path.extname(filename);
+      const extension = path.extname(filename) || '';
       const uniqueFilename = `${timestamp}-${uuid}${extension}`;
       
       // Determine storage path
-      const storagePath = isPublic ? 'public' : 'optimized';
+      let storagePath = 'optimized';
+      if (folder) storagePath = folder;
+      else if (isPublic) storagePath = 'public';
+
       const filePath = path.join(this.baseDir, storagePath, uniqueFilename);
       
       // Write file to disk
       await fs.writeFile(filePath, buffer);
       
-      // Store metadata
+      // Metadata (optional)
       const metadataPath = filePath + '.meta.json';
       const fileMetadata = {
         originalName: filename,
         contentType,
         size: buffer.length,
         uploadedAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
         metadata,
         fileId: uuidv4()
       };
       
       await fs.writeFile(metadataPath, JSON.stringify(fileMetadata, null, 2));
       
-      logger.info(`File uploaded successfully: ${uniqueFilename}`);
+      logger.info(`File uploaded successfully: ${storagePath}/${uniqueFilename}`);
       
       return {
         success: true,
-        key: uniqueFilename,
+        key: `${storagePath}/${uniqueFilename}`,
         url: `${this.publicUrl}/uploads/${storagePath}/${uniqueFilename}`,
         path: filePath,
         size: buffer.length
@@ -85,40 +90,35 @@ class LocalStorageService {
 
   /**
    * Generate download URL for file
-   * @param {string} filename - Filename
-   * @param {number} expiresIn - URL expiration time in seconds
-   * @returns {string} - Download URL
    */
-  async generateDownloadUrl(filename, expiresIn = 3600) {
+  async generateDownloadUrl(key, expiresIn = 3600) {
     try {
-      const filePath = path.join(this.baseDir, 'optimized', filename);
-      
-      // Check if file exists
+      const filePath = path.join(this.baseDir, key);
       try {
         await fs.access(filePath);
       } catch (error) {
         throw new Error('File not found');
       }
-      
-      // For local storage, we return a direct URL
-      const downloadUrl = `${this.publicUrl}/uploads/optimized/${filename}`;
-      
-      logger.info(`Generated download URL for: ${filename}`);
-      
+      const downloadUrl = `${this.publicUrl}/uploads/${key}`;
+      logger.info(`Generated download URL for: ${key}`);
       return downloadUrl;
-
     } catch (error) {
       logger.error('Local download URL generation error:', error);
       throw new Error(`Failed to generate download URL: ${error.message}`);
     }
   }
 
+  /** Resolve absolute path for subdir */
+  getFilePathIn(subdir, filenameOrKey) {
+    const key = filenameOrKey.includes('/') ? filenameOrKey : `${subdir}/${filenameOrKey}`;
+    return path.join(this.baseDir, key);
+  }
+
   /**
    * Resolve absolute path for an optimized file
    */
-  getOptimizedFilePath(filename) {
-    // Preferred location: baseDir/optimized/filename
-    return path.join(this.baseDir, 'optimized', filename);
+  getOptimizedFilePath(filenameOrKey) {
+    return this.getFilePathIn('optimized', filenameOrKey);
   }
 
   /**

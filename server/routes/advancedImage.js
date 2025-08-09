@@ -232,6 +232,45 @@ router.post('/add-watermark', authenticateToken, upload.fields([
   }
 });
 
+// Add watermark with styles and persist output separately
+router.post('/watermark', authenticateToken, upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'watermark', maxCount: 1 }
+]), async (req, res) => {
+  try {
+    if (!req.files.image || !req.files.watermark) {
+      return res.status(400).json({ error: 'Both image and watermark files are required' });
+    }
+
+    const options = {
+      position: req.body.position || 'bottom-right',
+      opacity: parseFloat(req.body.opacity) || 0.7,
+      size: parseFloat(req.body.size) || 0.2,
+      margin: parseInt(req.body.margin) || 20,
+      style: req.body.style || 'single'
+    };
+
+    // Save watermark temporarily
+    const watermarkFileName = `watermark_${Date.now()}.png`;
+    const watermarkPath = path.join(__dirname, '../../uploads/temp', watermarkFileName);
+    await fs.writeFile(watermarkPath, req.files.watermark[0].buffer);
+    options.watermarkPath = watermarkPath;
+
+    const result = await advancedImageProcessor.addWatermarkWithStyle(req.files.image[0], options);
+
+    // Persist watermarked output separately (without altering original)
+    const upload = await storageService.uploadFile(result.buffer, `watermarked_${Date.now()}.png`, 'image/png', { folder: 'watermarked' });
+
+    // Clean up temporary watermark
+    await fs.unlink(watermarkPath).catch(() => {});
+
+    res.json({ success: true, data: { key: upload.key, url: upload.url } });
+  } catch (error) {
+    console.error('Watermark style error:', error);
+    res.status(500).json({ error: 'Failed to add watermark', details: error.message });
+  }
+});
+
 // Image analysis
 router.post('/analyze', authenticateToken, upload.single('image'), async (req, res) => {
   try {

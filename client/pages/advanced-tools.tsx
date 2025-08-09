@@ -123,6 +123,8 @@ export default function AdvancedTools() {
   const [wmMargin, setWmMargin] = useState(20);
   const [wmResultUrl, setWmResultUrl] = useState<string | null>(null);
   const [wmLoading, setWmLoading] = useState(false);
+  const [wmStyle, setWmStyle] = useState<'single'|'tiled'|'diagonal'>('single');
+  const [wmSavedUrl, setWmSavedUrl] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -288,22 +290,30 @@ export default function AdvancedTools() {
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-4 gap-4">
-                  <div>
+                <div className="grid md:grid-cols-5 gap-4">
+                  <div className="md:col-span-1">
                     <label className="block text-sm font-medium text-gray-700">Position</label>
                     <select value={wmPosition} onChange={(e) => setWmPosition(e.target.value)} className="w-full border rounded px-2 py-1">
                       {['top-left','top-right','bottom-left','bottom-right','center'].map(p => <option key={p} value={p}>{p}</option>)}
                     </select>
                   </div>
-                  <div>
+                  <div className="md:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700">Style</label>
+                    <select value={wmStyle} onChange={(e) => setWmStyle(e.target.value as any)} className="w-full border rounded px-2 py-1">
+                      <option value="single">Single</option>
+                      <option value="tiled">Tiled</option>
+                      <option value="diagonal">Diagonal</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-1">
                     <label className="block text-sm font-medium text-gray-700">Opacity ({Math.round(wmOpacity*100)}%)</label>
                     <input type="range" min="0.1" max="1" step="0.05" value={wmOpacity} onChange={(e) => setWmOpacity(parseFloat(e.target.value))} className="w-full" />
                   </div>
-                  <div>
+                  <div className="md:col-span-1">
                     <label className="block text-sm font-medium text-gray-700">Size ({Math.round(wmSize*100)}%)</label>
                     <input type="range" min="0.05" max="0.5" step="0.05" value={wmSize} onChange={(e) => setWmSize(parseFloat(e.target.value))} className="w-full" />
                   </div>
-                  <div>
+                  <div className="md:col-span-1">
                     <label className="block text-sm font-medium text-gray-700">Margin ({wmMargin}px)</label>
                     <input type="range" min="0" max="100" step="2" value={wmMargin} onChange={(e) => setWmMargin(parseInt(e.target.value))} className="w-full" />
                   </div>
@@ -327,18 +337,19 @@ export default function AdvancedTools() {
                         form.append('image', wmImage);
                         form.append('watermark', wmFile);
                         form.append('position', wmPosition);
+                        form.append('style', wmStyle);
                         form.append('opacity', String(wmOpacity));
                         form.append('size', String(wmSize));
                         form.append('margin', String(wmMargin));
-                        const res = await fetch(buildApiUrl('/api/advanced/add-watermark'), {
+                        const res = await fetch(buildApiUrl('/api/advanced/watermark'), {
                           method: 'POST',
                           headers: { 'Authorization': `Bearer ${token}` },
                           body: form,
                         });
                         if (!res.ok) throw new Error('Failed to add watermark');
-                        const blob = await res.blob();
-                        const url = URL.createObjectURL(blob);
-                        setWmResultUrl(url);
+                        const data = await res.json();
+                        setWmSavedUrl(data.data?.url || null);
+                        setWmResultUrl(null);
                         toast.success('Watermark added');
                       } catch (e) {
                         console.error(e);
@@ -352,9 +363,10 @@ export default function AdvancedTools() {
                   </Button>
                 </div>
 
-                {wmResultUrl && (
+                {wmSavedUrl && (
                   <div className="mt-4">
-                    <img src={wmResultUrl} alt="Watermarked" className="max-w-full rounded border" />
+                    <p className="text-sm text-gray-600">Saved watermarked image:</p>
+                    <a className="text-blue-600 underline break-all" href={wmSavedUrl} target="_blank" rel="noreferrer">{wmSavedUrl}</a>
                   </div>
                 )}
               </div>
