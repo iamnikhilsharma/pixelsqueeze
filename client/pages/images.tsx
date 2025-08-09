@@ -15,6 +15,11 @@ import { useAuthStore } from '@/store/authStore';
 import { formatBytes, formatDate, buildApiUrl } from '@/utils/formatters';
 import toast from 'react-hot-toast';
 
+interface ImageDimensions {
+  original?: { width?: number; height?: number } | null;
+  optimized?: { width?: number; height?: number } | null;
+}
+
 interface ImageData {
   id: string;
   originalName: string;
@@ -22,18 +27,20 @@ interface ImageData {
   optimizedSize: number;
   compressionRatio: number;
   format: string;
-  dimensions?: string;
+  dimensions?: ImageDimensions | null;
+  dimensionsText?: string;
   createdAt: string;
   expiresAt?: string;
   downloadUrl?: string;
   status: string;
 }
 
-const isExpired = (expiresAt?: string) => expiresAt ? new Date(expiresAt).getTime() < Date.now() : false;
+const isExpired = (expiresAt?: string) => (expiresAt ? new Date(expiresAt).getTime() < Date.now() : false);
 
-const formatCountdown = (expiresAt?: string) => {
+const formatCountdown = (expiresAt?: string, nowMs?: number) => {
   if (!expiresAt) return '';
-  const ms = new Date(expiresAt).getTime() - Date.now();
+  const now = typeof nowMs === 'number' ? nowMs : Date.now();
+  const ms = new Date(expiresAt).getTime() - now;
   if (ms <= 0) return 'Expired';
   const h = Math.floor(ms / 3600000);
   const m = Math.floor((ms % 3600000) / 60000);
@@ -50,6 +57,13 @@ export default function Images() {
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [now, setNow] = useState(Date.now());
+
+  // Re-render every minute to update countdowns
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Fetch user's images
   useEffect(() => {
@@ -78,19 +92,28 @@ export default function Images() {
         }
 
         const data = await response.json();
-        const newImages = data.data.images.map((img: any) => ({
-          id: img._id,
-          originalName: img.originalName,
-          originalSize: img.originalSize,
-          optimizedSize: img.optimizedSize,
-          compressionRatio: img.compressionRatio,
-          format: img.format,
-          dimensions: img.dimensions,
-          createdAt: img.createdAt,
-          expiresAt: img.expiresAt,
-          downloadUrl: img.downloadUrl,
-          status: img.status
-        }));
+        const newImages: ImageData[] = data.data.images.map((img: any) => {
+          const dims: ImageDimensions | null = img.dimensions || null;
+          const dimsText = dims?.optimized?.width && dims?.optimized?.height
+            ? `${dims.optimized.width}x${dims.optimized.height}`
+            : dims?.original?.width && dims?.original?.height
+              ? `${dims.original.width}x${dims.original.height}`
+              : '-';
+          return {
+            id: img._id,
+            originalName: img.originalName,
+            originalSize: img.originalSize,
+            optimizedSize: img.optimizedSize,
+            compressionRatio: img.compressionRatio,
+            format: img.format,
+            dimensions: dims,
+            dimensionsText: dimsText,
+            createdAt: img.createdAt,
+            expiresAt: img.expiresAt,
+            downloadUrl: img.downloadUrl,
+            status: img.status
+          };
+        });
 
         if (page === 1) {
           setImages(newImages);
@@ -222,12 +245,6 @@ export default function Images() {
     }
   };
 
-  const getExpiryCountdown = (createdAt: string) => {
-    // With current model, expires is 24h from creation unless extended; we don't have expiresAt here yet.
-    // If backend returns expiresAt later, this can be replaced. For now, show placeholder.
-    return '';
-  };
-
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -272,7 +289,7 @@ export default function Images() {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Avg. Compression</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {Math.round(images.reduce((acc, img) => acc + img.compressionRatio, 0) / images.length)}%
+                    {images.length ? Math.round(images.reduce((acc, img) => acc + img.compressionRatio, 0) / images.length) : 0}%
                   </p>
                 </div>
               </div>
@@ -451,7 +468,7 @@ export default function Images() {
                       </div>
                       <div className="flex justify-between">
                         <span>Dimensions:</span>
-                        <span>{image.dimensions}</span>
+                        <span>{image.dimensionsText || '-'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Date:</span>
@@ -463,7 +480,7 @@ export default function Images() {
                         {isExpired(image.expiresAt) ? 'expired' : image.status}
                       </span>
                       {image.status === 'completed' && (
-                        <span className="text-xs text-gray-500">{formatCountdown(image.expiresAt)}</span>
+                        <span className="text-xs text-gray-500">{formatCountdown(image.expiresAt, now)}</span>
                       )}
                     </div>
                   </div>
