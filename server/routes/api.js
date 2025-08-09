@@ -421,7 +421,7 @@ router.post('/optimize-url',
 router.get('/stats',
   authenticateToken,
   asyncHandler(async (req, res) => {
-    const user = req.user;
+    const user = req.user || {};
     const { period = 'month' } = req.query;
 
     try {
@@ -433,14 +433,11 @@ router.get('/stats',
           startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
           endDate = now;
           break;
-        case 'month':
-          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-          endDate = now;
-          break;
         case 'year':
           startDate = new Date(now.getFullYear(), 0, 1);
           endDate = now;
           break;
+        case 'month':
         default:
           startDate = new Date(now.getFullYear(), now.getMonth(), 1);
           endDate = now;
@@ -457,21 +454,26 @@ router.get('/stats',
         totalDownloads: 0
       };
 
+      const usage = user.usage || { monthlyImages: 0, monthlyBandwidth: 0, lastResetDate: null };
+      const subscription = user.subscription || { plan: 'free', status: 'active', currentPeriodStart: null, currentPeriodEnd: null };
+      const planLimit = user.subscriptionLimits || 100;
+      const remainingImages = user.remainingImages || Math.max(0, planLimit - (usage.monthlyImages || 0));
+
       res.json({
         success: true,
         data: {
           usage: {
-            monthlyImages: user.usage.monthlyImages,
-            monthlyBandwidth: user.usage.monthlyBandwidth,
-            planLimit: user.subscriptionLimits,
-            remainingImages: user.remainingImages,
-            lastResetDate: user.usage.lastResetDate
+            monthlyImages: usage.monthlyImages || 0,
+            monthlyBandwidth: usage.monthlyBandwidth || 0,
+            planLimit: planLimit,
+            remainingImages: remainingImages,
+            lastResetDate: usage.lastResetDate || null
           },
           subscription: {
-            plan: user.subscription.plan,
-            status: user.subscription.status,
-            currentPeriodStart: user.subscription.currentPeriodStart,
-            currentPeriodEnd: user.subscription.currentPeriodEnd
+            plan: subscription.plan,
+            status: subscription.status,
+            currentPeriodStart: subscription.currentPeriodStart,
+            currentPeriodEnd: subscription.currentPeriodEnd
           },
           statistics: {
             period,

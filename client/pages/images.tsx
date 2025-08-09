@@ -392,30 +392,35 @@ export default function Images() {
                   </div>
 
                   {/* Actions */}
-                  <div className="mt-4 flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={(e) => {
-                        e?.stopPropagation();
-                        window.open(image.downloadUrl, '_blank');
-                      }}
-                    >
-                      <ArrowDownTrayIcon className="h-4 w-4 mr-1" />
-                      Download
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e?.stopPropagation();
-                        // TODO: Implement view details
-                        alert('View details coming soon!');
-                      }}
-                    >
-                      <EyeIcon className="h-4 w-4" />
-                    </Button>
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedImages.includes(image.id)}
+                        onChange={() => handleImageSelect(image.id)}
+                      />
+                      <span className="text-sm text-gray-600">Select</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {image.downloadUrl && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+                            const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+                            const a = document.createElement('a');
+                            a.href = `${cleanBaseUrl}${image.downloadUrl}`;
+                            a.download = `optimized_${image.originalName}`;
+                            document.body.appendChild(a);
+                            a.click();
+                            a.remove();
+                          }}
+                        >
+                          <ArrowDownTrayIcon className="h-4 w-4 mr-1" /> Download
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -439,6 +444,15 @@ export default function Images() {
               {selectedImages.length === sortedImages.length ? 'Deselect All' : 'Select All'}
             </Button>
           </motion.div>
+        )}
+
+        {/* Load more */}
+        {hasMore && (
+          <div className="mt-6 flex justify-center">
+            <Button variant="outline" onClick={loadMore} disabled={loading}>
+              {loading ? 'Loading...' : 'Load more'}
+            </Button>
+          </div>
         )}
       </div>
     </Layout>

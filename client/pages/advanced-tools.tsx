@@ -230,7 +230,10 @@ export default function AdvancedTools() {
 
             {/* Tool-specific interface */}
             {selectedTool === 'batch-processing' && (
-              <AdvancedImageUploader onImagesProcessed={handleImagesProcessed} />
+              <div>
+                <AdvancedImageUploader onImagesProcessed={handleImagesProcessed} />
+                <p className="mt-4 text-sm text-gray-500">When processing completes, visit <a className="text-blue-600 underline" href="/images">My Images</a> to view and download your results.</p>
+              </div>
             )}
 
             {selectedTool === 'format-conversion' && (
