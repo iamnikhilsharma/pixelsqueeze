@@ -14,6 +14,7 @@ import { Button } from '@/components/Button';
 import { useAuthStore } from '@/store/authStore';
 import { formatBytes, formatDate, buildApiUrl } from '@/utils/formatters';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/router';
 
 interface ImageDimensions {
   original?: { width?: number; height?: number } | null;
@@ -48,7 +49,8 @@ const formatCountdown = (expiresAt?: string, nowMs?: number) => {
 };
 
 export default function Images() {
-  const { user, isAuthenticated } = useAuthStore();
+  const router = useRouter();
+  const { user, isAuthenticated, checkAuth } = useAuthStore();
   const [images, setImages] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -58,6 +60,16 @@ export default function Images() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    (async () => {
+      await checkAuth();
+      if (!isAuthenticated) router.replace('/login');
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (!isAuthenticated) return null;
 
   // Re-render every minute to update countdowns
   useEffect(() => {

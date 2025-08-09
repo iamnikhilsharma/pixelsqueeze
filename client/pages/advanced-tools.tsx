@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   PhotoIcon,
@@ -17,6 +17,7 @@ import { Button } from '@/components/Button';
 import AdvancedImageUploader from '@/components/AdvancedImageUploader';
 import { useAuthStore } from '@/store/authStore';
 import { formatFileSize, formatNumber } from '@/utils/formatters';
+import { useRouter } from 'next/router';
 
 interface Tool {
   id: string;
@@ -109,9 +110,22 @@ const tools: Tool[] = [
 ];
 
 export default function AdvancedTools() {
-  const { user } = useAuthStore();
+  const router = useRouter();
+  const { user, isAuthenticated, checkAuth } = useAuthStore();
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [processedResults, setProcessedResults] = useState<any[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      await checkAuth();
+      if (!isAuthenticated) router.replace('/login');
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const isPremiumUser = user?.subscription?.plan !== 'free';
 

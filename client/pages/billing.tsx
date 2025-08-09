@@ -16,6 +16,7 @@ import { formatBytes, formatNumber } from '@/utils/formatters';
 import { stripeUtils } from '@/utils/stripe';
 import BillingPlans from '@/components/BillingPlans';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/router';
 
 const plans = [
   {
@@ -107,10 +108,21 @@ const plans = [
 ];
 
 export default function Billing() {
-  const { user } = useAuthStore();
+  const router = useRouter();
+  const { user, isAuthenticated, checkAuth } = useAuthStore();
   const [selectedPlan, setSelectedPlan] = useState(user?.subscription?.plan || 'free');
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
+    (async () => {
+      await checkAuth();
+      if (!isAuthenticated) router.replace('/login');
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (!isAuthenticated) return null;
 
   const currentPlan = plans.find(plan => plan.id === user?.subscription?.plan) || plans[0];
 

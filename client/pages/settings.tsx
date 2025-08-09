@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   UserIcon,
@@ -14,9 +14,22 @@ import { Layout } from '@/components/Layout';
 import { Button } from '@/components/Button';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/router';
 
 export default function Settings() {
-  const { user } = useAuthStore();
+  const router = useRouter();
+  const { isAuthenticated, checkAuth } = useAuthStore();
+
+  useEffect(() => {
+    (async () => {
+      await checkAuth();
+      if (!isAuthenticated) router.replace('/login');
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (!isAuthenticated) return null;
+
   const [activeTab, setActiveTab] = useState('profile');
   const [showApiKey, setShowApiKey] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
