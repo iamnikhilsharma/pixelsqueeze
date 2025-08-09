@@ -422,9 +422,19 @@ export default function AdvancedTools() {
                   {/* Right: Preview */}
                   <div className="bg-gray-50 rounded-lg p-4 border">
                     <h4 className="font-medium text-gray-900 mb-3">Preview</h4>
-                    <div className="aspect-video bg-white rounded-lg border flex items-center justify-center text-gray-400">
-                      <span>Preview will appear after applying. Saved URLs will show below.</span>
-                    </div>
+                    {wmSavedUrl || twSavedUrl ? (
+                      <div className="aspect-video bg-white rounded-lg border overflow-hidden">
+                        <img
+                          src={(wmSavedUrl || twSavedUrl) as string}
+                          alt="Watermark preview"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="aspect-video bg-white rounded-lg border flex items-center justify-center text-gray-400">
+                        <span>Preview will appear after applying. Saved URLs will show below.</span>
+                      </div>
+                    )}
                     {wmSavedUrl && (
                       <div className="mt-3">
                         <p className="text-sm text-gray-600">Image watermark URL:</p>
