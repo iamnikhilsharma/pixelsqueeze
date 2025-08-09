@@ -2,6 +2,7 @@ import React from 'react';
 import MarketingLayout from '@/components/MarketingLayout';
 import { Button } from '@/components/Button';
 import { motion } from 'framer-motion';
+import BeforeAfter from '@/components/BeforeAfter';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -13,7 +14,18 @@ export default function HomePage() {
     <MarketingLayout>
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-b from-primary-50 to-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-16 pb-20 lg:pt-24 lg:pb-28">
+        {/* Animated background shapes */}
+        <motion.div
+          className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-primary-200 blur-3xl opacity-50"
+          animate={{ x: [0, 20, 0], y: [0, -10, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-primary-200 blur-3xl opacity-50"
+          animate={{ x: [0, -20, 0], y: [0, 10, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-16 pb-20 lg:pt-24 lg:pb-28">
           <motion.div
             className="grid lg:grid-cols-2 gap-12 items-center"
             initial="hidden"
@@ -50,13 +62,26 @@ export default function HomePage() {
               <div className="rounded-2xl shadow-strong ring-1 ring-black/5 bg-white p-4">
                 <img src="/illustrations/hero.svg" alt="Preview" className="w-full" />
               </div>
-              <motion.div
-                className="absolute -z-10 -top-10 -right-10 h-40 w-40 bg-primary-200 rounded-full blur-3xl opacity-70"
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-              />
             </motion.div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Before/After comparison */}
+      <section className="py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">See the difference instantly</h2>
+              <p className="mt-2 text-gray-600">Drag the slider to compare original and optimized images. Maintain quality while reducing size.</p>
+              <ul className="mt-6 space-y-2 text-gray-700 text-sm">
+                <li>✓ High visual fidelity</li>
+                <li>✓ Smaller files for faster loads</li>
+                <li>✓ Best-in-class codecs and tuning</li>
+              </ul>
+            </div>
+            <BeforeAfter beforeSrc="/illustrations/features.svg" afterSrc="/illustrations/hero.svg" height={320} />
+          </div>
         </div>
       </section>
 
