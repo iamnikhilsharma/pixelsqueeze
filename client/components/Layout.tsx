@@ -49,6 +49,12 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
                     My Images
                   </Link>
                   <Link
+                    href="/advanced-tools"
+                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Advanced Tools
+                  </Link>
+                  <Link
                     href="/settings"
                     className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                   >
