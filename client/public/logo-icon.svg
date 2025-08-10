@@ -1,0 +1,17 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#22C55E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16A34A;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Clean PS monogram in circle -->
+  <circle cx="40" cy="40" r="40" fill="url(#logoGradient)"/>
+  
+  <!-- P letter -->
+  <path d="M 24 16 L 24 64 L 40 64 C 48 64 52 60 52 52 C 52 44 48 40 40 40 L 32 40 L 32 16 Z" fill="white"/>
+  
+  <!-- S letter -->
+  <path d="M 56 24 C 56 20 60 16 64 16 L 72 16 L 72 24 L 64 24 C 62 24 60 26 60 28 C 60 30 62 32 64 32 L 72 32 L 72 40 L 64 40 C 60 40 56 36 56 32" fill="white"/>
+</svg>

@@ -32,7 +32,7 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
                 />
               </Link>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               {user ? (
                 <>
@@ -83,7 +83,7 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
       </nav>
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {children}
+          {children}
       </main>
 
       <footer className="bg-white border-t mt-auto">

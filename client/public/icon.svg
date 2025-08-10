@@ -1,11 +1,35 @@
-<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <!-- SVG with refined mountain curves: sharper than before but still smooth -->
+
   <defs>
-    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#22C55E;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#16A34A;stop-opacity:1" />
+    <clipPath id="imgClip">
+      <rect x="1" y="1" width="38" height="38" rx="6" ry="6" />
+    </clipPath>
+  </defs>
+
+  <!-- Outer frame -->
+  <rect x="2" y="2" width="36" height="36" rx="6" fill="#8BC34A" />
+  <rect x="3" y="3" width="34" height="34" rx="6" fill="none" stroke="#03A9F4" stroke-width="3" stroke-linejoin="round" />
+
+  <!-- Clipped artwork -->
+  <g transform="translate(2,2)" clip-path="url(#imgClip)">
+    <rect x="0" y="0" width="36" height="36" fill="url(#skyGrad)" />
+    <circle cx="10" cy="9" r="4" fill="#FFFFFF" />
+
+    <!-- Back mountain: less rounded peaks for more definition -->
+    <path d="M0 29 C7 20 14 21 22 29 C28 33 32 29 36 26 L36 36 L0 36 Z" fill="#4CAF50" />
+
+    <!-- Front mountain: defined ridges but still smooth -->
+    <path d="M0 32 C7 24 14 25 22 31 C27 34 31 31 36 28 L36 36 L0 36 Z" fill="#388E3C" />
+
+    <!-- Ridge highlight -->
+    <path d="M1 31 C8 23 15 24 23 31 C28 34 32 31 36 28" fill="none" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="1.5" stroke-linecap="round" />
+  </g>
+
+  <defs>
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#A8E6A1" />
+      <stop offset="100%" stop-color="#8BC34A" />
     </linearGradient>
   </defs>
-  <circle cx="20" cy="20" r="20" fill="url(#iconGradient)"/>
-  <path d="M 10 8 L 10 32 L 18 32 C 22 32 24 30 24 26 C 24 22 22 20 18 20 L 14 20 L 14 8 Z" fill="white"/>
-  <path d="M 26 12 C 26 10 28 8 30 8 L 34 8 L 34 12 L 30 12 C 29 12 28 13 28 14 C 28 15 29 16 30 16 L 34 16 L 34 20 L 30 20 C 28 20 26 18 26 16" fill="white" opacity="0.9"/>
 </svg> 
