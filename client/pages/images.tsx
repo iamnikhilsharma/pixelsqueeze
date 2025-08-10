@@ -79,27 +79,10 @@ export default function Images() {
     return () => clearInterval(interval);
   }, []);
 
-  // Handle loading and authentication states
-  if (!hasRehydrated) {
-    return <div className="min-h-screen"/>;
-  }
-  
-  if (!token) {
-    return null;
-  }
-  
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center text-gray-500">Checking session...</div>;
-  }
-  
-  if (!isAuthenticated) {
-    return null;
-  }
-
   // Fetch user's images
   useEffect(() => {
     const fetchImages = async () => {
-      if (!isAuthenticated) return;
+      if (!isAuthenticated || !hasRehydrated) return;
 
       try {
         const authData = localStorage.getItem('pixelsqueeze-auth');
@@ -162,7 +145,24 @@ export default function Images() {
     };
 
     fetchImages();
-  }, [isAuthenticated, page]);
+  }, [isAuthenticated, page, hasRehydrated]);
+
+  // Handle loading and authentication states
+  if (!hasRehydrated) {
+    return <div className="min-h-screen"/>;
+  }
+  
+  if (!token) {
+    return null;
+  }
+  
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center text-gray-500">Checking session...</div>;
+  }
+  
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const filteredImages = images.filter(image => {
     const matchesSearch = image.originalName.toLowerCase().includes(searchTerm.toLowerCase());
