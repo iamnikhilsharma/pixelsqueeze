@@ -2,17 +2,17 @@
   <!-- SVG with refined mountain curves: sharper than before but still smooth -->
 
   <defs>
-    <clipPath id="imgClip">
-      <rect x="2" y="2" width="36" height="36" rx="5" ry="5" />
-    </clipPath>
+    <mask id="roundedMask">
+      <rect x="0" y="0" width="40" height="40" fill="white"/>
+      <rect x="2" y="2" width="36" height="36" rx="5" ry="5" fill="black"/>
+    </mask>
   </defs>
 
-  <!-- Border with rounded corners -->
-  <rect x="2" y="2" width="36" height="36" rx="5" ry="5" fill="none" stroke="#03A9F4" stroke-width="2" stroke-linejoin="round" />
-
-  <!-- Clipped artwork with background -->
-  <g transform="translate(2,2)" clip-path="url(#imgClip)">
-    <rect x="0" y="0" width="36" height="36" fill="url(#skyGrad)" />
+  <!-- Background with rounded corners -->
+  <rect x="2" y="2" width="36" height="36" rx="5" ry="5" fill="url(#skyGrad)" />
+  
+  <!-- Mountains and sun -->
+  <g transform="translate(2,2)">
     <circle cx="12" cy="9" r="4" fill="#FFFFFF" />
 
     <!-- Back mountain: exact same proportions as logo -->
@@ -24,6 +24,9 @@
     <!-- Ridge highlight: exact same proportions as logo -->
     <path d="M1.5 30.2 C8.9 22.7 16.5 23.4 23.3 29.2 C29.2 33.2 34.5 30.6 36 27.4" fill="none" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="1" stroke-linecap="round" />
   </g>
+
+  <!-- Border with rounded corners -->
+  <rect x="2" y="2" width="36" height="36" rx="5" ry="5" fill="none" stroke="#03A9F4" stroke-width="2" stroke-linejoin="round" />
 
   <defs>
     <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
