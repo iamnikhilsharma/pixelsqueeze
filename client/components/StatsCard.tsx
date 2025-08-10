@@ -7,7 +7,9 @@ interface StatsCardProps {
   total?: number;
   unit?: string;
   color?: 'primary' | 'secondary' | 'success' | 'warning';
-  icon?: React.ComponentType<{ className?: string }>;
+  icon?: React.ComponentType<{ className?: string }> | string;
+  change?: string;
+  changeType?: 'positive' | 'negative' | 'neutral';
 }
 
 const colorClasses = {
@@ -23,7 +25,9 @@ export function StatsCard({
   total, 
   unit, 
   color = 'primary',
-  icon: Icon 
+  icon: Icon,
+  change,
+  changeType
 }: StatsCardProps) {
   const percentage = total ? Math.round((Number(value) / total) * 100) : 0;
   const isOverLimit = total && Number(value) > total;
@@ -45,6 +49,17 @@ export function StatsCard({
               <p className="ml-1 text-sm text-gray-500">{unit}</p>
             )}
           </div>
+          {change && (
+            <div className="mt-1 flex items-center">
+              <span className={`text-sm font-medium ${
+                changeType === 'positive' ? 'text-green-600' : 
+                changeType === 'negative' ? 'text-red-600' : 
+                'text-gray-600'
+              }`}>
+                {change}
+              </span>
+            </div>
+          )}
           {total && (
             <p className="text-sm text-gray-500 mt-1">
               of {total.toLocaleString()} {unit}
@@ -54,7 +69,11 @@ export function StatsCard({
         
         {Icon && (
           <div className={`p-3 rounded-lg border ${colorClasses[color]}`}>
-            <Icon className="h-6 w-6" />
+            {typeof Icon === 'string' ? (
+              <span className="text-2xl">{Icon}</span>
+            ) : (
+              <Icon className="h-6 w-6" />
+            )}
           </div>
         )}
       </div>

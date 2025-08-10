@@ -11,7 +11,7 @@ import {
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
-import { Button } from './Button';
+import Button from './Button';
 import { formatBytes, buildApiUrl } from '@/utils/formatters';
 
 interface OptimizedImage {

@@ -13,7 +13,7 @@ import {
   PaintBrushIcon
 } from '@heroicons/react/24/outline';
 import Layout from '@/components/Layout';
-import { Button } from '@/components/Button';
+import Button from '@/components/Button';
 import AdvancedImageUploader from '@/components/AdvancedImageUploader';
 import { useAuthStore } from '@/store/authStore';
 import { formatFileSize, formatNumber, buildApiUrl } from '@/utils/formatters';

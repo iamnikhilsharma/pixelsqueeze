@@ -9,7 +9,7 @@ import {
   ArrowDownTrayIcon,
   Cog6ToothIcon
 } from '@heroicons/react/24/outline';
-import { Button } from './Button';
+import Button from './Button';
 import { formatBytes, buildApiUrl } from '@/utils/formatters';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';

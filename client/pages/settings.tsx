@@ -11,7 +11,7 @@ import {
   EyeSlashIcon
 } from '@heroicons/react/24/outline';
 import Layout from '@/components/Layout';
-import { Button } from '@/components/Button';
+import Button from '@/components/Button';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/router';

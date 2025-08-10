@@ -10,7 +10,7 @@ import {
   ClipboardDocumentIcon
 } from '@heroicons/react/24/outline';
 import Layout from '@/components/Layout';
-import { Button } from '@/components/Button';
+import Button from '@/components/Button';
 import { useAuthStore } from '@/store/authStore';
 import { formatNumber, formatDate } from '@/utils/formatters';
 import toast from 'react-hot-toast';

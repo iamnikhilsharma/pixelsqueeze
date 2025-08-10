@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { PhotoIcon, ArrowDownTrayIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { formatBytes, formatRelativeTime } from '@/utils/formatters';
-import { Button } from './Button';
+import Button from './Button';
 
 interface Image {
   id: string;

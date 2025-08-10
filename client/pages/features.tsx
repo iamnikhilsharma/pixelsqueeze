@@ -1,6 +1,6 @@
 import React from 'react';
 import MarketingLayout from '@/components/MarketingLayout';
-import { Button } from '@/components/Button';
+import Button from '@/components/Button';
 import { motion } from 'framer-motion';
 
 export default function FeaturesPage() {

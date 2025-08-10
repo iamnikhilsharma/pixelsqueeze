@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAuthStore } from '@/store/authStore';
-import { Button } from '@/components/Button';
+import Button from '@/components/Button';
 import toast from 'react-hot-toast';
 import { buildApiUrl } from '@/utils/formatters';
 
