@@ -42,6 +42,7 @@ interface AuthActions {
   updateUser: (userData: Partial<User>) => void;
   clearError: () => void;
   checkAuth: () => Promise<void>;
+  setRehydrated: () => void;
 }
 
 interface RegisterData {
@@ -139,6 +140,9 @@ export const useAuthStore = create<AuthStore>()(
           }
         }
       },
+
+      // Mark rehydration as complete
+      setRehydrated: () => set({ hasRehydrated: true }),
     }),
     {
       name: 'pixelsqueeze-auth',
@@ -149,13 +153,8 @@ export const useAuthStore = create<AuthStore>()(
         } else {
           delete axios.defaults.headers.common['Authorization'];
         }
-        // Mark rehydration complete
-        try {
-          // set may not be available here, so use a microtask to ensure store exists
-          Promise.resolve().then(() => {
-            useAuthStore.setState({ hasRehydrated: true });
-          });
-        } catch {}
+        // Note: hasRehydrated will be set to true by the persist middleware automatically
+        // We don't need to manually set it here to avoid React hook errors
       },
     }
   )
