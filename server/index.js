@@ -32,6 +32,17 @@ if (sentry.requestHandler) {
 // Security middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+      fontSrc: ["'self'", "https:", "data:"],
+      imgSrc: ["'self'", "data:", "https:"],
+      scriptSrc: ["'self'"],
+      connectSrc: ["'self'", "https:"],
+    },
+  },
 }));
 
 // CORS with multi-origin and wildcard support
@@ -49,15 +60,26 @@ function buildCorsOrigin() {
   return function(origin, callback) {
     if (!origin) return callback(null, true);
     const allowed = patterns.some(p => (p instanceof RegExp ? p.test(origin) : p === origin));
+    logger.info(`CORS check for origin: ${origin}, allowed: ${allowed}`);
     if (allowed) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
   };
 }
 
-app.use(cors({ origin: buildCorsOrigin(), credentials: true }));
+// Enhanced CORS configuration
+const corsOptions = {
+  origin: buildCorsOrigin(),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Content-Length', 'X-Requested-With'],
+  maxAge: 86400 // 24 hours
+};
+
+app.use(cors(corsOptions));
 
 // Handle CORS preflight requests explicitly
-app.options('*', cors({ origin: buildCorsOrigin(), credentials: true }));
+app.options('*', cors(corsOptions));
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -85,6 +107,17 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString(), uptime: process.uptime(), environment: process.env.NODE_ENV });
+});
+
+// CORS test endpoint
+app.get('/api/cors-test', (req, res) => {
+  logger.info(`CORS test request from origin: ${req.headers.origin}`);
+  res.json({ 
+    message: 'CORS is working!', 
+    origin: req.headers.origin,
+    timestamp: new Date().toISOString(),
+    corsEnabled: true
+  });
 });
 
 // Static uploads
