@@ -56,6 +56,9 @@ function buildCorsOrigin() {
 
 app.use(cors({ origin: buildCorsOrigin(), credentials: true }));
 
+// Handle CORS preflight requests explicitly
+app.options('*', cors({ origin: buildCorsOrigin(), credentials: true }));
+
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -73,7 +76,11 @@ app.use('/api/', limiter);
 // Database connection
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
 .then(() => { logger.info('Connected to MongoDB'); })
-.catch((error) => { logger.error('MongoDB connection error:', error); process.exit(1); });
+.catch((error) => { 
+  logger.error('MongoDB connection error:', error); 
+  logger.warn('Server will continue without database connection. Some features may not work.');
+  // Don't exit the process - allow CORS and basic functionality to work
+});
 
 // Health check
 app.get('/health', (req, res) => {
