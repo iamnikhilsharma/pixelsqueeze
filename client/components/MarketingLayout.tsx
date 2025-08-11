@@ -67,6 +67,12 @@ export default function MarketingLayout({ children, title = 'PixelSqueeze - AI I
               >
                 Documentation
               </Link>
+              <Link
+                href="/contact"
+                className="nav-link"
+              >
+                Contact
+              </Link>
               <div className="w-px h-6 bg-surface-200 mx-2"></div>
               {user ? (
                 <>
@@ -156,6 +162,13 @@ export default function MarketingLayout({ children, title = 'PixelSqueeze - AI I
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Documentation
+              </Link>
+              <Link
+                href="/contact"
+                className="nav-link-mobile"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Contact
               </Link>
               <div className="border-t border-surface-200 my-2"></div>
               {user ? (
