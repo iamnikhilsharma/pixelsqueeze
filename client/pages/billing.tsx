@@ -113,6 +113,8 @@ export default function Billing() {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
+  const currentPlan = plans.find(plan => plan.id === user?.subscription?.plan) || plans[0];
+
   useEffect(() => {
     (async () => {
       if (!hasRehydrated) return;
@@ -134,15 +136,9 @@ export default function Billing() {
     return null;
   }
   
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center text-gray-500">Checking session...</div>;
-  }
-  
   if (!isAuthenticated) {
     return null;
   }
-
-  const currentPlan = plans.find(plan => plan.id === user?.subscription?.plan) || plans[0];
 
   const startRazorpay = async (planId: string) => {
     setIsUpgrading(true);

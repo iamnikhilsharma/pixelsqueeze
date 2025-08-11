@@ -24,6 +24,22 @@ export default function Settings() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [profileData, setProfileData] = useState({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
+    company: '',
+    website: ''
+  });
+
+  const [preferences, setPreferences] = useState({
+    emailNotifications: true,
+    marketingEmails: false,
+    qualityDefault: 80,
+    preserveMetadata: false,
+    autoOptimize: true
+  });
+
   useEffect(() => {
     (async () => {
       if (!token) {
@@ -43,22 +59,6 @@ export default function Settings() {
   if (!isAuthenticated) {
     return null;
   }
-
-  const [profileData, setProfileData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    email: user?.email || '',
-    company: '',
-    website: ''
-  });
-
-  const [preferences, setPreferences] = useState({
-    emailNotifications: true,
-    marketingEmails: false,
-    qualityDefault: 80,
-    preserveMetadata: false,
-    autoOptimize: true
-  });
 
   const handleProfileSave = async () => {
     setIsLoading(true);
