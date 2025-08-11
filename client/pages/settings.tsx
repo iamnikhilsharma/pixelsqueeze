@@ -40,6 +40,12 @@ export default function Settings() {
     autoOptimize: true
   });
 
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
   useEffect(() => {
     (async () => {
       if (!token) {
@@ -62,20 +68,75 @@ export default function Settings() {
 
   const handleProfileSave = async () => {
     setIsLoading(true);
-    // TODO: Implement profile update
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const authData = localStorage.getItem('pixelsqueeze-auth');
+      const token = authData ? JSON.parse(authData).state.token : '';
+      
+      if (!token) {
+        toast.error('Authentication required');
+        return;
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(profileData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update profile');
+      }
+
+      const result = await response.json();
       toast.success('Profile updated successfully!');
-    }, 1000);
+      
+      // Update local user data
+      if (result.data) {
+        // Update the auth store with new user data
+        // This would typically be done through a store update function
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update profile');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePreferencesSave = async () => {
     setIsLoading(true);
-    // TODO: Implement preferences update
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const authData = localStorage.getItem('pixelsqueeze-auth');
+      const token = authData ? JSON.parse(authData).state.token : '';
+      
+      if (!token) {
+        toast.error('Authentication required');
+        return;
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/preferences`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(preferences)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save preferences');
+      }
+
       toast.success('Preferences saved successfully!');
-    }, 1000);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save preferences');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const copyApiKey = () => {
@@ -85,10 +146,89 @@ export default function Settings() {
     }
   };
 
-  const regenerateApiKey = () => {
+  const regenerateApiKey = async () => {
     if (confirm('Are you sure you want to regenerate your API key? This will invalidate the current key.')) {
-      // TODO: Implement API key regeneration
-      toast.success('API key regenerated successfully!');
+      try {
+        const authData = localStorage.getItem('pixelsqueeze-auth');
+        const token = authData ? JSON.parse(authData).state.token : '';
+        
+        if (!token) {
+          toast.error('Authentication required');
+          return;
+        }
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/regenerate-api-key`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to regenerate API key');
+        }
+
+        const result = await response.json();
+        toast.success('API key regenerated successfully!');
+        
+        // Update local user data with new API key
+        if (result.data?.apiKey) {
+          // This would typically update the auth store
+          // For now, we'll reload the page to get updated data
+          window.location.reload();
+        }
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to regenerate API key');
+      }
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters long');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const authData = localStorage.getItem('pixelsqueeze-auth');
+      const token = authData ? JSON.parse(authData).state.token : '';
+      
+      if (!token) {
+        toast.error('Authentication required');
+        return;
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to change password');
+      }
+
+      toast.success('Password changed successfully!');
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to change password');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -406,6 +546,8 @@ export default function Settings() {
                       </label>
                       <input
                         type="password"
+                        value={passwordData.currentPassword}
+                        onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
@@ -415,6 +557,8 @@ export default function Settings() {
                       </label>
                       <input
                         type="password"
+                        value={passwordData.newPassword}
+                        onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
@@ -424,10 +568,16 @@ export default function Settings() {
                       </label>
                       <input
                         type="password"
+                        value={passwordData.confirmPassword}
+                        onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
-                    <Button variant="primary">
+                    <Button 
+                      variant="primary" 
+                      onClick={handlePasswordChange}
+                      loading={isLoading}
+                    >
                       Update Password
                     </Button>
                   </div>

@@ -19,7 +19,8 @@ const { errorHandler } = require('./middleware/errorHandler');
 const { logger } = require('./utils/logger');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+// Force port to avoid conflicts, but allow override via environment
+const PORT = process.env.PORT === '5000' ? 5002 : (process.env.PORT || 5002);
 
 // Trust proxy
 app.set('trust proxy', 1);
@@ -96,7 +97,7 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(process.env.MONGODB_URI)
 .then(() => { logger.info('Connected to MongoDB'); })
 .catch((error) => { 
   logger.error('MongoDB connection error:', error); 
