@@ -41,7 +41,7 @@ const BillingPlans: React.FC<BillingPlansProps> = ({ onPlanChange }) => {
 
   const fetchPlans = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/billing/plans`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}/api/billing/plans`, {
         headers: {
           'Authorization': `Bearer ${user?.apiKey}`,
           'Content-Type': 'application/json',
@@ -230,7 +230,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ plan, onSuccess, onCancel }) 
 
     try {
       // Create subscription
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/billing/subscribe`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}/api/billing/subscribe`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${user?.apiKey}`,

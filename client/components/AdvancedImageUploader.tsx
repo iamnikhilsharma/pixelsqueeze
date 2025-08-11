@@ -216,7 +216,7 @@ export default function AdvancedImageUploader({ onImagesProcessed }: AdvancedIma
       if (image.result?.downloadUrl) {
         const link = document.createElement('a');
         // Construct the full URL for download
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002';
         const cleanBaseUrl = baseUrl.replace(/\/$/, ''); // Remove trailing slash
         link.href = `${cleanBaseUrl}${image.result.downloadUrl}`;
         link.download = `optimized_${image.file.name}`;

@@ -181,7 +181,7 @@ export function formatSubscriptionStatus(status: string): string {
  * Construct API URL properly by handling trailing slashes
  */
 export function buildApiUrl(path: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002';
   const cleanBaseUrl = baseUrl.replace(/\/$/, ''); // Remove trailing slash
   const cleanPath = path.startsWith('/') ? path : `/${path}`; // Ensure path starts with /
   return `${cleanBaseUrl}${cleanPath}`;

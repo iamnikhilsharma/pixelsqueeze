@@ -208,7 +208,7 @@ export default function Images() {
       const token = authData ? JSON.parse(authData).state.token : '';
       if (!token) throw new Error('No authentication token');
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002';
       const cleanBaseUrl = baseUrl.replace(/\/$/, '');
 
       // Stream zip download directly
