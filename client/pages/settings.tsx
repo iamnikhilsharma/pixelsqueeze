@@ -66,7 +66,31 @@ export default function Settings() {
     return null;
   }
 
+  const validateProfile = () => {
+    if (!profileData.firstName.trim()) {
+      toast.error('First name is required');
+      return false;
+    }
+    if (!profileData.lastName.trim()) {
+      toast.error('Last name is required');
+      return false;
+    }
+    if (!profileData.email.trim()) {
+      toast.error('Email is required');
+      return false;
+    }
+    if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(profileData.email)) {
+      toast.error('Please enter a valid email address');
+      return false;
+    }
+    return true;
+  };
+
   const handleProfileSave = async () => {
+    if (!validateProfile()) {
+      return;
+    }
+
     setIsLoading(true);
     try {
       const authData = localStorage.getItem('pixelsqueeze-auth');
@@ -77,14 +101,20 @@ export default function Settings() {
         return;
       }
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(profileData)
+        body: JSON.stringify(profileData),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -100,13 +130,31 @@ export default function Settings() {
         // This would typically be done through a store update function
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update profile');
+      if (error.name === 'AbortError') {
+        toast.error('Request timed out. Please try again.');
+      } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        toast.error('Network error. Please check your connection.');
+      } else {
+        toast.error(error.message || 'Failed to update profile');
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
+  const validatePreferences = () => {
+    if (preferences.qualityDefault < 1 || preferences.qualityDefault > 100) {
+      toast.error('Quality must be between 1 and 100');
+      return false;
+    }
+    return true;
+  };
+
   const handlePreferencesSave = async () => {
+    if (!validatePreferences()) {
+      return;
+    }
+
     setIsLoading(true);
     try {
       const authData = localStorage.getItem('pixelsqueeze-auth');

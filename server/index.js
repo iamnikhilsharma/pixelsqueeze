@@ -151,7 +151,26 @@ app.listen(PORT, () => {
   logger.info(`Local storage path: ${process.env.LOCAL_STORAGE_PATH || path.join(__dirname, '../uploads')}`);
 });
 
-process.on('SIGTERM', () => { logger.info('SIGTERM received, shutting down gracefully'); mongoose.connection.close(() => { logger.info('MongoDB connection closed'); process.exit(0); }); });
-process.on('SIGINT', () => { logger.info('SIGINT received, shutting down gracefully'); mongoose.connection.close(() => { logger.info('MongoDB connection closed'); process.exit(0); }); });
+process.on('SIGTERM', async () => { 
+  logger.info('SIGTERM received, shutting down gracefully'); 
+  try {
+    await mongoose.connection.close();
+    logger.info('MongoDB connection closed');
+  } catch (error) {
+    logger.error('Error closing MongoDB connection:', error);
+  }
+  process.exit(0); 
+});
+
+process.on('SIGINT', async () => { 
+  logger.info('SIGINT received, shutting down gracefully'); 
+  try {
+    await mongoose.connection.close();
+    logger.info('MongoDB connection closed');
+  } catch (error) {
+    logger.error('Error closing MongoDB connection:', error);
+  }
+  process.exit(0); 
+});
 
 module.exports = app; 

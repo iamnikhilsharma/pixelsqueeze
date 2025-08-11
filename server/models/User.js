@@ -110,9 +110,9 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indexes
-userSchema.index({ email: 1 });
-userSchema.index({ apiKey: 1 });
+// Indexes - using sparse for optional fields to avoid conflicts
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ apiKey: 1 }, { sparse: true });
 userSchema.index({ 'subscription.stripeCustomerId': 1 });
 
 // Virtual for full name
