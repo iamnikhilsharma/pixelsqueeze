@@ -23,6 +23,7 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState('profile');
   const [showApiKey, setShowApiKey] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [profileData, setProfileData] = useState({
     firstName: user?.firstName || '',
@@ -288,6 +289,18 @@ export default function Settings() {
     { id: 'security', name: 'Security', icon: ShieldCheckIcon }
   ];
 
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <div className="animate-pulse">
+      <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
+      <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+      <div className="space-y-6">
+        <div className="h-64 bg-gray-200 rounded"></div>
+        <div className="h-32 bg-gray-200 rounded"></div>
+      </div>
+    </div>
+  );
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -326,12 +339,15 @@ export default function Settings() {
         </motion.div>
 
         {/* Tab Content */}
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}
-        >
+        {isLoading ? (
+          <LoadingSkeleton />
+        ) : (
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+          >
           {activeTab === 'profile' && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Profile Information</h2>
@@ -657,7 +673,8 @@ export default function Settings() {
               </div>
             </div>
           )}
-        </motion.div>
+          </motion.div>
+        )}
       </div>
     </Layout>
   );
