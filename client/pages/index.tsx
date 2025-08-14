@@ -57,20 +57,6 @@ export default function Home() {
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            {/* Logo */}
-            <motion.div 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="flex justify-center mb-8"
-            >
-              <img 
-                src="/logo.svg" 
-                alt="PixelSqueeze" 
-                className="h-24 w-auto"
-              />
-            </motion.div>
-            
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -253,7 +239,7 @@ export default function Home() {
         </div>
 
         {/* Background Elements */}
-        <div className="absolute inset-0 overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <motion.div 
             animate={{ 
               y: [0, -20, 0],
