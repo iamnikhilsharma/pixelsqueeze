@@ -1,65 +1,298 @@
 import React from 'react';
-import MarketingLayout from '@/components/MarketingLayout';
-import Button from '@/components/Button';
 import { motion } from 'framer-motion';
+import MarketingLayout from '../components/MarketingLayout';
+import {
+  LightningIcon,
+  ShieldIcon,
+  CloudIcon,
+  ChartIcon,
+  StarIcon,
+  ArrowRightIcon,
+  CheckIcon,
+  SparklesIcon,
+  ZapIcon,
+  GlobeIcon,
+  UsersIcon,
+  RocketIcon,
+  CameraIcon,
+  PaletteIcon,
+  CodeIcon,
+  LockIcon
+} from '../components/icons';
 
-export default function FeaturesPage() {
+export default function Features() {
   const features = [
-    { title: 'Batch optimization', detail: 'Upload multiple images and track progress in real time.' },
-    { title: 'Format conversion', detail: 'Convert to WebP/AVIF/PNG/JPEG automatically.' },
-    { title: 'Metadata control', detail: 'Preserve or strip EXIF/IPTC/XMP with one click.' },
-    { title: 'Watermark & thumbnails', detail: 'Add watermarks and generate responsive thumbs.' },
-    { title: 'Secure downloads', detail: 'Private, expiring, and user-scoped downloads.' },
-    { title: 'API + SDK', detail: 'Automate via REST and the JavaScript SDK.' },
+    {
+      icon: <LightningIcon className="w-8 h-8" />,
+      title: "Lightning Fast Processing",
+      description: "Optimize images in seconds with our high-performance engine",
+      benefits: ["Sub-second processing", "Batch optimization", "Real-time preview"]
+    },
+    {
+      icon: <ShieldIcon className="w-8 h-8" />,
+      title: "Enterprise Security",
+      description: "Bank-level security with end-to-end encryption",
+      benefits: ["256-bit encryption", "GDPR compliant", "SOC 2 certified"]
+    },
+    {
+      icon: <CloudIcon className="w-8 h-8" />,
+      title: "Cloud-Native Architecture",
+      description: "Built for scale with global CDN distribution",
+      benefits: ["99.9% uptime", "Global edge locations", "Auto-scaling"]
+    },
+    {
+      icon: <ChartIcon className="w-8 h-8" />,
+      title: "Advanced Analytics",
+      description: "Deep insights into your optimization performance",
+      benefits: ["Real-time metrics", "Custom reports", "Performance tracking"]
+    }
+  ];
+
+  const advancedFeatures = [
+    {
+      icon: <CameraIcon className="w-8 h-8" />,
+      title: "AI-Powered Analysis",
+      description: "Intelligent image analysis and optimization recommendations",
+      color: "from-primary-500 to-primary-600"
+    },
+    {
+      icon: <PaletteIcon className="w-8 h-8" />,
+      title: "Smart Watermarking",
+      description: "Professional watermarking with AI positioning",
+      color: "from-secondary-500 to-secondary-600"
+    },
+    {
+      icon: <CodeIcon className="w-8 h-8" />,
+      title: "Developer API",
+      description: "RESTful API with comprehensive documentation",
+      color: "from-accent-500 to-accent-600"
+    },
+    {
+      icon: <LockIcon className="w-8 h-8" />,
+      title: "Batch Processing",
+      description: "Process thousands of images simultaneously",
+      color: "from-light-500 to-light-600"
+    }
   ];
 
   return (
-    <MarketingLayout>
-      <section className="py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="grid lg:grid-cols-2 gap-10 items-center"
+    <MarketingLayout title="Features - PixelSqueeze">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
           >
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Features</h1>
-              <p className="mt-2 text-gray-600 max-w-2xl">Everything you need to optimize images for fast, beautiful websites and apps.</p>
-              <ul className="mt-6 grid sm:grid-cols-2 gap-4">
-                {features.map((f, i) => (
-                  <motion.li key={f.title} className="rounded-xl border border-gray-200 p-4 bg-white" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.05 * i }}>
-                    <div className="h-8 w-8 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center font-bold">✓</div>
-                    <h3 className="mt-2 font-semibold text-gray-900">{f.title}</h3>
-                    <p className="text-sm text-gray-600">{f.detail}</p>
-                  </motion.li>
-                ))}
-              </ul>
-              <div className="mt-6"><Button href="/register" variant="primary">Start free</Button></div>
-            </div>
-            <motion.div initial={{ opacity: 0, scale: 0.98 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
-              <img src="/illustrations/features.svg" alt="Features" className="w-full rounded-xl border border-gray-200" />
-            </motion.div>
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+              Powerful Features for{' '}
+              <span className="bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
+                Modern Teams
+              </span>
+            </h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Discover the comprehensive toolkit that makes PixelSqueeze the go-to solution for image optimization.
+            </p>
           </motion.div>
+        </div>
+
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <motion.div 
+            animate={{ 
+              y: [0, -20, 0],
+              rotate: [0, 5, 0]
+            }}
+            transition={{ 
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute -top-40 -right-40 w-80 h-80 bg-primary-200 rounded-full mix-blend-multiply filter blur-xl opacity-70"
+          ></motion.div>
+          <motion.div 
+            animate={{ 
+              y: [0, 20, 0],
+              rotate: [0, -5, 0]
+            }}
+            transition={{ 
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 2
+            }}
+            className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-200 rounded-full mix-blend-multiply filter blur-xl opacity-70"
+          ></motion.div>
         </div>
       </section>
 
-      <section className="py-12 bg-primary-50/60">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-gray-900">Why PixelSqueeze?</h2>
-          <div className="mt-6 grid md:grid-cols-3 gap-6">
-            {[
-              { t: 'Speed', d: 'Optimized pipeline for fast processing and delivery.'},
-              { t: 'Reliability', d: 'Secure downloads and robust error handling.'},
-              { t: 'Developer Experience', d: 'Clean API, docs, and examples.'},
-            ].map((i, idx) => (
-              <motion.div key={i.t} className="rounded-xl border border-gray-200 p-6 bg-white" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.05 * idx }}>
-                <div className="h-8 w-8 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center font-bold">✓</div>
-                <div className="mt-2 font-semibold text-gray-900">{i.t}</div>
-                <div className="text-sm text-gray-600">{i.d}</div>
+      {/* Core Features */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Core Features
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Everything you need to optimize images at scale
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-8 border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
+              >
+                <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center mb-6 text-white">
+                  {feature.icon}
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">{feature.title}</h3>
+                <p className="text-gray-600 mb-6">{feature.description}</p>
+                <ul className="space-y-2">
+                  {feature.benefits.map((benefit, benefitIndex) => (
+                    <li key={benefitIndex} className="flex items-center text-gray-700">
+                      <CheckIcon className="w-5 h-5 text-primary-500 mr-3" />
+                      {benefit}
+                    </li>
+                  ))}
+                </ul>
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Advanced Features */}
+      <section className="py-20 bg-gradient-to-r from-primary-50 to-secondary-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Advanced Capabilities
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Take your image optimization to the next level
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {advancedFeatures.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="bg-white rounded-xl p-6 text-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2"
+              >
+                <div className={`w-16 h-16 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center mx-auto mb-4 text-white`}>
+                  {feature.icon}
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
+                <p className="text-gray-600 text-sm">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Technology Stack */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Built with Modern Technology
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Leveraging cutting-edge tools and frameworks for optimal performance
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {[
+              { name: "WebAssembly", description: "Near-native performance" },
+              { name: "AI/ML", description: "Intelligent optimization" },
+              { name: "Cloud Native", description: "Scalable infrastructure" },
+              { name: "Real-time", description: "Instant processing" }
+            ].map((tech, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="text-center"
+              >
+                <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <SparklesIcon className="w-10 h-10 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{tech.name}</h3>
+                <p className="text-gray-600 text-sm">{tech.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-primary-500 to-secondary-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-3xl md:text-4xl font-bold text-white mb-4"
+          >
+            Ready to Experience These Features?
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto"
+          >
+            Start optimizing your images today with our powerful feature set.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            viewport={{ once: true }}
+            className="space-x-4"
+          >
+            <a href="/register" className="bg-white text-primary-500 hover:bg-gray-100 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200 inline-block">
+              Get Started Free
+            </a>
+            <a href="/pricing" className="border-2 border-white text-white hover:bg-white hover:text-primary-500 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200 inline-block">
+              View Pricing
+            </a>
+          </motion.div>
         </div>
       </section>
     </MarketingLayout>
