@@ -15,6 +15,7 @@ const billingRoutes = require('./routes/billing');
 const analyticsRoutes = require('./routes/analytics');
 const batchProcessingRoutes = require('./routes/batchProcessing');
 const preferencesRoutes = require('./routes/preferences');
+const performanceRoutes = require('./routes/performance');
 const storageService = require('./services/storageService');
 const sentry = require('./services/sentry');
 
@@ -137,6 +138,7 @@ app.use('/api/billing', billingRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/batch-processing', batchProcessingRoutes);
 app.use('/api/preferences', preferencesRoutes);
+app.use('/api/performance', performanceRoutes);
 
 // Sentry error handler (before our error handler)
 if (sentry.errorHandler) {
