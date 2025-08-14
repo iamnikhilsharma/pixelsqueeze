@@ -12,7 +12,8 @@ import {
   DocumentTextIcon,
   PaintBrushIcon,
   XMarkIcon,
-  Square3Stack3DIcon
+  Square3Stack3DIcon,
+  SwatchIcon
 } from '@heroicons/react/24/outline';
 import Layout from '@/components/Layout';
 import Button from '@/components/Button';
@@ -429,24 +430,69 @@ export default function AdvancedTools() {
               </div>
             )}
 
+            {/* Image Analysis Tool Interface */}
+            {selectedTool === 'image-analysis' && (
+              <div className="space-y-6">
+                <div className="text-center py-12">
+                  <div className="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <ChartBarIcon className="w-12 h-12 text-indigo-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                    Intelligent Image Analysis
+                  </h3>
+                  <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+                    Get comprehensive insights into your images including color analysis, metadata extraction, 
+                    quality assessment, and personalized optimization recommendations.
+                  </p>
+                  
+                  <div className="grid md:grid-cols-2 gap-6 mb-8 max-w-4xl mx-auto">
+                    <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                        <SwatchIcon className="w-5 h-5 mr-2 text-indigo-600" />
+                        Color Analysis
+                      </h4>
+                      <ul className="text-sm text-gray-600 space-y-2">
+                        <li>• Dominant color extraction</li>
+                        <li>• Color palette generation</li>
+                        <li>• Color temperature analysis</li>
+                        <li>• Color harmony assessment</li>
+                        <li>• RGB/HSL color values</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                        <DocumentTextIcon className="w-5 h-5 mr-2 text-indigo-600" />
+                        Quality Assessment
+                      </h4>
+                      <ul className="text-sm text-gray-600 space-y-2">
+                        <li>• Resolution analysis</li>
+                        <li>• Format quality scoring</li>
+                        <li>• Compression assessment</li>
+                        <li>• Sharpness evaluation</li>
+                        <li>• Noise level detection</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <Button
+                    href="/image-analysis"
+                    variant="primary"
+                    size="lg"
+                    className="text-lg px-8 py-4"
+                  >
+                    <ChartBarIcon className="w-6 h-6 mr-3" />
+                    Open Image Analysis Tool
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Batch Processing Tool Interface */}
             {selectedTool === 'batch-processing' && (
               <div>
               <AdvancedImageUploader onImagesProcessed={handleImagesProcessed} />
                 <p className="mt-4 text-sm text-gray-500">When processing completes, visit <a className="text-blue-600 underline" href="/images">My Images</a> to view and download your results.</p>
-              </div>
-            )}
-
-            {selectedTool === 'image-analysis' && (
-              <div className="text-center py-12">
-                <ChartBarIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Image Analysis</h3>
-                <p className="text-gray-600 mb-4">
-                  Get detailed insights about your images
-                </p>
-                <Button variant="primary">
-                  Coming Soon
-                </Button>
               </div>
             )}
 

@@ -665,6 +665,206 @@ router.post('/thumbnails', authenticateToken, upload.array('images', 10), async 
   }
 });
 
+// Image analysis endpoint
+router.post('/analyze', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image provided' });
+    }
+
+    const {
+      extractMetadata = 'true',
+      analyzeColors = 'true',
+      assessQuality = 'true',
+      generateRecommendations = 'true',
+      detailedAnalysis = 'false'
+    } = req.body;
+
+    console.log(`Analyzing image: ${req.file.originalname} for user ${req.user.email}`);
+    console.log('Analysis options:', { 
+      extractMetadata, 
+      analyzeColors, 
+      assessQuality, 
+      generateRecommendations, 
+      detailedAnalysis 
+    });
+
+    // Perform comprehensive image analysis
+    const analysis = await advancedImageProcessor.analyzeImage(req.file.buffer, {
+      extractMetadata: extractMetadata === 'true',
+      analyzeColors: analyzeColors === 'true',
+      assessQuality: assessQuality === 'true',
+      generateRecommendations: generateRecommendations === 'true',
+      detailedAnalysis: detailedAnalysis === 'true'
+    });
+
+    // Track analytics for this analysis
+    try {
+      await fetch(`${process.env.API_BASE_URL || 'http://localhost:5002'}/api/analytics/track`, {
+        method: 'POST',
+        headers: {
+          'Authorization': req.headers.authorization,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          originalName: req.file.originalname,
+          originalSize: req.file.size,
+          optimizedSize: req.file.size, // Analysis doesn't change size
+          processingTime: 0, // Analysis time not tracked separately
+          format: req.file.originalname.split('.').pop().toLowerCase()
+        })
+      });
+    } catch (error) {
+      console.warn('Failed to track analytics for image analysis:', error);
+    }
+
+    console.log(`Completed analysis for: ${req.file.originalname}`);
+
+    res.json({
+      success: true,
+      data: {
+        originalName: req.file.originalname,
+        originalSize: req.file.size,
+        analysis,
+        analysisTime: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('Image analysis error:', error);
+    res.status(500).json({ 
+      error: 'Image analysis failed', 
+      details: error.message 
+    });
+  }
+});
+
+// Batch image analysis endpoint
+router.post('/analyze-batch', authenticateToken, upload.array('images', 10), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No images provided' });
+    }
+
+    const {
+      extractMetadata = 'true',
+      analyzeColors = 'true',
+      assessQuality = 'true',
+      generateRecommendations = 'true',
+      detailedAnalysis = 'false'
+    } = req.body;
+
+    console.log(`Analyzing ${req.files.length} images for user ${req.user.email}`);
+
+    // Set up Server-Sent Events for progress tracking
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive'
+    });
+
+    const results = [];
+    const totalFiles = req.files.length;
+    let processedFiles = 0;
+
+    // Process each image
+    for (const file of req.files) {
+      try {
+        console.log(`Analyzing image: ${file.originalname}`);
+
+        // Perform image analysis
+        const analysis = await advancedImageProcessor.analyzeImage(file.buffer, {
+          extractMetadata: extractMetadata === 'true',
+          analyzeColors: analyzeColors === 'true',
+          assessQuality: assessQuality === 'true',
+          generateRecommendations: generateRecommendations === 'true',
+          detailedAnalysis: detailedAnalysis === 'true'
+        });
+
+        processedFiles++;
+        
+        // Send progress update
+        res.write(`data: ${JSON.stringify({
+          processed: processedFiles,
+          total: totalFiles,
+          percentage: Math.round((processedFiles / totalFiles) * 100),
+          currentFile: file.originalname,
+          result: {
+            originalName: file.originalname,
+            originalSize: file.size,
+            analysis,
+            analysisTime: new Date().toISOString()
+          }
+        })}\n\n`);
+
+        results.push({
+          originalName: file.originalname,
+          originalSize: file.size,
+          analysis,
+          analysisTime: new Date().toISOString()
+        });
+
+        // Track analytics for this analysis
+        try {
+          await fetch(`${process.env.API_BASE_URL || 'http://localhost:5002'}/api/analytics/track`, {
+            method: 'POST',
+            headers: {
+              'Authorization': req.headers.authorization,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              originalName: file.originalname,
+              originalSize: file.size,
+              optimizedSize: file.size,
+              processingTime: 0,
+              format: file.originalname.split('.').pop().toLowerCase()
+            })
+          });
+        } catch (error) {
+          console.warn('Failed to track analytics for batch analysis:', error);
+        }
+
+      } catch (error) {
+        console.error(`Error analyzing ${file.originalname}:`, error);
+        processedFiles++;
+        
+        res.write(`data: ${JSON.stringify({
+          processed: processedFiles,
+          total: totalFiles,
+          percentage: Math.round((processedFiles / totalFiles) * 100),
+          currentFile: file.originalname,
+          error: error.message
+        })}\n\n`);
+
+        results.push({
+          originalName: file.originalname,
+          error: error.message,
+          originalSize: file.size
+        });
+      }
+    }
+
+    console.log(`Completed batch analysis. Processed ${results.length} files`);
+    
+    // Send completion event
+    res.write(`data: ${JSON.stringify({
+      completed: true,
+      results,
+      totalProcessed: results.length,
+      totalErrors: results.filter(r => r.error).length
+    })}\n\n`);
+
+    res.end();
+
+  } catch (error) {
+    console.error('Batch image analysis error:', error);
+    res.status(500).json({ 
+      error: 'Batch image analysis failed', 
+      details: error.message 
+    });
+  }
+});
+
 // Text watermark endpoint
 router.post('/watermark-text', authenticateToken, upload.single('image'), async (req, res) => {
   try {
@@ -695,65 +895,6 @@ router.post('/watermark-text', authenticateToken, upload.single('image'), async 
   } catch (e) {
     console.error('Text watermark error:', e);
     res.status(500).json({ error: 'Failed to add text watermark', details: e.message });
-  }
-});
-
-// Image analysis
-router.post('/analyze', authenticateToken, upload.single('image'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No image file provided' });
-    }
-
-    const analysis = await advancedImageProcessor.analyzeImage(req.file);
-    const suggestions = advancedImageProcessor.getOptimizationSuggestions(analysis);
-
-    res.json({
-      success: true,
-      data: {
-        ...analysis,
-        suggestions
-      }
-    });
-
-  } catch (error) {
-    console.error('Image analysis error:', error);
-    res.status(500).json({ error: 'Failed to analyze image', details: error.message });
-  }
-});
-
-// Generate thumbnails
-router.post('/thumbnails', authenticateToken, upload.single('image'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No image file provided' });
-    }
-
-    const sizes = req.body.sizes ? JSON.parse(req.body.sizes) : [150, 300, 600];
-    const thumbnails = await advancedImageProcessor.generateThumbnails(req.file, sizes);
-
-    // Save thumbnails
-    const savedThumbnails = [];
-    for (const thumbnail of thumbnails) {
-      const fileName = `thumb_${thumbnail.size}_${Date.now()}.${thumbnail.format}`;
-      const filePath = path.join(__dirname, '../../uploads', fileName);
-      
-      await fs.writeFile(filePath, thumbnail.buffer);
-      
-      savedThumbnails.push({
-        ...thumbnail,
-        downloadUrl: `/uploads/${fileName}`
-      });
-    }
-
-    res.json({
-      success: true,
-      data: savedThumbnails
-    });
-
-  } catch (error) {
-    console.error('Thumbnail generation error:', error);
-    res.status(500).json({ error: 'Failed to generate thumbnails', details: error.message });
   }
 });
 
