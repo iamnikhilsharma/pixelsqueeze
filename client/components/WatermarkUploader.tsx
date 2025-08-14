@@ -184,7 +184,7 @@ const WatermarkUploader: React.FC = () => {
         formData.append(key, value.toString());
       });
 
-      const response = await fetch(`${buildApiUrl()}/api/advanced/watermark`, {
+      const response = await fetch(`${buildApiUrl('')}/api/advanced/watermark`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
