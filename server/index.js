@@ -13,6 +13,8 @@ const adminRoutes = require('./routes/admin');
 const advancedImageRoutes = require('./routes/advancedImage');
 const billingRoutes = require('./routes/billing');
 const analyticsRoutes = require('./routes/analytics');
+const batchProcessingRoutes = require('./routes/batchProcessing');
+const preferencesRoutes = require('./routes/preferences');
 const storageService = require('./services/storageService');
 const sentry = require('./services/sentry');
 
@@ -133,6 +135,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/advanced', advancedImageRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/batch-processing', batchProcessingRoutes);
+app.use('/api/preferences', preferencesRoutes);
 
 // Sentry error handler (before our error handler)
 if (sentry.errorHandler) {
