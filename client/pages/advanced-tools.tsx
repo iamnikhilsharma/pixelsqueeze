@@ -95,7 +95,7 @@ export default function AdvancedTools() {
         {/* Header */}
         <div className="text-center mb-16">
           <div className="flex items-center justify-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mr-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-green-600 to-blue-600 rounded-2xl flex items-center justify-center mr-4">
               <AdvancedToolsIcon className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-4xl font-bold text-gray-900">Advanced Tools</h1>
@@ -113,8 +113,8 @@ export default function AdvancedTools() {
               <div className="p-8">
                 {/* Tool Header */}
                 <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center mr-4">
-                    <div className="text-blue-600">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-blue-100 rounded-xl flex items-center justify-center mr-4">
+                    <div className="text-green-600">
                       {tool.icon}
                     </div>
                   </div>
@@ -172,7 +172,7 @@ export default function AdvancedTools() {
 
         {/* Additional Info */}
         <div className="mt-16 text-center">
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8">
+          <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-8">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">
               Need More Power?
             </h3>
