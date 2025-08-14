@@ -65,6 +65,7 @@ interface UsageStats {
 }
 
 export default function EnhancedDashboard() {
+  const { user, token } = useAuthStore();
   const [usageStats, setUsageStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,14 +76,23 @@ export default function EnhancedDashboard() {
 
   const fetchUsageStats = async () => {
     try {
-      const response = await fetch(buildApiUrl('api/analytics/user'));
+      // Temporarily use mock endpoint for testing
+      const response = await fetch(buildApiUrl('api/analytics/mock'), {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
       if (response.ok) {
         const data = await response.json();
         setUsageStats(data);
+      } else if (response.status === 401) {
+        setError('Authentication failed. Please log in again.');
       } else {
         setError('Failed to fetch usage statistics');
       }
     } catch (err) {
+      console.error('Error fetching usage stats:', err);
       setError('Error fetching usage statistics');
     } finally {
       setIsLoading(false);
@@ -105,12 +115,22 @@ export default function EnhancedDashboard() {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Dashboard</h2>
           <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={fetchUsageStats}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
-          >
-            Try Again
-          </button>
+          <div className="space-x-4">
+            <button
+              onClick={fetchUsageStats}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+            >
+              Try Again
+            </button>
+            {error === 'Authentication required' || error === 'Authentication failed. Please log in again.' ? (
+              <a
+                href="/login"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 inline-block"
+              >
+                Sign In
+              </a>
+            ) : null}
+          </div>
         </div>
       </div>
     );

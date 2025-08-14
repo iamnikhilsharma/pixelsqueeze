@@ -6,6 +6,68 @@ const { asyncHandler } = require('../middleware/errorHandler');
 const { logger } = require('../utils/logger');
 
 /**
+ * GET /api/analytics/mock
+ * Mock data endpoint for testing dashboard (no auth required)
+ */
+router.get('/mock', (req, res) => {
+  const mockData = {
+    user: {
+      name: 'Nikhil',
+      email: 'iamnikhil_sharma@hotmail.com'
+    },
+    currentMonth: {
+      imagesProcessed: 3,
+      bandwidthUsed: '17.29 MB',
+      bandwidthUsedMB: 17.29,
+      bandwidthSaved: '16.92 MB',
+      averageProcessingTime: '0.0s',
+      compressionRatio: 96.7,
+      successRate: 100
+    },
+    planLimits: {
+      monthlyImages: 5000,
+      monthlyBandwidth: '10GB',
+      monthlyBandwidthMB: 10240
+    },
+    recentActivity: [
+      {
+        date: '09/08/2025',
+        imagesProcessed: 2,
+        bandwidthUsed: '3.31 MB',
+        avgTime: '1.6s'
+      },
+      {
+        date: '11/08/2025',
+        imagesProcessed: 1,
+        bandwidthUsed: '13.98 MB',
+        avgTime: '7.0s'
+      }
+    ],
+    formatBreakdown: [
+      {
+        format: 'WEBP',
+        count: 3,
+        percentage: 100.0
+      }
+    ]
+  };
+  
+  res.json(mockData);
+});
+
+/**
+ * GET /api/analytics/test
+ * Test endpoint for analytics routes
+ */
+router.get('/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Analytics routes are working!',
+    timestamp: new Date().toISOString()
+  });
+});
+
+/**
  * GET /api/analytics/user
  * Get current user's usage statistics
  */
