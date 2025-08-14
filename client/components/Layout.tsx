@@ -14,7 +14,8 @@ import {
   ThumbnailIcon,
   AnalysisIcon,
   PerformanceIcon,
-  SettingsIcon
+  SettingsIcon,
+  ChevronDownIcon
 } from './icons';
 import { Dropdown, DropdownItem, DropdownDivider } from './Dropdown';
 
@@ -24,12 +25,13 @@ interface LayoutProps {
 }
 
 export default function Layout({ children, title = 'PixelSqueeze - AI Image Compression' }: LayoutProps) {
-  const { user, logout } = useAuthStore();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, token, logout } = useAuthStore();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
-    setMobileMenuOpen(false);
+    setIsUserMenuOpen(false);
   };
 
   return (
@@ -56,74 +58,76 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
             </div>
 
             {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-8">
+              <Link href="/" className="nav-link">Home</Link>
+              
+              {/* Tools Dropdown */}
+              <div className="relative group">
+                <button className="nav-link flex items-center">
+                  Tools
+                  <ChevronDownIcon className="w-4 h-4 ml-1" />
+                </button>
+                <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                  <Link href="/images" className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-t-lg">Image Optimization</Link>
+                  <Link href="/watermark" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">Watermarking</Link>
+                  <Link href="/thumbnails" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">Thumbnails</Link>
+                  <Link href="/image-analysis" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">Image Analysis</Link>
+                </div>
+              </div>
+
+              {/* Advanced Dropdown */}
+              <div className="relative group">
+                <button className="nav-link flex items-center">
+                  Advanced
+                  <ChevronDownIcon className="w-4 h-4 ml-1" />
+                </button>
+                <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                  <Link href="/advanced-tools" className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-t-lg">Advanced Tools</Link>
+                  <Link href="/performance" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">Performance Dashboard</Link>
+                  <Link href="/api-docs" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">API Documentation</Link>
+                </div>
+              </div>
+
+              <Link href="/pricing" className="nav-link">Pricing</Link>
+              <Link href="/contact" className="nav-link">Contact</Link>
+            </div>
+
+            {/* Right Side - Authentication */}
             <div className="hidden md:flex items-center space-x-4">
-              {user ? (
-                <>
-                  {/* Main Tools Dropdown */}
-                  <Dropdown 
-                    trigger={<span>Tools</span>}
-                    width="lg"
+              {user && token ? (
+                // User is logged in - Show My Account dropdown
+                <div className="relative">
+                  <button
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="flex items-center space-x-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-4 py-2 rounded-lg hover:from-primary-600 hover:to-secondary-600 transition-all duration-200"
                   >
-                    <DropdownItem href="/dashboard" icon={<DashboardIcon className="w-4 h-4" />}>
-                      Dashboard
-                    </DropdownItem>
-                    <DropdownItem href="/images" icon={<ImagesIcon className="w-4 h-4" />}>
-                      My Images
-                    </DropdownItem>
-                    <DropdownDivider />
-                    <DropdownItem href="/watermark" icon={<WatermarkIcon className="w-4 h-4" />}>
-                      Watermark Tool
-                    </DropdownItem>
-                    <DropdownItem href="/thumbnails" icon={<ThumbnailIcon className="w-4 h-4" />}>
-                      Thumbnail Generator
-                    </DropdownItem>
-                    <DropdownItem href="/image-analysis" icon={<AnalysisIcon className="w-4 h-4" />}>
-                      Image Analysis
-                    </DropdownItem>
-                    <DropdownItem href="/performance" icon={<PerformanceIcon className="w-4 h-4" />}>
-                      Performance
-                    </DropdownItem>
-                  </Dropdown>
-
-                  {/* Advanced Tools Dropdown */}
-                  <Dropdown 
-                    trigger={<span>Advanced</span>}
-                    width="md"
-                  >
-                    <DropdownItem href="/advanced-tools" icon={<AdvancedToolsIcon className="w-4 h-4" />}>
-                      All Tools
-                    </DropdownItem>
-                    <DropdownItem href="/settings" icon={<SettingsIcon className="w-4 h-4" />}>
-                      Settings
-                    </DropdownItem>
-                  </Dropdown>
-
-                  {/* User Dropdown */}
-                  <Dropdown 
-                    trigger={<span className="flex items-center space-x-2"><UserIcon className="w-5 h-5" /><span>{user.email}</span></span>}
-                    align="right"
-                    width="md"
-                  >
-                    <DropdownItem href="/dashboard" icon={<DashboardIcon className="w-4 h-4" />}>
-                      Dashboard
-                    </DropdownItem>
-                    <DropdownItem href="/settings" icon={<SettingsIcon className="w-4 h-4" />}>
-                      Account Settings
-                    </DropdownItem>
-                    <DropdownDivider />
-                    <DropdownItem onClick={handleLogout} icon={<LogoutIcon className="w-4 h-4" />}>
-                      Sign Out
-                    </DropdownItem>
-                  </Dropdown>
-                </>
+                    <UserIcon className="w-5 h-5" />
+                    <span>{user.firstName ? `${user.firstName} ${user.lastName}` : 'My Account'}</span>
+                    <ChevronDownIcon className="w-4 h-4" />
+                  </button>
+                  
+                  {isUserMenuOpen && (
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200">
+                      <Link href="/dashboard" className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-t-lg">Dashboard</Link>
+                      <Link href="/profile" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">Profile</Link>
+                      <Link href="/settings" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">Settings</Link>
+                      <div className="border-t border-gray-200">
+                        <button
+                          onClick={handleLogout}
+                          className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-b-lg flex items-center"
+                        >
+                          <LogoutIcon className="w-4 h-4 mr-2" />
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               ) : (
+                // User is not logged in - Show Sign In and Sign Up buttons
                 <>
-                  <Link href="/login" className="nav-link">
-                    Sign In
-                  </Link>
-                  <Link href="/register" className="btn-primary">
-                    Get Started
-                  </Link>
+                  <Link href="/login" className="nav-link">Sign In</Link>
+                  <Link href="/register" className="btn-primary">Sign Up</Link>
                 </>
               )}
             </div>
@@ -131,10 +135,10 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
             {/* Mobile menu button */}
             <div className="md:hidden">
               <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="text-gray-700 hover:text-gray-900 p-2"
               >
-                {mobileMenuOpen ? (
+                {isMobileMenuOpen ? (
                   <CloseIcon className="w-6 h-6" />
                 ) : (
                   <MenuIcon className="w-6 h-6" />
@@ -145,7 +149,7 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
         </div>
 
         {/* Mobile Navigation */}
-        {mobileMenuOpen && (
+        {isMobileMenuOpen && (
           <div className="md:hidden bg-white/95 backdrop-blur-md border-t border-gray-200/50">
             <div className="px-2 pt-2 pb-3 space-y-1">
               {user ? (
@@ -154,12 +158,12 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
                     Welcome, {user.email}
                   </div>
                   
-                  <Link href="/dashboard" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <Link href="/dashboard" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
                     <DashboardIcon className="w-5 h-5" />
                     Dashboard
                   </Link>
                   
-                  <Link href="/images" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <Link href="/images" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
                     <ImagesIcon className="w-5 h-5" />
                     My Images
                   </Link>
@@ -168,22 +172,22 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
                     Tools
                   </div>
                   
-                  <Link href="/watermark" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <Link href="/watermark" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
                     <WatermarkIcon className="w-5 h-5" />
                     Watermark
                   </Link>
                   
-                  <Link href="/thumbnails" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <Link href="/thumbnails" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
                     <ThumbnailIcon className="w-5 h-5" />
                     Thumbnails
                   </Link>
                   
-                  <Link href="/image-analysis" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <Link href="/image-analysis" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
                     <AnalysisIcon className="w-5 h-5" />
                     Analysis
                   </Link>
                   
-                  <Link href="/performance" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <Link href="/performance" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
                     <PerformanceIcon className="w-5 h-5" />
                     Performance
                   </Link>
@@ -192,7 +196,7 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
                     Account
                   </div>
                   
-                  <Link href="/settings" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <Link href="/settings" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
                     <SettingsIcon className="w-5 h-5" />
                     Settings
                   </Link>
@@ -207,10 +211,10 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
                 </>
               ) : (
                 <>
-                  <Link href="/login" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <Link href="/login" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
                     Sign In
                   </Link>
-                  <Link href="/register" className="mobile-nav-link bg-blue-600 text-white hover:bg-blue-700" onClick={() => setMobileMenuOpen(false)}>
+                  <Link href="/register" className="mobile-nav-link bg-blue-600 text-white hover:bg-blue-700" onClick={() => setIsMobileMenuOpen(false)}>
                     Get Started
                   </Link>
                 </>
