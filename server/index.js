@@ -12,6 +12,7 @@ const webhookRoutes = require('./routes/webhooks');
 const adminRoutes = require('./routes/admin');
 const advancedImageRoutes = require('./routes/advancedImage');
 const billingRoutes = require('./routes/billing');
+const analyticsRoutes = require('./routes/analytics');
 const storageService = require('./services/storageService');
 const sentry = require('./services/sentry');
 
@@ -131,6 +132,7 @@ app.use('/api/webhooks', webhookRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/advanced', advancedImageRoutes);
 app.use('/api/billing', billingRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Sentry error handler (before our error handler)
 if (sentry.errorHandler) {

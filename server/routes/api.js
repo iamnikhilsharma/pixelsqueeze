@@ -120,6 +120,30 @@ router.post('/optimize',
       // Increment user usage
       await user.incrementUsage(req.file.size);
 
+      // Track analytics
+      try {
+        const analyticsResponse = await fetch(`${process.env.API_BASE_URL || 'http://localhost:5002'}/api/analytics/track`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${req.headers.authorization}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            originalName: req.file.originalname,
+            originalSize: req.file.size,
+            optimizedSize: result.optimizedSize,
+            processingTime: result.processingTime,
+            format: result.format
+          })
+        });
+        
+        if (!analyticsResponse.ok) {
+          logger.warn('Failed to track analytics for image optimization');
+        }
+      } catch (error) {
+        logger.warn('Error tracking analytics:', error);
+      }
+
       res.json({
         success: true,
         data: {
