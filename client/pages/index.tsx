@@ -13,7 +13,7 @@ import {
 
 export default function Home() {
   return (
-    <MarketingLayout>
+    <MarketingLayout title="PixelSqueeze - AI-Powered Image Optimization">
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

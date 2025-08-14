@@ -32,7 +32,7 @@ export default function ThumbnailsPage() {
   }
 
   return (
-    <Layout>
+    <Layout title="Generate Thumbnails - PixelSqueeze">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Head from 'next/head';
 import Link from 'next/link';
 import { useAuthStore } from '../store/authStore';
 import { 
@@ -17,7 +18,12 @@ import {
 } from './icons';
 import { Dropdown, DropdownItem, DropdownDivider } from './Dropdown';
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+interface LayoutProps {
+  children: React.ReactNode;
+  title?: string;
+}
+
+export default function Layout({ children, title = 'PixelSqueeze - AI Image Compression' }: LayoutProps) {
   const { user, logout } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -28,6 +34,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <Head>
+        <title>{title}</title>
+        <meta name="description" content="Professional image optimization and processing tools for developers, designers, and businesses." />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
       {/* Navigation */}
       <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
