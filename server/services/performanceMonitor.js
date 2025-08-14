@@ -67,74 +67,92 @@ class PerformanceMonitor extends EventEmitter {
    * Track API request
    */
   trackRequest(req, res, next) {
-    const startTime = performance.now();
-    const requestId = this.generateRequestId();
+    try {
+      const startTime = performance.now();
+      const requestId = this.generateRequestId();
 
-    // Add request ID to response headers
-    res.setHeader('X-Request-ID', requestId);
+      // Add request ID to response headers
+      res.setHeader('X-Request-ID', requestId);
 
-    // Track request start
-    this.metrics.requests.total++;
+      // Track request start
+      this.metrics.requests.total++;
 
-    // Override res.end to capture response time
-    const originalEnd = res.end;
-    res.end = function(chunk, encoding) {
-      const endTime = performance.now();
-      const responseTime = endTime - startTime;
+      // Override res.end to capture response time
+      const originalEnd = res.end;
+      const self = this;
+      
+      res.end = function(chunk, encoding) {
+        try {
+          const endTime = performance.now();
+          const responseTime = endTime - startTime;
 
-      // Track response metrics
-      this.trackResponse(req, res, responseTime, requestId);
+          // Track response metrics
+          self.trackResponse(req, res, responseTime, requestId);
+        } catch (error) {
+          // Log error but don't crash the response
+          logger.error('Error in performance tracking:', error);
+        }
 
-      // Call original end method
-      originalEnd.call(this, chunk, encoding);
-    }.bind(this);
+        // Call original end method
+        return originalEnd.call(this, chunk, encoding);
+      };
 
-    next();
+      next();
+    } catch (error) {
+      // Log error but don't crash the request
+      logger.error('Error setting up performance tracking:', error);
+      next();
+    }
   }
 
   /**
    * Track response metrics
    */
   trackResponse(req, res, responseTime, requestId) {
-    // Update request metrics
-    if (res.statusCode >= 200 && res.statusCode < 400) {
-      this.metrics.requests.successful++;
-    } else {
-      this.metrics.requests.failed++;
+    try {
+      // Update request metrics
+      if (res.statusCode >= 200 && res.statusCode < 400) {
+        this.metrics.requests.successful++;
+      } else {
+        this.metrics.requests.failed++;
+      }
+
+      // Track response time
+      this.requestTimes.push(responseTime);
+      if (this.requestTimes.length > 100) {
+        this.requestTimes.shift();
+      }
+
+      // Calculate average response time
+      this.metrics.requests.averageResponseTime = 
+        this.requestTimes.reduce((sum, time) => sum + time, 0) / this.requestTimes.length;
+
+      // Log performance data
+      this.logPerformance({
+        type: 'request',
+        requestId,
+        method: req.method,
+        path: req.path,
+        statusCode: res.statusCode,
+        responseTime,
+        userAgent: req.get('User-Agent'),
+        ip: req.ip,
+        timestamp: new Date()
+      });
+
+      // Emit performance event
+      this.emit('requestCompleted', {
+        requestId,
+        method: req.method,
+        path: req.path,
+        statusCode: res.statusCode,
+        responseTime,
+        timestamp: new Date()
+      });
+    } catch (error) {
+      // Log error but don't crash
+      logger.error('Error tracking response metrics:', error);
     }
-
-    // Track response time
-    this.requestTimes.push(responseTime);
-    if (this.requestTimes.length > 100) {
-      this.requestTimes.shift();
-    }
-
-    // Calculate average response time
-    this.metrics.requests.averageResponseTime = 
-      this.requestTimes.reduce((sum, time) => sum + time, 0) / this.requestTimes.length;
-
-    // Log performance data
-    this.logPerformance({
-      type: 'request',
-      requestId,
-      method: req.method,
-      path: req.path,
-      statusCode: res.statusCode,
-      responseTime,
-      userAgent: req.get('User-Agent'),
-      ip: req.ip,
-      timestamp: new Date()
-    });
-
-    // Emit performance event
-    this.emit('requestCompleted', {
-      requestId,
-      method: req.method,
-      path: req.path,
-      statusCode: res.statusCode,
-      responseTime,
-      timestamp: new Date()
-    });
   }
 
   /**
