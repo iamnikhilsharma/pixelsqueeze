@@ -93,8 +93,13 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Performance monitoring middleware
-app.use('/api/', performanceMonitor.trackRequest.bind(performanceMonitor));
+// Performance monitoring middleware (optional)
+if (performanceMonitor && typeof performanceMonitor.trackRequest === 'function') {
+  app.use('/api/', performanceMonitor.trackRequest.bind(performanceMonitor));
+  logger.info('Performance monitoring middleware enabled');
+} else {
+  logger.warn('Performance monitoring not available, skipping middleware');
+}
 
 // Database connection
 mongoose.connect(process.env.MONGODB_URI)
@@ -150,7 +155,14 @@ app.use('/api/billing', billingRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/batch-processing', batchProcessingRoutes);
 app.use('/api/preferences', preferencesRoutes);
-app.use('/api/performance', performanceRoutes);
+
+// Performance routes (optional)
+if (performanceRoutes) {
+  app.use('/api/performance', performanceRoutes);
+  logger.info('Performance routes enabled');
+} else {
+  logger.warn('Performance routes not available');
+}
 
 // Sentry error handler (before our error handler)
 if (sentry.errorHandler) {
