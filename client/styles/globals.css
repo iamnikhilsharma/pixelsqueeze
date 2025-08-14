@@ -6,34 +6,37 @@
 
 /* Custom CSS Variables */
 :root {
-  --color-primary: #16a34a; /* green-600 */
-  --color-primary-light: #22c55e; /* green-500 */
-  --color-primary-dark: #15803d; /* green-700 */
-  --color-secondary: #2563eb; /* blue-600 */
-  --color-secondary-light: #3b82f6; /* blue-500 */
-  --color-secondary-dark: #1d4ed8; /* blue-700 */
-  --color-accent: #7c3aed; /* violet-600 */
-  --color-accent-light: #8b5cf6; /* violet-500 */
-  --color-accent-dark: #6d28d9; /* violet-700 */
+  --color-primary: #8bc34a; /* Main green from logo */
+  --color-primary-light: #9ccc65; /* Lighter green from logo */
+  --color-primary-dark: #689f38; /* Darker green from logo */
+  --color-secondary: #03a9f4; /* Main blue from logo */
+  --color-secondary-light: #42a5f5; /* Lighter blue from logo */
+  --color-secondary-dark: #0288d1; /* Darker blue from logo */
+  --color-accent: #4caf50; /* Secondary green from logo */
+  --color-accent-light: #66bb6a; /* Lighter accent green */
+  --color-accent-dark: #388e3c; /* Dark green from logo */
+  --color-light: #a8e6a1; /* Light green from logo */
+  --color-light-light: #c8e6c9; /* Lighter light green */
+  --color-light-dark: #8bc34a; /* Darker light green */
 }
 
 /* Base Styles */
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  background: linear-gradient(135deg, #f0f9ff 0%, #f0fdf4 50%, #eff6ff 100%);
+  background: linear-gradient(135deg, #e3f2fd 0%, #f1f8e9 50%, #e8f5e8 100%);
   color: #1f2937;
   line-height: 1.6;
 }
 
 /* Custom Selection Colors */
 ::selection {
-  background-color: rgba(34, 197, 94, 0.2); /* green-500 with opacity */
-  color: #15803d; /* green-700 */
+  background-color: rgba(139, 195, 74, 0.2); /* primary-500 with opacity */
+  color: #689f38; /* primary-700 */
 }
 
 ::-moz-selection {
-  background-color: rgba(34, 197, 94, 0.2);
-  color: #15803d;
+  background-color: rgba(139, 195, 74, 0.2);
+  color: #689f38;
 }
 
 @layer base {
@@ -68,15 +71,15 @@ body {
 @layer components {
   /* Enhanced Button System */
   .btn-primary {
-    @apply bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2;
+    @apply bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
   }
   
   .btn-secondary {
-    @apply bg-white text-green-600 border-2 border-green-600 hover:bg-green-50 font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2;
+    @apply bg-white text-primary-500 border-2 border-primary-500 hover:bg-primary-50 font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
   }
   
   .btn-outline {
-    @apply bg-transparent text-green-600 border-2 border-green-600 hover:bg-green-600 hover:text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2;
+    @apply bg-transparent text-primary-500 border-2 border-primary-500 hover:bg-primary-500 hover:text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
   }
 
   .btn-ghost {
@@ -185,7 +188,7 @@ body {
 
   /* Enhanced Navigation */
   .nav-link {
-    @apply text-gray-700 hover:text-green-600 px-3 py-2 text-sm font-medium transition-colors duration-200;
+    @apply text-gray-700 hover:text-primary-500 px-3 py-2 text-sm font-medium transition-colors duration-200;
   }
 
   .nav-link.active {
@@ -535,7 +538,7 @@ body {
 }
 
 .form-input {
-  @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200;
+  @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200;
 }
 
 .form-label {

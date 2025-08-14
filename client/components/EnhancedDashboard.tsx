@@ -103,7 +103,7 @@ export default function EnhancedDashboard() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center min-h-96">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-500"></div>
         </div>
       </div>
     );
@@ -118,7 +118,7 @@ export default function EnhancedDashboard() {
           <div className="space-x-4">
             <button
               onClick={fetchUsageStats}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+              className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
             >
               Try Again
             </button>
@@ -176,7 +176,7 @@ export default function EnhancedDashboard() {
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
-                className="bg-gradient-to-r from-green-500 to-blue-600 h-2 rounded-full transition-all duration-300"
+                className="bg-gradient-to-r from-primary-500 to-secondary-500 h-2 rounded-full transition-all duration-300"
                 style={{ 
                   width: `${Math.min(
                     ((usageStats.currentMonth?.imagesProcessed || 0) / (usageStats.planLimits?.monthlyImages || 1)) * 100, 
@@ -196,7 +196,7 @@ export default function EnhancedDashboard() {
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
-                className="bg-gradient-to-r from-green-500 to-blue-600 h-2 rounded-full transition-all duration-300"
+                className="bg-gradient-to-r from-primary-500 to-secondary-500 h-2 rounded-full transition-all duration-300"
                 style={{ 
                   width: `${Math.min(
                     ((usageStats.currentMonth?.bandwidthUsedMB || 0) / (usageStats.planLimits?.monthlyBandwidthMB || 1)) * 100, 
@@ -251,7 +251,7 @@ export default function EnhancedDashboard() {
           </h2>
           <button
             onClick={fetchUsageStats}
-            className="text-green-600 hover:text-green-700 transition-colors duration-200"
+            className="text-primary-500 hover:text-primary-600 transition-colors duration-200"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -261,19 +261,19 @@ export default function EnhancedDashboard() {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center">
-            <div className="text-3xl font-bold text-green-600 mb-2">
+            <div className="text-3xl font-bold text-primary-500 mb-2">
               {usageStats.currentMonth?.compressionRatio || 0}%
             </div>
             <div className="text-gray-600">Average Compression</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">
+            <div className="text-3xl font-bold text-secondary-500 mb-2">
               {usageStats.currentMonth?.bandwidthSaved || '0 MB'}
             </div>
             <div className="text-gray-600">Total Bandwidth Saved</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-purple-600 mb-2">
+            <div className="text-3xl font-bold text-accent-500 mb-2">
               {usageStats.currentMonth?.imagesProcessed || 0}
             </div>
             <div className="text-gray-600">Images This Month</div>
@@ -315,7 +315,7 @@ export default function EnhancedDashboard() {
             {usageStats.formatBreakdown?.map((format: any, index: number) => (
               <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
                 <div className="flex items-center">
-                  <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                  <div className="w-3 h-3 bg-primary-500 rounded-full mr-3"></div>
                   <span className="text-sm font-medium text-gray-900">{format.format}</span>
                 </div>
                 <div className="text-right">
@@ -334,7 +334,7 @@ export default function EnhancedDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <a
             href="/images"
-            className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-all duration-200"
+            className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-all duration-200"
           >
             <span className="text-2xl mr-3">📁</span>
             <div>
@@ -344,7 +344,7 @@ export default function EnhancedDashboard() {
           </a>
           <a
             href="/watermark"
-            className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200"
+            className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-secondary-300 hover:bg-secondary-50 transition-all duration-200"
           >
             <span className="text-2xl mr-3">💧</span>
             <div>
@@ -354,7 +354,7 @@ export default function EnhancedDashboard() {
           </a>
           <a
             href="/thumbnails"
-            className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-all duration-200"
+            className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-accent-300 hover:bg-accent-50 transition-all duration-200"
           >
             <span className="text-2xl mr-3">🖼️</span>
             <div>

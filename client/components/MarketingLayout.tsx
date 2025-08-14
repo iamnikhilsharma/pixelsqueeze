@@ -39,13 +39,12 @@ export default function MarketingLayout({ children, title = 'PixelSqueeze - AI I
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <Link href="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">PS</span>
-                </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-                  PixelSqueeze
-                </span>
+              <Link href="/" className="flex items-center">
+                <img 
+                  src="/logo.svg" 
+                  alt="PixelSqueeze" 
+                  className="h-10 w-auto"
+                />
               </Link>
             </div>
 
@@ -173,13 +172,12 @@ export default function MarketingLayout({ children, title = 'PixelSqueeze - AI I
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">PS</span>
-                </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-                  PixelSqueeze
-                </span>
+              <div className="flex items-center mb-4">
+                <img 
+                  src="/logo.svg" 
+                  alt="PixelSqueeze" 
+                  className="h-12 w-auto"
+                />
               </div>
               <p className="text-gray-600 max-w-md">
                 Professional image optimization and processing tools for developers, designers, and businesses.

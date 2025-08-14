@@ -18,9 +18,18 @@ export default function Home() {
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
+            {/* Logo */}
+            <div className="flex justify-center mb-8">
+              <img 
+                src="/logo.svg" 
+                alt="PixelSqueeze" 
+                className="h-24 w-auto"
+              />
+            </div>
+            
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
               Transform Your Images with{' '}
-              <span className="bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
                 AI-Powered
               </span>{' '}
               Optimization
@@ -153,15 +162,15 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-green-600 to-blue-600">
+      <section className="py-20 bg-gradient-to-r from-primary-500 to-secondary-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Ready to Optimize Your Images?
           </h2>
-          <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
             Join thousands of developers and designers who trust PixelSqueeze for their image optimization needs.
           </p>
-          <Link href="/register" className="bg-white text-green-600 hover:bg-gray-100 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200 inline-flex items-center">
+          <Link href="/register" className="bg-white text-primary-500 hover:bg-gray-100 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200 inline-flex items-center">
             Start Optimizing Now
             <ArrowRightIcon className="w-5 h-5 ml-2" />
           </Link>
