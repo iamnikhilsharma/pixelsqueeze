@@ -99,7 +99,7 @@ export default function Features() {
         </div>
 
         {/* Background Elements */}
-        <div className="absolute inset-0 overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <motion.div 
             animate={{ 
               y: [0, -20, 0],

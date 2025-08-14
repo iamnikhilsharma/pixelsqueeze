@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import MarketingLayout from '../components/MarketingLayout';
+import { useAuthStore } from '../store/authStore';
 import {
   LightningIcon,
   ShieldIcon,
@@ -20,16 +21,41 @@ import {
 } from '../components/icons';
 
 export default function Home() {
+  const { user, token } = useAuthStore();
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [results, setResults] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [usageCount, setUsageCount] = useState(0);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
+    setError(null);
+    
+    // Validate file count
     if (files.length > 10) {
-      alert('Maximum 10 images allowed');
+      setError('Maximum 10 images allowed');
       return;
     }
+
+    // Validate file types
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+    
+    if (invalidFiles.length > 0) {
+      setError(`Invalid file type(s): ${invalidFiles.map(f => f.name).join(', ')}. Only JPEG, PNG, and WebP are supported.`);
+      return;
+    }
+
+    // Validate file sizes (max 10MB per file)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const oversizedFiles = files.filter(file => file.size > maxSize);
+    
+    if (oversizedFiles.length > 0) {
+      setError(`File(s) too large: ${oversizedFiles.map(f => f.name).join(', ')}. Maximum size is 10MB per file.`);
+      return;
+    }
+
     setUploadedFiles(files);
   };
 
@@ -37,18 +63,79 @@ export default function Home() {
     if (uploadedFiles.length === 0) return;
     
     setIsProcessing(true);
-    // Simulate processing
-    setTimeout(() => {
-      const mockResults = uploadedFiles.map((file, index) => ({
-        name: file.name,
-        originalSize: Math.floor(Math.random() * 5000) + 1000,
-        optimizedSize: Math.floor(Math.random() * 2000) + 500,
-        compression: Math.floor(Math.random() * 40) + 60,
-        format: ['JPEG', 'PNG', 'WEBP'][Math.floor(Math.random() * 3)]
-      }));
-      setResults(mockResults);
+    setError(null);
+    
+    try {
+      // Simulate processing with more realistic timing
+      const processingTime = Math.min(uploadedFiles.length * 500, 3000); // 500ms per image, max 3s
+      
+      setTimeout(() => {
+        const mockResults = uploadedFiles.map((file, index) => ({
+          name: file.name,
+          originalSize: file.size,
+          optimizedSize: Math.floor(file.size * (0.6 + Math.random() * 0.3)), // 60-90% of original
+          compression: Math.floor((1 - (file.size * (0.6 + Math.random() * 0.3)) / file.size) * 100),
+          format: file.name.toLowerCase().endsWith('.webp') ? 'WEBP' : 
+                 file.name.toLowerCase().endsWith('.png') ? 'PNG' : 'JPEG',
+          processingTime: Math.floor(Math.random() * 2000) + 500, // 0.5-2.5s
+          id: `opt_${Date.now()}_${index}` // Unique ID for each result
+        }));
+        setResults(mockResults);
+        setIsProcessing(false);
+        
+        // Increment usage count for logged-in users
+        if (user && token) {
+          setUsageCount(prev => prev + uploadedFiles.length);
+        }
+      }, processingTime);
+    } catch (err) {
+      setError('Failed to process images. Please try again.');
       setIsProcessing(false);
-    }, 3000);
+    }
+  };
+
+  const downloadOptimizedImage = (result: any) => {
+    if (!user || !token) {
+      setError('Please log in to download optimized images');
+      return;
+    }
+
+    // Create a mock optimized image blob (in real app, this would be the actual optimized image)
+    const canvas = document.createElement('canvas');
+    canvas.width = 800;
+    canvas.height = 600;
+    const ctx = canvas.getContext('2d');
+    
+    if (ctx) {
+      // Create a simple placeholder image
+      ctx.fillStyle = '#f3f4f6';
+      ctx.fillRect(0, 0, 800, 600);
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('Optimized Image', 400, 300);
+      ctx.fillText(`${result.compression}% compression`, 400, 340);
+    }
+
+    // Convert to blob and download
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `optimized_${result.name}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    }, 'image/png');
+  };
+
+  const clearResults = () => {
+    setResults([]);
+    setUploadedFiles([]);
+    setError(null);
   };
 
   return (
@@ -118,9 +205,47 @@ export default function Home() {
                 Choose Images
               </label>
               <p className="text-sm text-gray-500 mt-2">
-                Maximum 10 images • Supports JPEG, PNG, WEBP
+                Maximum 10 images • Supports JPEG, PNG, WebP
               </p>
+              {!user || !token ? (
+                <p className="text-xs text-amber-600 mt-2">
+                  ⚠️ Demo mode: You can optimize images but cannot download them. Sign up for full access!
+                </p>
+              ) : null}
             </div>
+
+            {/* Error Display */}
+            {error && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg"
+              >
+                <div className="flex items-center">
+                  <div className="w-5 h-5 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-red-600 text-sm">!</span>
+                  </div>
+                  <p className="text-red-800 text-sm">{error}</p>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Usage Counter for Logged-in Users */}
+            {user && token && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <ChartIcon className="w-5 h-5 text-blue-600 mr-2" />
+                    <span className="text-blue-800 text-sm font-medium">Images Optimized This Session:</span>
+                  </div>
+                  <span className="text-blue-900 text-lg font-bold">{usageCount}</span>
+                </div>
+              </motion.div>
+            )}
 
             {/* File List */}
             {uploadedFiles.length > 0 && (
@@ -223,15 +348,41 @@ export default function Home() {
                           </span>
                         </div>
                       </div>
+                      
+                      {/* Download Button for Logged-in Users */}
+                      {user && token && (
+                        <button
+                          onClick={() => downloadOptimizedImage(result)}
+                          className="w-full mt-3 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center"
+                        >
+                          <DownloadIcon className="w-4 h-4 mr-2" />
+                          Download
+                        </button>
+                      )}
                     </motion.div>
                   ))}
                 </div>
                 
-                <div className="text-center mt-6">
-                  <Link href="/register" className="bg-white text-primary-600 hover:bg-gray-50 px-6 py-3 rounded-xl font-semibold transition-colors inline-flex items-center">
-                    <DownloadIcon className="w-5 h-5 mr-2" />
-                    Get Full Access
-                  </Link>
+                <div className="text-center mt-6 space-y-3">
+                  {user && token && (
+                    <p className="text-sm text-gray-600">
+                      💡 You can download all optimized images. Your usage count: {usageCount} images
+                    </p>
+                  )}
+                  <div className="flex justify-center space-x-4">
+                    <button
+                      onClick={clearResults}
+                      className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+                    >
+                      Clear Results
+                    </button>
+                    {!user || !token ? (
+                      <Link href="/register" className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 inline-flex items-center">
+                        <StarIcon className="w-4 h-4 mr-2" />
+                        Sign Up to Download
+                      </Link>
+                    ) : null}
+                  </div>
                 </div>
               </motion.div>
             )}

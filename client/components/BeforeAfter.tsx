@@ -46,7 +46,7 @@ export default function BeforeAfter({ beforeSrc, afterSrc, height = 360, classNa
   return (
     <div className={`relative w-full overflow-hidden rounded-xl border border-gray-200 bg-white ${className}`} style={{ height }} ref={containerRef}>
       <img src={beforeSrc} alt="Before" className="absolute inset-0 h-full w-full object-cover select-none" draggable={false} />
-      <div className="absolute inset-0 overflow-hidden" style={{ width: `${percent}%` }}>
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" style={{ width: `${percent}%` }}>
         <img src={afterSrc} alt="After" className="h-full w-full object-cover select-none" draggable={false} />
       </div>
       {/* Slider */}
