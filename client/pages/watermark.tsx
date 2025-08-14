@@ -32,7 +32,7 @@ export default function WatermarkPage() {
   }
 
   return (
-    <Layout title="Watermark Images - PixelSqueeze">
+    <Layout>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

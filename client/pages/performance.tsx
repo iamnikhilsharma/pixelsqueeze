@@ -23,7 +23,7 @@ export default function PerformancePage() {
 
   if (!hasRehydrated) {
     return (
-      <Layout title="Performance - PixelSqueeze">
+      <Layout>
         <div className="flex items-center justify-center min-h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
@@ -36,7 +36,7 @@ export default function PerformancePage() {
   }
 
   return (
-    <Layout title="Performance - PixelSqueeze">
+    <Layout>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

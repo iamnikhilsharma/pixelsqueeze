@@ -82,7 +82,7 @@ export default function ContactPage() {
 
   if (submitted) {
     return (
-      <MarketingLayout title="Message Sent - PixelSqueeze">
+      <MarketingLayout>
         <section className="py-20">
           <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 text-center">
             <motion.div
@@ -105,7 +105,7 @@ export default function ContactPage() {
   }
 
   return (
-    <MarketingLayout title="Contact Us - PixelSqueeze">
+    <MarketingLayout>
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-br from-primary-50 via-white to-green-50/30">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

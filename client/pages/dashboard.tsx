@@ -31,7 +31,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <Layout title="Dashboard - PixelSqueeze">
+    <Layout>
       <EnhancedDashboard />
     </Layout>
   );
