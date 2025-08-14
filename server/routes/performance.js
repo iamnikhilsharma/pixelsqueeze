@@ -10,6 +10,10 @@ const { logger } = require('../utils/logger');
 // Get current performance metrics
 router.get('/metrics', authenticateToken, asyncHandler(async (req, res) => {
   try {
+    if (!performanceMonitor) {
+      return res.status(503).json({ error: 'Performance monitoring service not available' });
+    }
+    
     const metrics = performanceMonitor.getMetrics();
     
     res.json({
@@ -47,6 +51,10 @@ router.get('/report', authenticateToken, asyncHandler(async (req, res) => {
 // Get cache statistics
 router.get('/cache/stats', authenticateToken, asyncHandler(async (req, res) => {
   try {
+    if (!advancedCache) {
+      return res.status(503).json({ error: 'Cache service not available' });
+    }
+    
     const cacheStats = await advancedCache.getStats();
     
     res.json({

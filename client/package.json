@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "build:prod": "NEXT_PUBLIC_API_URL=https://pixelsqueeze.onrender.com next build",
+    "start:prod": "NEXT_PUBLIC_API_URL=https://pixelsqueeze.onrender.com next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
   },

@@ -16,6 +16,7 @@ const analyticsRoutes = require('./routes/analytics');
 const batchProcessingRoutes = require('./routes/batchProcessing');
 const preferencesRoutes = require('./routes/preferences');
 const performanceRoutes = require('./routes/performance');
+const performanceMonitor = require('./services/performanceMonitor');
 const storageService = require('./services/storageService');
 const sentry = require('./services/sentry');
 
@@ -50,41 +51,33 @@ app.use(helmet({
   },
 }));
 
-// CORS with multi-origin and wildcard support
-function buildCorsOrigin() {
-  const raw = process.env.CORS_ORIGIN || 'http://localhost:3000';
-  const list = raw.split(',').map(s => s.trim()).filter(Boolean);
-  const patterns = list.map(item => {
-    if (item.includes('*')) {
-      const escaped = item.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
-      return new RegExp(`^${escaped}$`);
-    }
-    return item;
-  });
-
-  return function(origin, callback) {
-    if (!origin) return callback(null, true);
-    const allowed = patterns.some(p => (p instanceof RegExp ? p.test(origin) : p === origin));
-    logger.info(`CORS check for origin: ${origin}, allowed: ${allowed}`);
-    if (allowed) return callback(null, true);
-    return callback(new Error('Not allowed by CORS'));
-  };
-}
-
-// Enhanced CORS configuration
-const corsOptions = {
-  origin: buildCorsOrigin(),
+// CORS configuration
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://pixelsqueeze-rho.vercel.app',
+    'https://pixelsqueeze.vercel.app',
+    'https://pixelsqueeze.onrender.com'
+  ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-  exposedHeaders: ['Content-Length', 'X-Requested-With'],
-  maxAge: 86400 // 24 hours
-};
-
-app.use(cors(corsOptions));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 
 // Handle CORS preflight requests explicitly
-app.options('*', cors(corsOptions));
+app.options('*', cors({
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://pixelsqueeze-rho.vercel.app',
+    'https://pixelsqueeze.vercel.app',
+    'https://pixelsqueeze.onrender.com'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -99,6 +92,9 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 app.use('/api/', limiter);
+
+// Performance monitoring middleware
+app.use('/api/', performanceMonitor.trackRequest.bind(performanceMonitor));
 
 // Database connection
 mongoose.connect(process.env.MONGODB_URI)
@@ -122,6 +118,22 @@ app.get('/api/cors-test', (req, res) => {
     origin: req.headers.origin,
     timestamp: new Date().toISOString(),
     corsEnabled: true
+  });
+});
+
+// API test endpoint
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: 'API is working!', 
+    timestamp: new Date().toISOString(),
+    routes: [
+      '/api/auth/*',
+      '/api/analytics/*',
+      '/api/performance/*',
+      '/api/advanced/*',
+      '/api/batch-processing/*',
+      '/api/preferences/*'
+    ]
   });
 });
 
