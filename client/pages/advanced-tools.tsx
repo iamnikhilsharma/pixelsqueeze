@@ -11,7 +11,8 @@ import {
   CameraIcon,
   DocumentTextIcon,
   PaintBrushIcon,
-  XMarkIcon
+  XMarkIcon,
+  Square3Stack3DIcon
 } from '@heroicons/react/24/outline';
 import Layout from '@/components/Layout';
 import Button from '@/components/Button';
@@ -370,6 +371,64 @@ export default function AdvancedTools() {
               </div>
             )}
 
+            {/* Thumbnail Tool Interface */}
+            {selectedTool === 'thumbnail-generation' && (
+              <div className="space-y-6">
+                <div className="text-center py-12">
+                  <div className="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CameraIcon className="w-12 h-12 text-indigo-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                    Multi-Size Thumbnail Generator
+                  </h3>
+                  <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+                    Generate multiple thumbnail sizes for your images with preset dimensions, 
+                    custom sizes, and batch processing. Perfect for responsive websites and apps.
+                  </p>
+                  
+                  <div className="grid md:grid-cols-2 gap-6 mb-8 max-w-4xl mx-auto">
+                    <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                        <Square3Stack3DIcon className="w-5 h-5 mr-2 text-indigo-600" />
+                        Preset Sizes
+                      </h4>
+                      <ul className="text-sm text-gray-600 space-y-2">
+                        <li>• Square: 150x150 to 1920x1920</li>
+                        <li>• Portrait: 300x450, 600x900</li>
+                        <li>• Landscape: 600x400, 1200x800</li>
+                        <li>• Responsive breakpoints</li>
+                        <li>• Custom dimensions</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                        <DocumentArrowDownIcon className="w-5 h-5 mr-2 text-indigo-600" />
+                        Batch Processing
+                      </h4>
+                      <ul className="text-sm text-gray-600 space-y-2">
+                        <li>• Process up to 10 images</li>
+                        <li>• Multiple format support</li>
+                        <li>• ZIP download option</li>
+                        <li>• Quality control</li>
+                        <li>• Aspect ratio preservation</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <Button
+                    href="/thumbnails"
+                    variant="primary"
+                    size="lg"
+                    className="text-lg px-8 py-4"
+                  >
+                    <CameraIcon className="w-6 h-6 mr-3" />
+                    Open Thumbnail Tool
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Batch Processing Tool Interface */}
             {selectedTool === 'batch-processing' && (
               <div>
@@ -384,19 +443,6 @@ export default function AdvancedTools() {
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Image Analysis</h3>
                 <p className="text-gray-600 mb-4">
                   Get detailed insights about your images
-                </p>
-                <Button variant="primary">
-                  Coming Soon
-                </Button>
-              </div>
-            )}
-
-            {selectedTool === 'thumbnail-generation' && (
-              <div className="text-center py-12">
-                <CameraIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Thumbnail Generation</h3>
-                <p className="text-gray-600 mb-4">
-                  Create multiple thumbnail sizes automatically
                 </p>
                 <Button variant="primary">
                   Coming Soon

@@ -426,6 +426,202 @@ class AdvancedImageProcessor {
     }]);
   }
 
+  // Generate thumbnails with multiple size presets
+  async generateThumbnails(imageBuffer, options = {}) {
+    const {
+      presets = ['small', 'medium', 'large', 'xl'],
+      customSizes = [],
+      quality = 80,
+      format = 'auto',
+      preserveAspectRatio = true,
+      fit = 'inside',
+      background = { r: 255, g: 255, b: 255, alpha: 1 },
+      progressive = true,
+      mozjpeg = true
+    } = options;
+
+    try {
+      const image = sharp(imageBuffer);
+      const metadata = await image.metadata();
+      
+      // Define preset sizes
+      const presetSizes = {
+        'xs': { width: 150, height: 150 },
+        'small': { width: 300, height: 300 },
+        'medium': { width: 600, height: 600 },
+        'large': { width: 1200, height: 1200 },
+        'xl': { width: 1920, height: 1920 },
+        'square-150': { width: 150, height: 150 },
+        'square-300': { width: 300, height: 300 },
+        'square-600': { width: 600, height: 600 },
+        'portrait-300': { width: 300, height: 450 },
+        'portrait-600': { width: 600, height: 900 },
+        'landscape-400': { width: 600, height: 400 },
+        'landscape-800': { width: 1200, height: 800 }
+      };
+
+      // Combine presets and custom sizes
+      const allSizes = [];
+      
+      // Add selected presets
+      presets.forEach(preset => {
+        if (presetSizes[preset]) {
+          allSizes.push({
+            ...presetSizes[preset],
+            name: preset,
+            type: 'preset'
+          });
+        }
+      });
+
+      // Add custom sizes
+      customSizes.forEach((size, index) => {
+        allSizes.push({
+          width: size.width,
+          height: size.height,
+          name: `custom-${index + 1}`,
+          type: 'custom'
+        });
+      });
+
+      // Generate thumbnails for each size
+      const thumbnails = [];
+      for (const size of allSizes) {
+        try {
+          let thumbnail = image.clone();
+          
+          // Calculate dimensions preserving aspect ratio if requested
+          let { width, height } = size;
+          if (preserveAspectRatio) {
+            const aspectRatio = metadata.width / metadata.height;
+            if (width && height) {
+              // Both dimensions specified, use fit mode
+              thumbnail = thumbnail.resize(width, height, { fit, background });
+            } else if (width) {
+              // Only width specified, calculate height
+              height = Math.round(width / aspectRatio);
+              thumbnail = thumbnail.resize(width, height);
+            } else if (height) {
+              // Only height specified, calculate width
+              width = Math.round(height * aspectRatio);
+              thumbnail = thumbnail.resize(width, height);
+            }
+          } else {
+            thumbnail = thumbnail.resize(width, height, { fit, background });
+          }
+
+          // Determine output format
+          const outputFormat = this.determineOutputFormat('image.jpg', format);
+          
+          // Apply format-specific optimizations
+          thumbnail = this.applyFormatOptimizations(thumbnail, outputFormat, {
+            quality,
+            progressive,
+            mozjpeg
+          });
+
+          // Generate thumbnail buffer
+          const thumbnailBuffer = await thumbnail.toBuffer();
+          
+          thumbnails.push({
+            name: size.name,
+            type: size.type,
+            width: width || metadata.width,
+            height: height || metadata.height,
+            format: outputFormat,
+            size: thumbnailBuffer.length,
+            buffer: thumbnailBuffer,
+            originalWidth: metadata.width,
+            originalHeight: metadata.height
+          });
+
+        } catch (error) {
+          console.error(`Error generating thumbnail for ${size.name}:`, error);
+          thumbnails.push({
+            name: size.name,
+            type: size.type,
+            error: error.message,
+            width: size.width,
+            height: size.height
+          });
+        }
+      }
+
+      return thumbnails;
+
+    } catch (error) {
+      console.error('Thumbnail generation error:', error);
+      throw new Error(`Failed to generate thumbnails: ${error.message}`);
+    }
+  }
+
+  // Generate single thumbnail with specific dimensions
+  async generateThumbnail(imageBuffer, width, height, options = {}) {
+    const {
+      quality = 80,
+      format = 'auto',
+      fit = 'inside',
+      background = { r: 255, g: 255, b: 255, alpha: 1 },
+      preserveAspectRatio = true,
+      progressive = true,
+      mozjpeg = true
+    } = options;
+
+    try {
+      let image = sharp(imageBuffer);
+      const metadata = await image.metadata();
+      
+      // Calculate dimensions preserving aspect ratio if requested
+      let finalWidth = width;
+      let finalHeight = height;
+      
+      if (preserveAspectRatio) {
+        const aspectRatio = metadata.width / metadata.height;
+        if (width && height) {
+          // Both dimensions specified, use fit mode
+          image = image.resize(width, height, { fit, background });
+        } else if (width) {
+          // Only width specified, calculate height
+          finalHeight = Math.round(width / aspectRatio);
+          image = image.resize(width, finalHeight);
+        } else if (height) {
+          // Only height specified, calculate width
+          finalWidth = Math.round(height * aspectRatio);
+          image = image.resize(finalWidth, height);
+        }
+      } else {
+        image = image.resize(width, height, { fit, background });
+      }
+
+      // Determine output format
+      const outputFormat = this.determineOutputFormat('image.jpg', format);
+      
+      // Apply format-specific optimizations
+      image = this.applyFormatOptimizations(image, outputFormat, {
+        quality,
+        progressive,
+        mozjpeg
+      });
+
+      // Generate thumbnail buffer
+      const thumbnailBuffer = await image.toBuffer();
+      
+      return {
+        width: finalWidth || metadata.width,
+        height: finalHeight || metadata.height,
+        format: outputFormat,
+        size: thumbnailBuffer.length,
+        buffer: thumbnailBuffer,
+        originalWidth: metadata.width,
+        originalHeight: metadata.height
+      };
+
+    } catch (error) {
+      console.error('Single thumbnail generation error:', error);
+      throw new Error(`Failed to generate thumbnail: ${error.message}`);
+    }
+  }
+
   // Create custom optimization presets
   createPreset(name, options) {
     const presets = {
@@ -509,36 +705,6 @@ class AdvancedImageProcessor {
     } catch (error) {
       console.error('Image analysis error:', error);
       throw new Error(`Failed to analyze image: ${error.message}`);
-    }
-  }
-
-  // Generate image thumbnails
-  async generateThumbnails(file, sizes = [150, 300, 600]) {
-    try {
-      const thumbnails = [];
-      
-      for (const size of sizes) {
-        const thumbnail = await sharp(file.buffer)
-          .resize(size, size, {
-            fit: 'cover',
-            position: 'center'
-          })
-          .jpeg({ quality: 80 })
-          .toBuffer();
-
-        thumbnails.push({
-          size,
-          width: size,
-          height: size,
-          buffer: thumbnail,
-          format: 'jpeg'
-        });
-      }
-
-      return thumbnails;
-    } catch (error) {
-      console.error('Thumbnail generation error:', error);
-      throw new Error(`Failed to generate thumbnails: ${error.message}`);
     }
   }
 

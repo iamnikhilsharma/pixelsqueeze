@@ -57,6 +57,9 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
                   <Link href="/watermark" className="nav-link">
                     Watermark
                   </Link>
+                  <Link href="/thumbnails" className="nav-link">
+                    Thumbnails
+                  </Link>
                   <Link href="/settings" className="nav-link">
                     Settings
                   </Link>
@@ -156,6 +159,13 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Watermark
+                  </Link>
+                  <Link
+                    href="/thumbnails"
+                    className="nav-link-mobile"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Thumbnails
                   </Link>
                   <Link
                     href="/settings"

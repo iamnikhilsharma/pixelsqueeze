@@ -8,6 +8,7 @@ const { authenticateToken } = require('../middleware/auth');
 const Image = require('../models/Image');
 const storageService = require('../services/storageService');
 const { v4: uuidv4 } = require('uuid');
+const archiver = require('archiver');
 
 // Configure multer for multiple file uploads
 const upload = multer({
@@ -474,6 +475,193 @@ router.post('/watermark', authenticateToken, upload.array('images', 10), async (
   } catch (error) {
     console.error('Watermark processing error:', error);
     res.status(500).json({ error: 'Watermark processing failed', details: error.message });
+  }
+});
+
+// Thumbnail generation with multiple size presets
+router.post('/thumbnails', authenticateToken, upload.array('images', 10), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No images provided' });
+    }
+
+    const {
+      presets = 'small,medium,large',
+      customSizes = '',
+      quality = 80,
+      format = 'auto',
+      preserveAspectRatio = 'true',
+      fit = 'inside',
+      background = '#ffffff',
+      createZip = 'true'
+    } = req.body;
+
+    console.log(`Generating thumbnails for ${req.files.length} images for user ${req.user.email}`);
+    console.log('Thumbnail options:', { presets, customSizes, quality, format, preserveAspectRatio });
+
+    // Parse presets and custom sizes
+    const selectedPresets = presets.split(',').map(p => p.trim()).filter(Boolean);
+    const customSizeArray = customSizes ? JSON.parse(customSizes) : [];
+    
+    // Set up Server-Sent Events for progress tracking
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive'
+    });
+
+    const results = [];
+    const totalFiles = req.files.length;
+    let processedFiles = 0;
+
+    // Process each image
+    for (const file of req.files) {
+      try {
+        console.log(`Generating thumbnails for: ${file.originalname}`);
+
+        // Generate thumbnails
+        const thumbnails = await advancedImageProcessor.generateThumbnails(file.buffer, {
+          presets: selectedPresets,
+          customSizes: customSizeArray,
+          quality: parseInt(quality),
+          format,
+          preserveAspectRatio: preserveAspectRatio === 'true',
+          fit,
+          background: background === '#ffffff' ? { r: 255, g: 255, b: 255, alpha: 1 } : background,
+          progressive: true,
+          mozjpeg: true
+        });
+
+        // Save thumbnails to disk and generate download URLs
+        const savedThumbnails = [];
+        for (const thumbnail of thumbnails) {
+          if (thumbnail.error) {
+            savedThumbnails.push(thumbnail);
+            continue;
+          }
+
+          try {
+            // Generate filename
+            const fileExtension = thumbnail.format === 'jpeg' ? 'jpg' : thumbnail.format || 'jpg';
+            const filename = `thumb_${thumbnail.name}_${file.originalname.split('.')[0]}.${fileExtension}`;
+            
+            // Save to uploads directory
+            const uploadsDir = path.join(__dirname, '../../uploads');
+            try {
+              await fs.mkdir(uploadsDir, { recursive: true });
+            } catch (error) {
+              console.error('Error creating uploads directory:', error);
+            }
+
+            const filePath = path.join(uploadsDir, filename);
+            await fs.writeFile(filePath, thumbnail.buffer);
+
+            // Generate download URL
+            const downloadUrl = await storageService.generateDownloadUrl(filename, 24 * 60 * 60); // 24 hours
+
+            savedThumbnails.push({
+              ...thumbnail,
+              filename,
+              downloadUrl
+            });
+
+          } catch (error) {
+            console.error(`Error saving thumbnail ${thumbnail.name}:`, error);
+            savedThumbnails.push({
+              ...thumbnail,
+              error: error.message
+            });
+          }
+        }
+
+        // Create ZIP file if requested
+        let zipUrl = null;
+        if (createZip === 'true' && savedThumbnails.length > 0) {
+          try {
+            const archive = archiver('zip', { zlib: { level: 9 } });
+            const zipFilename = `thumbnails_${file.originalname.split('.')[0]}.zip`;
+            const zipPath = path.join(uploadsDir, zipFilename);
+            const output = fs.createWriteStream(zipPath);
+
+            archive.pipe(output);
+
+            // Add thumbnails to ZIP
+            for (const thumbnail of savedThumbnails) {
+              if (!thumbnail.error) {
+                const thumbnailPath = path.join(uploadsDir, thumbnail.filename);
+                archive.file(thumbnailPath, { name: thumbnail.filename });
+              }
+            }
+
+            await archive.finalize();
+            zipUrl = await storageService.generateDownloadUrl(zipFilename, 24 * 60 * 60);
+          } catch (error) {
+            console.error('Error creating ZIP file:', error);
+          }
+        }
+
+        processedFiles++;
+        
+        // Send progress update
+        res.write(`data: ${JSON.stringify({
+          processed: processedFiles,
+          total: totalFiles,
+          percentage: Math.round((processedFiles / totalFiles) * 100),
+          currentFile: file.originalname,
+          result: {
+            originalName: file.originalname,
+            thumbnails: savedThumbnails,
+            zipUrl,
+            totalThumbnails: savedThumbnails.length,
+            totalErrors: savedThumbnails.filter(t => t.error).length
+          }
+        })}\n\n`);
+
+        results.push({
+          originalName: file.originalname,
+          thumbnails: savedThumbnails,
+          zipUrl,
+          totalThumbnails: savedThumbnails.length,
+          totalErrors: savedThumbnails.filter(t => t.error).length
+        });
+
+      } catch (error) {
+        console.error(`Error generating thumbnails for ${file.originalname}:`, error);
+        processedFiles++;
+        
+        res.write(`data: ${JSON.stringify({
+          processed: processedFiles,
+          total: totalFiles,
+          percentage: Math.round((processedFiles / totalFiles) * 100),
+          currentFile: file.originalname,
+          error: error.message
+        })}\n\n`);
+
+        results.push({
+          originalName: file.originalname,
+          error: error.message,
+          thumbnails: [],
+          totalThumbnails: 0,
+          totalErrors: 1
+        });
+      }
+    }
+
+    console.log(`Completed thumbnail generation. Processed ${results.length} files`);
+    
+    // Send completion event
+    res.write(`data: ${JSON.stringify({
+      completed: true,
+      results,
+      totalProcessed: results.length,
+      totalErrors: results.filter(r => r.error).length
+    })}\n\n`);
+
+    res.end();
+
+  } catch (error) {
+    console.error('Thumbnail generation error:', error);
+    res.status(500).json({ error: 'Thumbnail generation failed', details: error.message });
   }
 });
 
