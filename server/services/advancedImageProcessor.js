@@ -7,6 +7,19 @@ class AdvancedImageProcessor {
   constructor() {
     this.supportedFormats = ['jpeg', 'jpg', 'png', 'webp', 'avif', 'tiff', 'gif'];
     this.maxConcurrentOperations = 5;
+    
+    // Watermark positioning presets
+    this.watermarkPositions = {
+      'top-left': { gravity: 'northwest', x: 20, y: 20 },
+      'top-center': { gravity: 'north', x: 0, y: 20 },
+      'top-right': { gravity: 'northeast', x: -20, y: 20 },
+      'center-left': { gravity: 'west', x: 20, y: 0 },
+      'center': { gravity: 'center', x: 0, y: 0 },
+      'center-right': { gravity: 'east', x: -20, y: 0 },
+      'bottom-left': { gravity: 'southwest', x: 20, y: -20 },
+      'bottom-center': { gravity: 'south', x: 0, y: -20 },
+      'bottom-right': { gravity: 'southeast', x: -20, y: -20 }
+    };
   }
 
   // Enhanced optimization with advanced options
@@ -30,7 +43,8 @@ class AdvancedImageProcessor {
       brightness = 1,
       contrast = 1,
       saturation = 1,
-      gamma = 1
+      gamma = 1,
+      watermark = null // New watermark option
     } = options;
 
     try {
@@ -78,6 +92,13 @@ class AdvancedImageProcessor {
           saturation,
           gamma
         });
+      }
+
+      // Apply watermark if specified
+      if (watermark && (watermark.text || watermark.imageBuffer)) {
+        console.log('Applying watermark to image');
+        image = await this.addWatermark(await image.toBuffer(), watermark);
+        image = sharp(image);
       }
 
       // Determine output format
@@ -223,264 +244,186 @@ class AdvancedImageProcessor {
   }
 
   // Add watermark to image
-  async addWatermark(file, watermarkOptions = {}) {
+  async addWatermark(imageBuffer, watermarkOptions = {}) {
     const {
-      watermarkPath,
+      type = 'text', // 'text' or 'image'
+      text = '',
+      font = 'Arial',
+      fontSize = 48,
+      fontColor = '#ffffff',
+      backgroundColor = 'rgba(0,0,0,0.5)',
+      imageBuffer: watermarkImageBuffer = null,
       position = 'bottom-right',
-      opacity = 0.7,
-      size = 0.2, // 20% of image size
-      margin = 20
+      opacity = 0.8,
+      size = 1.0, // Scale factor for image watermarks
+      margin = 20,
+      rotation = 0,
+      blendMode = 'over'
     } = watermarkOptions;
 
     try {
-      if (!watermarkPath) {
-        throw new Error('Watermark file not provided');
+      let image = sharp(imageBuffer);
+      
+      if (type === 'text' && text) {
+        image = await this.addTextWatermark(image, {
+          text,
+          font,
+          fontSize,
+          fontColor,
+          backgroundColor,
+          position,
+          opacity,
+          margin,
+          rotation
+        });
+      } else if (type === 'image' && watermarkImageBuffer) {
+        image = await this.addImageWatermark(image, {
+          watermarkImageBuffer,
+          position,
+          opacity,
+          size,
+          margin,
+          rotation,
+          blendMode
+        });
       }
 
-      const image = sharp(file.buffer);
-      const watermark = sharp(watermarkPath).ensureAlpha();
-      
-      // Get image dimensions
-      const imageMetadata = await image.metadata();
-      const watermarkMetadata = await watermark.metadata();
-      
-      // Calculate watermark size
-      const watermarkWidth = Math.round((imageMetadata.width || 0) * size);
-      const watermarkHeight = Math.round((watermarkWidth * (watermarkMetadata.height || 1)) / (watermarkMetadata.width || 1));
-      
-      // Resize watermark and apply opacity by multiplying alpha channel
-      const resized = await watermark
-        .resize(watermarkWidth, watermarkHeight)
-        .png()
-        .toBuffer();
-
-      // Create an alpha overlay for opacity control
-      const alphaOverlay = await sharp({
-        create: {
-          width: watermarkWidth,
-          height: watermarkHeight,
-          channels: 4,
-          background: { r: 255, g: 255, b: 255, alpha: opacity }
-        }
-      }).png().toBuffer();
-
-      const resizedWatermark = await sharp(resized)
-        .composite([{ input: alphaOverlay, blend: 'dest-in' }])
-        .png()
-        .toBuffer();
-
-      // Calculate position
-      const positionCoords = this.calculateWatermarkPosition(
-        imageMetadata.width || 0,
-        imageMetadata.height || 0,
-        watermarkWidth,
-        watermarkHeight,
-        position,
-        margin
-      );
-
-      // Composite watermark onto image
-      const result = await image
-        .composite([{
-          input: resizedWatermark,
-          top: positionCoords.y,
-          left: positionCoords.x,
-          blend: 'over'
-        }])
-        .png()
-        .toBuffer();
-
-      return {
-        id: uuidv4(),
-        originalName: file.originalname,
-        originalSize: file.buffer.length,
-        watermarkedSize: result.length,
-        watermarkPosition: position,
-        buffer: result
-      };
+      return await image.toBuffer();
     } catch (error) {
-      console.error('Watermark error:', error);
+      console.error('Watermarking error:', error);
       throw new Error(`Failed to add watermark: ${error.message}`);
     }
   }
 
-  async addWatermarkWithStyle(file, watermarkOptions = {}) {
+  // Add text watermark
+  async addTextWatermark(image, options) {
     const {
-      watermarkPath,
-      position = 'bottom-right',
-      opacity = 0.7,
-      size = 0.2,
-      margin = 20,
-      style = 'single' // single | tiled | diagonal
-    } = watermarkOptions;
-
-    const baseResult = await this.addWatermark(file, { watermarkPath, position, opacity, size, margin });
-
-    if (style === 'single') return baseResult;
-
-    const image = sharp(file.buffer);
-    const imageMetadata = await image.metadata();
-    const imgW = imageMetadata.width || 0;
-    const imgH = imageMetadata.height || 0;
-
-    // build a pattern watermark buffer based on style
-    const wmBase = await sharp(watermarkPath).ensureAlpha().toBuffer();
-    const wmSize = Math.round(imgW * size);
-    const wmResized = await sharp(wmBase).resize({ width: wmSize }).png().toBuffer();
-
-    // Create a tiled canvas
-    const tileCanvas = await sharp({
-      create: { width: imgW, height: imgH, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } }
-    }).png().toBuffer();
-
-    const composites = [];
-
-    const stepX = wmSize + margin;
-    const stepY = Math.round((wmSize * 0.35) + margin);
-
-    if (style === 'tiled') {
-      for (let y = margin; y < imgH; y += stepX) {
-        for (let x = margin; x < imgW; x += stepX) {
-          composites.push({ input: wmResized, left: x, top: y, blend: 'over' });
-        }
-      }
-    } else if (style === 'diagonal') {
-      for (let y = margin, row = 0; y < imgH; y += stepX, row++) {
-        for (let x = margin + (row % 2 === 0 ? 0 : Math.floor(stepX / 2)); x < imgW; x += stepX) {
-          composites.push({ input: wmResized, left: x, top: y, blend: 'over' });
-        }
-      }
-    }
-
-    // Apply opacity via dest-in trick
-    const alphaOverlay = await sharp({
-      create: { width: wmSize, height: wmSize, channels: 4, background: { r: 255, g: 255, b: 255, alpha: opacity } }
-    }).png().toBuffer();
-    const wmResizedWithOpacity = await sharp(wmResized).composite([{ input: alphaOverlay, blend: 'dest-in' }]).png().toBuffer();
-
-    const patternBuffer = await sharp(tileCanvas).composite(
-      composites.map(c => ({ ...c, input: wmResizedWithOpacity }))
-    ).png().toBuffer();
-
-    const final = await image.composite([{ input: patternBuffer, blend: 'over' }]).png().toBuffer();
-
-    return {
-      id: uuidv4(),
-      originalName: file.originalname,
-      originalSize: file.buffer.length,
-      watermarkedSize: final.length,
-      watermarkStyle: style,
-      buffer: final
-    };
-  }
-
-  async addTextWatermark(file, watermarkOptions = {}) {
-    const {
-      text = 'PixelSqueeze',
-      position = 'bottom-right',
-      opacity = 0.7,
-      size = 0.15, // fraction of image width that text box should roughly occupy
-      margin = 20,
-      style = 'single', // single | tiled | diagonal
-      color = '#ffffff',
+      text,
+      font = 'Arial',
       fontSize = 48,
-      fontFamily = 'sans-serif',
-      shadowColor = '#000000',
-      shadowOpacity = 0.35,
-      shadowBlur = 2,
-      shadowOffsetX = 2,
-      shadowOffsetY = 2,
-      diagonalAngle = 30
-    } = watermarkOptions;
+      fontColor = '#ffffff',
+      backgroundColor = 'rgba(0,0,0,0.5)',
+      position = 'bottom-right',
+      opacity = 0.8,
+      margin = 20,
+      rotation = 0
+    } = options;
 
-    const image = sharp(file.buffer);
-    const imageMetadata = await image.metadata();
-    const imgW = imageMetadata.width || 0;
-    const imgH = imageMetadata.height || 0;
-
-    // Estimate text box width from fontSize and text length
-    const estTextWidth = Math.max(50, Math.min(imgW, Math.round((imgW * size))));
-    const estTextHeight = Math.round(fontSize * 1.4);
-
-    const svg = (w, h) => Buffer.from(
-      `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+    const pos = this.watermarkPositions[position] || this.watermarkPositions['bottom-right'];
+    
+    // Create text watermark SVG
+    const svgText = `
+      <svg width="100%" height="100%">
         <defs>
-          <filter id="shadow" x="-100%" y="-100%" width="300%" height="300%">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="${shadowBlur}" />
-            <feOffset dx="${shadowOffsetX}" dy="${shadowOffsetY}" result="offsetblur" />
-            <feFlood flood-color="${shadowColor}" flood-opacity="${shadowOpacity}" />
-            <feComposite in2="offsetblur" operator="in" />
-            <feMerge>
-              <feMergeNode />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
+          <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="2" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.5)"/>
           </filter>
         </defs>
-        <style>
-          .tw { font-family: ${fontFamily}, 'DejaVu Sans', sans-serif; font-size: ${fontSize}px; fill: ${color}; fill-opacity: ${opacity}; dominant-baseline: middle; paint-order: stroke fill; }
-        </style>
-        <text x="50%" y="50%" text-anchor="middle" class="tw" filter="url(#shadow)">${String(text).replace(/&/g, '&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</text>
-      </svg>`
-    );
+        <text 
+          x="${pos.x === 0 ? '50%' : pos.x > 0 ? pos.x : '100%'}" 
+          y="${pos.y === 0 ? '50%' : pos.y > 0 ? pos.y : '100%'}"
+          font-family="${font}, sans-serif" 
+          font-size="${fontSize}" 
+          fill="${fontColor}"
+          opacity="${opacity}"
+          text-anchor="${pos.x === 0 ? 'middle' : pos.x > 0 ? 'start' : 'end'}"
+          dominant-baseline="${pos.y === 0 ? 'middle' : pos.y > 0 ? 'hanging' : 'auto'}"
+          transform="${rotation !== 0 ? `rotate(${rotation})` : ''}"
+          filter="url(#shadow)"
+        >
+          ${text}
+        </text>
+      </svg>
+    `;
 
-    // Base single watermark buffer
-    const singleBuffer = await sharp(svg(estTextWidth, estTextHeight)).png().toBuffer();
+    return image.composite([{
+      input: Buffer.from(svgText),
+      top: pos.y,
+      left: pos.x,
+      blend: 'over'
+    }]);
+  }
 
-    if (style === 'single') {
-      const pos = this.calculateWatermarkPosition(imgW, imgH, estTextWidth, estTextHeight, position, margin);
-      const out = await image.composite([{ input: singleBuffer, left: pos.x, top: pos.y, blend: 'over' }]).png().toBuffer();
-      return {
-        id: uuidv4(),
-        originalName: file.originalname,
-        originalSize: file.buffer.length,
-        watermarkedSize: out.length,
-        watermarkStyle: style,
-        buffer: out
-      };
+  // Add image watermark
+  async addImageWatermark(image, options) {
+    const {
+      watermarkImageBuffer,
+      position = 'bottom-right',
+      opacity = 0.8,
+      size = 1.0,
+      margin = 20,
+      rotation = 0,
+      blendMode = 'over'
+    } = options;
+
+    const pos = this.watermarkPositions[position] || this.watermarkPositions['bottom-right'];
+    
+    // Process watermark image
+    let watermark = sharp(watermarkImageBuffer);
+    
+    // Get original image dimensions
+    const imageMetadata = await image.metadata();
+    const watermarkMetadata = await watermark.metadata();
+    
+    // Calculate watermark size (default to 20% of original image width)
+    const watermarkWidth = Math.round(imageMetadata.width * 0.2 * size);
+    const watermarkHeight = Math.round((watermarkMetadata.height / watermarkMetadata.width) * watermarkWidth);
+    
+    // Resize watermark
+    watermark = watermark.resize(watermarkWidth, watermarkHeight, {
+      fit: 'inside',
+      withoutEnlargement: true
+    });
+    
+    // Apply opacity and rotation
+    if (opacity < 1) {
+      watermark = watermark.composite([{
+        input: Buffer.from(`<svg><rect width="100%" height="100%" fill="white" opacity="${1 - opacity}"/></svg>`),
+        blend: 'multiply'
+      }]);
+    }
+    
+    if (rotation !== 0) {
+      watermark = watermark.rotate(rotation);
+    }
+    
+    // Calculate positioning
+    let top, left;
+    if (pos.gravity === 'northwest') {
+      top = margin;
+      left = margin;
+    } else if (pos.gravity === 'north') {
+      top = margin;
+      left = (imageMetadata.width - watermarkWidth) / 2;
+    } else if (pos.gravity === 'northeast') {
+      top = margin;
+      left = imageMetadata.width - watermarkWidth - margin;
+    } else if (pos.gravity === 'west') {
+      top = (imageMetadata.height - watermarkHeight) / 2;
+      left = margin;
+    } else if (pos.gravity === 'center') {
+      top = (imageMetadata.height - watermarkHeight) / 2;
+      left = (imageMetadata.width - watermarkWidth) / 2;
+    } else if (pos.gravity === 'east') {
+      top = (imageMetadata.height - watermarkHeight) / 2;
+      left = imageMetadata.width - watermarkWidth - margin;
+    } else if (pos.gravity === 'southwest') {
+      top = imageMetadata.height - watermarkHeight - margin;
+      left = margin;
+    } else if (pos.gravity === 'south') {
+      top = imageMetadata.height - watermarkHeight - margin;
+      left = (imageMetadata.width - watermarkWidth) / 2;
+    } else if (pos.gravity === 'southeast') {
+      top = imageMetadata.height - watermarkHeight - margin;
+      left = imageMetadata.width - watermarkWidth - margin;
     }
 
-    // Build pattern for tiled / diagonal
-    const composites = [];
-
-    if (style === 'tiled') {
-      const step = Math.round(Math.max(estTextWidth, estTextHeight) + margin);
-      for (let y = margin; y < imgH; y += step) {
-        for (let x = margin; x < imgW; x += step) {
-          composites.push({ input: singleBuffer, left: x, top: y, blend: 'over' });
-        }
-      }
-    } else if (style === 'diagonal') {
-      // Rotate the text element to make the diagonal pattern visually distinct
-      const rotated = await sharp(singleBuffer)
-        .rotate(-Math.abs(diagonalAngle), { background: { r: 0, g: 0, b: 0, alpha: 0 } })
-        .png()
-        .toBuffer();
-      const meta = await sharp(rotated).metadata();
-      const step = Math.round(Math.max(meta.width || estTextWidth, meta.height || estTextHeight) + margin);
-
-      let row = 0;
-      for (let y = margin; y < imgH; y += step, row++) {
-        for (let x = margin + (row % 2 === 0 ? 0 : Math.floor(step / 2)); x < imgW; x += step) {
-          composites.push({ input: rotated, left: x, top: y, blend: 'over' });
-        }
-      }
-    }
-
-    const pattern = await sharp({ create: { width: imgW, height: imgH, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
-      .png()
-      .composite(composites)
-      .png()
-      .toBuffer();
-
-    const final = await image.composite([{ input: pattern, blend: 'over' }]).png().toBuffer();
-    return {
-      id: uuidv4(),
-      originalName: file.originalname,
-      originalSize: file.buffer.length,
-      watermarkedSize: final.length,
-      watermarkStyle: style,
-      buffer: final
-    };
+    return image.composite([{
+      input: await watermark.toBuffer(),
+      top: Math.round(top),
+      left: Math.round(left),
+      blend: blendMode
+    }]);
   }
 
   // Create custom optimization presets

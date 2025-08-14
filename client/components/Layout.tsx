@@ -42,31 +42,22 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-1">
+            <div className="hidden md:flex items-center space-x-8">
               {user ? (
                 <>
-                  <Link
-                    href="/dashboard"
-                    className="nav-link"
-                  >
+                  <Link href="/dashboard" className="nav-link">
                     Dashboard
                   </Link>
-                  <Link
-                    href="/images"
-                    className="nav-link"
-                  >
-                    My Images
+                  <Link href="/images" className="nav-link">
+                    Images
                   </Link>
-                  <Link
-                    href="/advanced-tools"
-                    className="nav-link"
-                  >
+                  <Link href="/advanced-tools" className="nav-link">
                     Advanced Tools
                   </Link>
-                  <Link
-                    href="/settings"
-                    className="nav-link"
-                  >
+                  <Link href="/watermark" className="nav-link">
+                    Watermark
+                  </Link>
+                  <Link href="/settings" className="nav-link">
                     Settings
                   </Link>
                   <div className="w-px h-6 bg-surface-200 mx-2"></div>
@@ -158,6 +149,13 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Advanced Tools
+                  </Link>
+                  <Link
+                    href="/watermark"
+                    className="nav-link-mobile"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Watermark
                   </Link>
                   <Link
                     href="/settings"

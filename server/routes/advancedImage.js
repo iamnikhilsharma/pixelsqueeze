@@ -7,6 +7,7 @@ const advancedImageProcessor = require('../services/advancedImageProcessor');
 const { authenticateToken } = require('../middleware/auth');
 const Image = require('../models/Image');
 const storageService = require('../services/storageService');
+const { v4: uuidv4 } = require('uuid');
 
 // Configure multer for multiple file uploads
 const upload = multer({
@@ -268,6 +269,211 @@ router.post('/watermark', authenticateToken, upload.fields([
   } catch (error) {
     console.error('Watermark style error:', error);
     res.status(500).json({ error: 'Failed to add watermark', details: error.message });
+  }
+});
+
+// Watermark processing with text or image watermarks
+router.post('/watermark', authenticateToken, upload.array('images', 10), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No images provided' });
+    }
+
+    const {
+      type = 'text', // 'text' or 'image'
+      text = '',
+      font = 'Arial',
+      fontSize = 48,
+      fontColor = '#ffffff',
+      backgroundColor = 'rgba(0,0,0,0.5)',
+      position = 'bottom-right',
+      opacity = 0.8,
+      size = 1.0,
+      margin = 20,
+      rotation = 0,
+      blendMode = 'over',
+      quality = 80,
+      format = 'auto',
+      preserveMetadata = false
+    } = req.body;
+
+    console.log(`Processing ${req.files.length} images with watermark for user ${req.user.email}`);
+    console.log('Watermark options:', { type, text, position, opacity, size });
+
+    // Validate watermark options
+    if (type === 'text' && !text) {
+      return res.status(400).json({ error: 'Text watermark requires text content' });
+    }
+
+    if (type === 'image' && !req.files.find(f => f.fieldname === 'watermark')) {
+      return res.status(400).json({ error: 'Image watermark requires watermark file' });
+    }
+
+    // Get watermark image if needed
+    let watermarkImageBuffer = null;
+    if (type === 'image') {
+      const watermarkFile = req.files.find(f => f.fieldname === 'watermark');
+      if (watermarkFile) {
+        watermarkImageBuffer = watermarkFile.buffer;
+      }
+    }
+
+    // Set up Server-Sent Events for progress tracking
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive'
+    });
+
+    const results = [];
+    const totalFiles = req.files.filter(f => f.fieldname === 'images').length;
+    let processedFiles = 0;
+
+    // Process each image
+    for (const file of req.files) {
+      if (file.fieldname !== 'images') continue;
+
+      try {
+        console.log(`Processing watermark for: ${file.originalname}`);
+
+        // Create watermark options
+        const watermarkOptions = {
+          type,
+          text,
+          font,
+          fontSize: parseInt(fontSize),
+          fontColor,
+          backgroundColor,
+          position,
+          opacity: parseFloat(opacity),
+          size: parseFloat(size),
+          margin: parseInt(margin),
+          rotation: parseInt(rotation),
+          blendMode,
+          imageBuffer: watermarkImageBuffer
+        };
+
+        // Process image with watermark
+        const result = await advancedImageProcessor.optimizeImage(file, {
+          quality: parseInt(quality),
+          format,
+          preserveMetadata: preserveMetadata === 'true',
+          watermark: watermarkOptions
+        });
+
+        // Generate unique filename
+        const fileExtension = result.format === 'jpeg' ? 'jpg' : result.format || 'jpg';
+        const filename = `watermarked_${result.id}.${fileExtension}`;
+        
+        // Save to uploads directory
+        const uploadsDir = path.join(__dirname, '../../uploads');
+        try {
+          await fs.mkdir(uploadsDir, { recursive: true });
+        } catch (error) {
+          console.error('Error creating uploads directory:', error);
+        }
+
+        const filePath = path.join(uploadsDir, filename);
+        await fs.writeFile(filePath, result.buffer);
+
+        // Generate download URL
+        const downloadUrl = await storageService.generateDownloadUrl(filename, 24 * 60 * 60); // 24 hours
+
+        // Save to database
+        const image = new Image({
+          user: req.user._id,
+          originalName: file.originalname,
+          originalSize: file.size,
+          originalFormat: file.originalname.split('.').pop().toLowerCase(),
+          optimizedSize: result.optimizedSize,
+          optimizedFormat: result.format,
+          quality: parseInt(quality),
+          width: result.width,
+          height: result.height,
+          processingTime: result.processingTime,
+          watermark: {
+            type,
+            text: type === 'text' ? text : undefined,
+            position,
+            opacity: parseFloat(opacity),
+            size: parseFloat(size)
+          },
+          storageKey: filename,
+          downloadUrl,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+        });
+
+        await image.save();
+
+        processedFiles++;
+        
+        // Send progress update
+        res.write(`data: ${JSON.stringify({
+          processed: processedFiles,
+          total: totalFiles,
+          percentage: Math.round((processedFiles / totalFiles) * 100),
+          currentFile: file.originalname,
+          result: {
+            id: result.id,
+            filename,
+            downloadUrl,
+            originalSize: file.size,
+            optimizedSize: result.optimizedSize,
+            compressionRatio: result.compressionRatio,
+            processingTime: result.processingTime
+          }
+        })}\n\n`);
+
+        results.push({
+          id: result.id,
+          originalName: file.originalname,
+          filename,
+          downloadUrl,
+          originalSize: file.size,
+          optimizedSize: result.optimizedSize,
+          compressionRatio: result.compressionRatio,
+          processingTime: result.processingTime,
+          watermark: watermarkOptions
+        });
+
+      } catch (error) {
+        console.error(`Error processing watermark for ${file.originalname}:`, error);
+        processedFiles++;
+        
+        res.write(`data: ${JSON.stringify({
+          processed: processedFiles,
+          total: totalFiles,
+          percentage: Math.round((processedFiles / totalFiles) * 100),
+          currentFile: file.originalname,
+          error: error.message
+        })}\n\n`);
+
+        results.push({
+          id: uuidv4(),
+          originalName: file.originalname,
+          error: error.message,
+          originalSize: file.size,
+          optimizedSize: 0,
+          compressionRatio: 0
+        });
+      }
+    }
+
+    console.log(`Completed watermark processing. Processed ${results.length} files`);
+    
+    // Send completion event
+    res.write(`data: ${JSON.stringify({
+      completed: true,
+      results,
+      totalProcessed: results.length,
+      totalErrors: results.filter(r => r.error).length
+    })}\n\n`);
+
+    res.end();
+
+  } catch (error) {
+    console.error('Watermark processing error:', error);
+    res.status(500).json({ error: 'Watermark processing failed', details: error.message });
   }
 });
 

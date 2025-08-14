@@ -77,6 +77,37 @@ const imageSchema = new mongoose.Schema({
     type: Number, // in milliseconds
     required: true
   },
+  watermark: {
+    type: {
+      type: String,
+      enum: ['text', 'image']
+    },
+    text: String,
+    position: {
+      type: String,
+      enum: ['top-left', 'top-center', 'top-right', 'center-left', 'center', 'center-right', 'bottom-left', 'bottom-center', 'bottom-right']
+    },
+    opacity: {
+      type: Number,
+      min: 0,
+      max: 1
+    },
+    size: {
+      type: Number,
+      min: 0.1,
+      max: 2.0
+    },
+    font: String,
+    fontSize: Number,
+    fontColor: String,
+    backgroundColor: String,
+    margin: Number,
+    rotation: Number,
+    blendMode: {
+      type: String,
+      default: 'over'
+    }
+  },
   status: {
     type: String,
     enum: ['processing', 'completed', 'failed'],

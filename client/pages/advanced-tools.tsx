@@ -10,7 +10,8 @@ import {
   ChartBarIcon,
   CameraIcon,
   DocumentTextIcon,
-  PaintBrushIcon
+  PaintBrushIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import Layout from '@/components/Layout';
 import Button from '@/components/Button';
@@ -67,7 +68,7 @@ const tools: Tool[] = [
       'Multiple watermark formats',
       'Batch watermarking'
     ],
-    status: 'premium'
+    status: 'available'
   },
   {
     id: 'image-analysis',
@@ -299,375 +300,81 @@ export default function AdvancedTools() {
                 <div className="p-2 bg-indigo-100 rounded-lg">
                   {React.createElement(tools.find(t => t.id === selectedTool)?.icon || PhotoIcon, { className: "h-6 w-6 text-indigo-600" })}
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">{tools.find(t => t.id === selectedTool)?.name}</h2>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {tools.find(t => t.id === selectedTool)?.name}
+                </h2>
               </div>
-              <Button onClick={() => setSelectedTool(null)} variant="outline" size="sm">Close</Button>
+              <button
+                onClick={() => setSelectedTool(null)}
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
             </div>
 
+            {/* Watermark Tool Interface */}
+            {selectedTool === 'watermarking' && (
+              <div className="space-y-6">
+                <div className="text-center py-12">
+                  <div className="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <PaintBrushIcon className="w-12 h-12 text-indigo-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                    Professional Watermarking Tool
+                  </h3>
+                  <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+                    Add custom text or logo watermarks to your images with precise control over positioning, 
+                    opacity, size, and styling. Perfect for protecting your content and adding branding.
+                  </p>
+                  
+                  <div className="grid md:grid-cols-2 gap-6 mb-8 max-w-4xl mx-auto">
+                    <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                        <DocumentTextIcon className="w-5 h-5 mr-2 text-indigo-600" />
+                        Text Watermarks
+                      </h4>
+                      <ul className="text-sm text-gray-600 space-y-2">
+                        <li>• Custom text with font selection</li>
+                        <li>• Color and background options</li>
+                        <li>• Size and opacity control</li>
+                        <li>• 9 positioning presets</li>
+                        <li>• Rotation and margin settings</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                        <PhotoIcon className="w-5 h-5 mr-2 text-indigo-600" />
+                        Image Watermarks
+                      </h4>
+                      <ul className="text-sm text-gray-600 space-y-2">
+                        <li>• Logo and image watermarks</li>
+                        <li>• Automatic size scaling</li>
+                        <li>• Blend mode options</li>
+                        <li>• Batch processing</li>
+                        <li>• High-quality output</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <Button
+                    href="/watermark"
+                    variant="primary"
+                    size="lg"
+                    className="text-lg px-8 py-4"
+                  >
+                    <PaintBrushIcon className="w-6 h-6 mr-3" />
+                    Open Watermark Tool
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Batch Processing Tool Interface */}
             {selectedTool === 'batch-processing' && (
               <div>
               <AdvancedImageUploader onImagesProcessed={handleImagesProcessed} />
                 <p className="mt-4 text-sm text-gray-500">When processing completes, visit <a className="text-blue-600 underline" href="/images">My Images</a> to view and download your results.</p>
-              </div>
-            )}
-
-            {selectedTool === 'watermarking' && (
-              <div>
-                {/* Tabs */}
-                <div className="mb-6">
-                  <div className="inline-flex rounded-lg overflow-hidden border border-gray-200">
-                    <button
-                      className={`px-4 py-2 text-sm font-medium transition-colors ${
-                        wmActiveTab === 'image' 
-                          ? 'bg-indigo-600 text-white' 
-                          : 'bg-white text-gray-700 hover:bg-gray-50'
-                      } border-r border-gray-200`}
-                      onClick={() => { setWmActiveTab('image'); setTwResultUrl(null); setTwSavedUrl(null); }}
-                    >
-                      Image Watermark
-                    </button>
-                    <button
-                      className={`px-4 py-2 text-sm font-medium transition-colors ${
-                        wmActiveTab === 'text' 
-                          ? 'bg-indigo-600 text-white' 
-                          : 'bg-white text-gray-700 hover:bg-gray-50'
-                      }`}
-                      onClick={() => { setWmActiveTab('text'); setWmResultUrl(null); setWmSavedUrl(null); }}
-                    >
-                      Text Watermark
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid lg:grid-cols-2 gap-8">
-                  {/* Left: Controls */}
-                  <div className="space-y-6">
-                    {wmActiveTab === 'image' && (
-                      <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                        <h4 className="font-medium text-gray-900 mb-4 text-lg">Image Watermark</h4>
-                        
-                        {/* File Inputs */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Base Image</label>
-                          <input id="wmImageInput" type="file" accept="image/*" className="hidden" onChange={(e) => setWmImage(e.target.files?.[0] || null)} />
-                            <label htmlFor="wmImageInput" className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md bg-white text-sm cursor-pointer hover:bg-gray-50 transition-colors">
-                            <PhotoIcon className="h-4 w-4 mr-2 text-indigo-600" />
-                            {wmImage ? wmImage.name : 'Choose file'}
-                          </label>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Watermark (PNG)</label>
-                          <input id="wmFileInput" type="file" accept="image/png" className="hidden" onChange={(e) => setWmFile(e.target.files?.[0] || null)} />
-                            <label htmlFor="wmFileInput" className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md bg-white text-sm cursor-pointer hover:bg-gray-50 transition-colors">
-                            <DocumentTextIcon className="h-4 w-4 mr-2 text-indigo-600" />
-                            {wmFile ? wmFile.name : 'Choose file'}
-                          </label>
-                        </div>
-                      </div>
-
-                        {/* Position and Style Controls */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
-                          <SegmentedControl value={wmPosition} onChange={(v) => setWmPosition(v)} options={positionOptions} />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Style</label>
-                          <SegmentedControl
-                            value={wmStyle}
-                            onChange={(v) => setWmStyle(v as any)}
-                            options={styleOptions}
-                          />
-                        </div>
-                        </div>
-
-                        {/* Sliders */}
-                        <div className="space-y-4 mb-6">
-                        <div>
-                            <label className="flex items-center justify-between text-sm font-medium text-gray-700 mb-2">
-                              <span>Opacity</span>
-                              <span className="text-gray-500 font-mono">{Math.round(wmOpacity * 100)}%</span>
-                            </label>
-                            <input 
-                              type="range" 
-                              min="0.1" 
-                              max="1" 
-                              step="0.05" 
-                              value={wmOpacity} 
-                              onChange={(e) => setWmOpacity(parseFloat(e.target.value))} 
-                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" 
-                            />
-                        </div>
-                        <div>
-                            <label className="flex items-center justify-between text-sm font-medium text-gray-700 mb-2">
-                              <span>Size</span>
-                              <span className="text-gray-500 font-mono">{Math.round(wmSize * 100)}%</span>
-                            </label>
-                            <input 
-                              type="range" 
-                              min="0.05" 
-                              max="0.5" 
-                              step="0.05" 
-                              value={wmSize} 
-                              onChange={(e) => setWmSize(parseFloat(e.target.value))} 
-                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" 
-                            />
-                        </div>
-                        <div>
-                            <label className="flex items-center justify-between text-sm font-medium text-gray-700 mb-2">
-                              <span>Margin</span>
-                              <span className="text-gray-500 font-mono">{wmMargin}px</span>
-                            </label>
-                            <input 
-                              type="range" 
-                              min="0" 
-                              max="100" 
-                              step="2" 
-                              value={wmMargin} 
-                              onChange={(e) => setWmMargin(parseInt(e.target.value))} 
-                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" 
-                            />
-                          </div>
-                        </div>
-
-                        {/* Apply Button */}
-                        <Button 
-                          variant="primary" 
-                          loading={wmLoading} 
-                          onClick={async () => {
-                          try {
-                            if (!wmImage || !wmFile) { toast.error('Select image and watermark'); return; }
-                            setWmLoading(true);
-                            const authData = localStorage.getItem('pixelsqueeze-auth');
-                            const token = authData ? JSON.parse(authData).state.token : '';
-                            const form = new FormData();
-                            form.append('image', wmImage);
-                            form.append('watermark', wmFile);
-                            form.append('position', wmPosition);
-                            form.append('style', wmStyle);
-                            form.append('opacity', String(wmOpacity));
-                            form.append('size', String(wmSize));
-                            form.append('margin', String(wmMargin));
-                            const res = await fetch(buildApiUrl('/api/advanced/watermark'), { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: form });
-                            const data = await res.json();
-                            if (!data.success) throw new Error(data.error || 'Failed');
-                            const savedUrl = data.data?.key ? buildApiUrl(`/uploads/${data.data.key}`) : (data.data?.url || null);
-                            setWmSavedUrl(savedUrl);
-                            setWmResultUrl(null);
-                            toast.success('Watermark saved');
-                          } catch (e: any) { toast.error(e.message || 'Failed'); } finally { setWmLoading(false); }
-                          }}
-                          className="w-full"
-                        >
-                          Apply & Save
-                        </Button>
-                    </div>
-                    )}
-
-                    {wmActiveTab === 'text' && (
-                      <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                        <h4 className="font-medium text-gray-900 mb-4 text-lg">Text Watermark</h4>
-                        
-                        {/* File and Text Inputs */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Base Image</label>
-                          <input id="twImageInput" type="file" accept="image/*" className="hidden" onChange={(e) => setTwImage(e.target.files?.[0] || null)} />
-                            <label htmlFor="twImageInput" className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md bg-white text-sm cursor-pointer hover:bg-gray-50 transition-colors">
-                            <PhotoIcon className="h-4 w-4 mr-2 text-indigo-600" />
-                            {twImage ? twImage.name : 'Choose file'}
-                          </label>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Watermark Text</label>
-                            <input 
-                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" 
-                              value={twText} 
-                              onChange={(e) => setTwText(e.target.value)} 
-                              placeholder="Enter watermark text"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Position and Style Controls */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
-                          <SegmentedControl value={twPosition} onChange={(v) => setTwPosition(v)} options={positionOptions} />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Style</label>
-                          <SegmentedControl
-                            value={twStyle}
-                            onChange={(v) => setTwStyle(v as any)}
-                            options={styleOptions}
-                          />
-                        </div>
-                        </div>
-
-                        {/* Sliders */}
-                        <div className="space-y-4 mb-6">
-                        <div>
-                            <label className="flex items-center justify-between text-sm font-medium text-gray-700 mb-2">
-                              <span>Opacity</span>
-                              <span className="text-gray-500 font-mono">{Math.round(twOpacity * 100)}%</span>
-                            </label>
-                            <input 
-                              type="range" 
-                              min="0.1" 
-                              max="1" 
-                              step="0.05" 
-                              value={twOpacity} 
-                              onChange={(e) => setTwOpacity(parseFloat(e.target.value))} 
-                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" 
-                            />
-                        </div>
-                        <div>
-                            <label className="flex items-center justify-between text-sm font-medium text-gray-700 mb-2">
-                              <span>Size</span>
-                              <span className="text-gray-500 font-mono">{Math.round(twSize * 100)}%</span>
-                            </label>
-                            <input 
-                              type="range" 
-                              min="0.05" 
-                              max="0.5" 
-                              step="0.05" 
-                              value={twSize} 
-                              onChange={(e) => setTwSize(parseFloat(e.target.value))} 
-                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" 
-                            />
-                      </div>
-                        <div>
-                            <label className="flex items-center justify-between text-sm font-medium text-gray-700 mb-2">
-                              <span>Margin</span>
-                              <span className="text-gray-500 font-mono">{twMargin}px</span>
-                            </label>
-                            <input 
-                              type="range" 
-                              min="0" 
-                              max="100" 
-                              step="2" 
-                              value={twMargin} 
-                              onChange={(e) => setTwMargin(parseInt(e.target.value))} 
-                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" 
-                            />
-                        </div>
-                        </div>
-
-                        {/* Color and Font Controls */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Text Color</label>
-                            <div className="flex items-center space-x-2">
-                              <input 
-                                type="color" 
-                                value={twColor} 
-                                onChange={(e) => setTwColor(e.target.value)} 
-                                className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
-                              />
-                              <span className="text-sm text-gray-600 font-mono">{twColor}</span>
-                        </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Font Size</label>
-                            <input 
-                              type="number" 
-                              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
-                              value={twFontSize} 
-                              onChange={(e) => setTwFontSize(parseInt(e.target.value) || 48)} 
-                              min="12"
-                              max="200"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Apply Button */}
-                        <Button 
-                          variant="primary" 
-                          loading={twLoading} 
-                          onClick={async () => {
-                          try {
-                            if (!twImage) { toast.error('Select image'); return; }
-                            setTwLoading(true);
-                            const authData = localStorage.getItem('pixelsqueeze-auth');
-                            const token = authData ? JSON.parse(authData).state.token : '';
-                            const form = new FormData();
-                            form.append('image', twImage);
-                            form.append('text', twText);
-                            form.append('position', twPosition);
-                            form.append('style', twStyle);
-                            form.append('opacity', String(twOpacity));
-                            form.append('size', String(twSize));
-                            form.append('margin', String(twMargin));
-                            form.append('color', twColor);
-                            form.append('fontSize', String(twFontSize));
-                            const res = await fetch(buildApiUrl('/api/advanced/watermark-text'), { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: form });
-                            const data = await res.json();
-                            if (!data.success) throw new Error(data.error || 'Failed');
-                            const savedUrl = data.data?.key ? buildApiUrl(`/uploads/${data.data.key}`) : (data.data?.url || null);
-                            setTwSavedUrl(savedUrl);
-                            setTwResultUrl(null);
-                            toast.success('Text watermark saved');
-                          } catch (e: any) { toast.error(e.message || 'Failed'); } finally { setTwLoading(false); }
-                          }}
-                          className="w-full"
-                        >
-                          Apply & Save
-                        </Button>
-                    </div>
-                    )}
-                  </div>
-
-                  {/* Right: Preview */}
-                  <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                    <h4 className="font-medium text-gray-900 mb-4 text-lg">Preview</h4>
-                    {wmSavedUrl || twSavedUrl ? (
-                      <div className="aspect-video bg-white rounded-lg border border-gray-200 overflow-hidden flex items-center justify-center mb-4">
-                        <img
-                          src={(wmSavedUrl || twSavedUrl) as string}
-                          alt="Watermark preview"
-                          className="max-w-full max-h-full object-contain"
-                        />
-                      </div>
-                    ) : (
-                      <div className="aspect-video bg-white rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 mb-4">
-                        <div className="text-center">
-                          <PhotoIcon className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                          <p className="text-sm">Preview will appear after applying</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Result URLs */}
-                    {wmSavedUrl && (
-                      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                        <p className="text-sm font-medium text-green-800 mb-2">Image Watermark Saved</p>
-                        <a 
-                          className="text-green-600 underline break-all text-sm hover:text-green-800" 
-                          href={wmSavedUrl} 
-                          target="_blank" 
-                          rel="noreferrer"
-                        >
-                          {wmSavedUrl}
-                        </a>
-                      </div>
-                    )}
-                    {twSavedUrl && (
-                      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                        <p className="text-sm font-medium text-green-800 mb-2">Text Watermark Saved</p>
-                        <a 
-                          className="text-green-600 underline break-all text-sm hover:text-green-800" 
-                          href={twSavedUrl} 
-                          target="_blank" 
-                          rel="noreferrer"
-                        >
-                          {twSavedUrl}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </div>
               </div>
             )}
 
