@@ -439,21 +439,21 @@ export default function DocumentationPage() {
                     <div className="bg-gray-900 rounded-xl p-4">
                       <pre className="text-green-400 text-sm overflow-x-auto">
                         <code>{`# Image Optimization
-curl -X POST ${buildApiUrl('/api/optimize')} \\
+curl -X POST ${buildApiUrl('api/optimize')} \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -F "image=@photo.jpg" \\
   -F "quality=85" \\
   -F "format=webp"
 
 # Batch Processing
-curl -X POST ${buildApiUrl('/api/batch')} \\
+curl -X POST ${buildApiUrl('api/batch')} \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -F "images[]=@image1.jpg" \\
   -F "images[]=@image2.png" \\
   -F "preset=web
 
 # Image Watermark
-curl -X POST ${buildApiUrl('/api/advanced/watermark')} \\
+curl -X POST ${buildApiUrl('api/advanced/watermark')} \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -F "image=@base.jpg" \\
   -F "watermark=@logo.png" \\
@@ -474,7 +474,7 @@ const optimizeImage = async (file) => {
   formData.append('quality', '85');
   formData.append('format', 'webp');
 
-  const response = await fetch('${buildApiUrl('/api/optimize')}', {
+  const response = await fetch('${buildApiUrl('api/optimize')}', {
     method: 'POST',
     headers: {
       'Authorization': 'Bearer YOUR_API_KEY'
@@ -494,7 +494,7 @@ const processBatch = async (files) => {
   });
   formData.append('preset', 'web');
 
-  const response = await fetch('${buildApiUrl('/api/batch')}', {
+  const response = await fetch('${buildApiUrl('api/batch')}', {
     method: 'POST',
     headers: {
       'Authorization': 'Bearer YOUR_API_KEY'
@@ -517,7 +517,7 @@ const processBatch = async (files) => {
 
 # Image Optimization
 def optimize_image(file_path, api_key):
-    url = '${buildApiUrl('/api/optimize')}'
+    url = '${buildApiUrl('api/optimize')}'
     headers = {'Authorization': f'Bearer {api_key}'}
     
     with open(file_path, 'rb') as f:

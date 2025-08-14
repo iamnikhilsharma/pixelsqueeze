@@ -72,14 +72,11 @@ const EnhancedDashboard: React.FC = () => {
 
   const fetchUsageStats = useCallback(async (forceRefresh = false) => {
     try {
-      const response = await fetch(
-        `${buildApiUrl('')}/api/analytics/user${forceRefresh ? '?refresh=true' : ''}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+      const response = await fetch(`${buildApiUrl('api/analytics/user')}${forceRefresh ? '?refresh=true' : ''}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      );
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch usage statistics');

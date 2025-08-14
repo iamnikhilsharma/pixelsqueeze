@@ -73,7 +73,7 @@ const PerformanceDashboard: React.FC = () => {
 
   const fetchMetrics = useCallback(async () => {
     try {
-      const response = await fetch(`${buildApiUrl('')}/api/performance/metrics`, {
+      const response = await fetch(buildApiUrl('api/performance/metrics'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -90,7 +90,7 @@ const PerformanceDashboard: React.FC = () => {
 
   const fetchCacheStats = useCallback(async () => {
     try {
-      const response = await fetch(`${buildApiUrl('')}/api/performance/cache/stats`, {
+      const response = await fetch(buildApiUrl('api/performance/cache/stats'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -107,7 +107,7 @@ const PerformanceDashboard: React.FC = () => {
 
   const fetchRecommendations = useCallback(async () => {
     try {
-      const response = await fetch(`${buildApiUrl('')}/api/performance/recommendations`, {
+      const response = await fetch(buildApiUrl('api/performance/recommendations'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -124,7 +124,7 @@ const PerformanceDashboard: React.FC = () => {
 
   const clearCache = async (namespace?: string) => {
     try {
-      const response = await fetch(`${buildApiUrl('')}/api/performance/cache/clear`, {
+      const response = await fetch(buildApiUrl('api/performance/cache/clear'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

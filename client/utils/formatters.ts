@@ -183,8 +183,15 @@ export function formatSubscriptionStatus(status: string): string {
 export function buildApiUrl(path: string): string {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002';
   
-  // Remove trailing slash from baseUrl and leading slash from path
+  // Remove trailing slash from baseUrl
   const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+  
+  // If path is empty, just return the base URL
+  if (!path || path.trim() === '') {
+    return cleanBaseUrl;
+  }
+  
+  // Remove leading slash from path
   const cleanPath = path.replace(/^\//, '');
   
   // Combine baseUrl and path with single slash

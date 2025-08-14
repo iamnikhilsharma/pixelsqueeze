@@ -207,7 +207,7 @@ const ThumbnailGenerator: React.FC = () => {
       formData.append('background', thumbnailOptions.background);
       formData.append('createZip', thumbnailOptions.createZip.toString());
 
-      const response = await fetch(`${buildApiUrl('')}/api/advanced/thumbnails`, {
+      const response = await fetch(buildApiUrl('api/advanced/thumbnails'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
