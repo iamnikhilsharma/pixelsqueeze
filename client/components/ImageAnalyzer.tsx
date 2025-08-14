@@ -67,7 +67,7 @@ const ImageAnalyzer: React.FC = () => {
         formData.append(key, value.toString());
       });
 
-      const response = await fetch(`${buildApiUrl('')}/api/advanced/analyze-batch`, {
+      const response = await fetch(buildApiUrl('api/advanced/analyze-batch'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
