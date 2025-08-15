@@ -23,6 +23,9 @@ const adminAuthRoutes = require('./routes/adminAuth');
 const performanceMonitor = require('./services/performanceMonitor');
 const storageService = require('./services/storageService');
 const sentry = require('./services/sentry');
+const adminPlansRoutes = require('./routes/adminPlans');
+const adminSubscriptionsRoutes = require('./routes/adminSubscriptions');
+const adminInvoicesRoutes = require('./routes/adminInvoices');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { logger } = require('./utils/logger');
@@ -155,6 +158,7 @@ app.use('/api', apiRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/admin', adminAuthRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/plans', adminPlansRoutes);
 app.use('/api/advanced', advancedImageRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/analytics', analyticsRoutes);
@@ -163,6 +167,8 @@ app.use('/api/preferences', preferencesRoutes);
 app.use('/api/razorpay', razorpayRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/invoice', invoiceRoutes);
+app.use('/api/admin/subscriptions', adminSubscriptionsRoutes);
+app.use('/api/admin/invoices', adminInvoicesRoutes);
 
 // Performance routes (optional)
 if (performanceRoutes) {
