@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import MarketingLayout from '../components/MarketingLayout';
+import AdminLayout from '../../components/AdminLayout';
 
 interface Stats {
   totalUsers: number;
@@ -15,7 +15,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      router.replace('/login');
+      router.replace('/admin/login');
       return;
     }
     fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/admin/stats`, {
@@ -26,11 +26,11 @@ export default function AdminDashboard() {
         return res.json();
       })
       .then(json => setStats(json.data))
-      .catch(() => router.replace('/'));
+      .catch(() => router.replace('/admin/login'));
   }, []);
 
   return (
-    <MarketingLayout title="Admin Dashboard - PixelSqueeze">
+    <AdminLayout title="Admin Dashboard - PixelSqueeze">
       <section className="py-20 bg-gray-50 min-h-screen">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
@@ -55,6 +55,6 @@ export default function AdminDashboard() {
           )}
         </div>
       </section>
-    </MarketingLayout>
+    </AdminLayout>
   );
 }

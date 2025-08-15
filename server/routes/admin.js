@@ -575,4 +575,56 @@ router.get('/system-info',
   })
 );
 
+// Helper: sanitize update fields
+const ALLOWED_UPDATE_FIELDS = ['firstName','lastName','company','isAdmin','isActive','subscription.plan'];
+
+// GET /api/admin/users/:id
+router.get('/users/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password');
+    if (!user) return res.status(404).json({ success:false, message:'User not found' });
+    return res.json({ success:true, data:user });
+  } catch(err){
+    return res.status(500).json({ success:false, message:'Failed to fetch user'});
+  }
+});
+
+// PATCH /api/admin/users/:id  (update allowed fields)
+router.patch('/users/:id', async (req, res)=>{
+  try {
+    const updates = {};
+    ALLOWED_UPDATE_FIELDS.forEach(f=>{
+      if (req.body.hasOwnProperty(f)) updates[f]=req.body[f];
+    });
+    const user = await User.findByIdAndUpdate(req.params.id, updates, { new:true }).select('-password');
+    if(!user) return res.status(404).json({ success:false, message:'User not found'});
+    return res.json({ success:true, data:user });
+  }catch(err){
+    return res.status(500).json({ success:false, message:'Failed to update user'});
+  }
+});
+
+// PATCH /api/admin/users/:id/deactivate  body { isActive: boolean }
+router.patch('/users/:id/activate', async (req,res)=>{
+  try {
+    const { isActive } = req.body;
+    const user = await User.findByIdAndUpdate(req.params.id,{ isActive: !!isActive },{ new:true }).select('-password');
+    if(!user) return res.status(404).json({ success:false, message:'User not found'});
+    return res.json({ success:true, data:user });
+  }catch(err){
+    return res.status(500).json({ success:false, message:'Failed to change status'});
+  }
+});
+
+// DELETE /api/admin/users/:id  (permanent delete)
+router.delete('/users/:id', async (req,res)=>{
+  try {
+    const result = await User.findByIdAndDelete(req.params.id);
+    if(!result) return res.status(404).json({ success:false, message:'User not found'});
+    return res.json({ success:true, message:'User deleted'});
+  }catch(err){
+    return res.status(500).json({ success:false, message:'Failed to delete user'});
+  }
+});
+
 module.exports = router; 
