@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import AdminLayout from '../../components/AdminLayout';
+import withAdminAuth from '../../components/AdminGuard';
 
 interface Stats {
   totalUsers: number;
@@ -8,7 +9,7 @@ interface Stats {
   admins: number;
 }
 
-export default function AdminDashboard() {
+function AdminDashboard() {
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
 
@@ -58,3 +59,5 @@ export default function AdminDashboard() {
     </AdminLayout>
   );
 }
+
+export default withAdminAuth(AdminDashboard);

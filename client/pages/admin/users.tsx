@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import AdminLayout from '../../components/AdminLayout';
+import withAdminAuth from '../../components/AdminGuard';
 
 interface User {
   _id: string;
@@ -12,7 +13,7 @@ interface User {
   subscription?: { plan: string };
 }
 
-export default function AdminUsers() {
+function AdminUsers() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,3 +101,5 @@ export default function AdminUsers() {
     </AdminLayout>
   );
 }
+
+export default withAdminAuth(AdminUsers);

@@ -12,8 +12,12 @@ export default function AdminLayout({ title = 'Admin', children }: Props) {
   const router = useRouter();
   const nav = [
     { name: 'Dashboard', href: '/admin' },
-    { name: 'Users', href: '/admin/users' }
+    { name: 'Users', href: '/admin/users' },
+    { name: 'Plans', href: '/admin/plans' },
+    { name: 'Invoices', href: '/admin/invoices' }
   ];
+
+  const [open, setOpen] = React.useState(false);
 
   return (
     <>
@@ -21,8 +25,13 @@ export default function AdminLayout({ title = 'Admin', children }: Props) {
         <title>{title}</title>
       </Head>
       <div className="min-h-screen flex bg-gray-100">
-        {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-lg hidden md:block">
+        {/* Mobile hamburger */}
+        <button onClick={()=>setOpen(!open)} className="absolute top-4 left-4 md:hidden p-2 bg-white rounded shadow">
+          <span className="sr-only">Toggle</span>
+          ☰
+        </button>
+
+        <aside className={`fixed md:static inset-y-0 left-0 transform ${open ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-200 w-64 bg-white shadow-lg z-40`}>
           <div className="px-6 py-4 text-2xl font-semibold border-b">Admin</div>
           <nav className="mt-4">
             {nav.map(link => (
