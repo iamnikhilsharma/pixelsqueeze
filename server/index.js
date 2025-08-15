@@ -26,6 +26,7 @@ const sentry = require('./services/sentry');
 const adminPlansRoutes = require('./routes/adminPlans');
 const adminSubscriptionsRoutes = require('./routes/adminSubscriptions');
 const adminInvoicesRoutes = require('./routes/adminInvoices');
+const adminMetricsRoutes = require('./routes/adminMetrics');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { logger } = require('./utils/logger');
@@ -169,6 +170,7 @@ app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/invoice', invoiceRoutes);
 app.use('/api/admin/subscriptions', adminSubscriptionsRoutes);
 app.use('/api/admin/invoices', adminInvoicesRoutes);
+app.use('/api/admin/metrics', adminMetricsRoutes);
 
 // Performance routes (optional)
 if (performanceRoutes) {
