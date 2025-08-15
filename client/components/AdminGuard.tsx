@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
-export default function withAdminAuth<P>(Wrapped: React.ComponentType<P>) {
-  const Guarded: React.FC<P> = (props) => {
+export default function withAdminAuth<P extends object>(Wrapped: React.ComponentType<P>): React.FC<P> {
+  const Guarded: React.FC<P> = (props: P) => {
     const router = useRouter();
     const [authorized, setAuthorized] = useState(false);
 
@@ -27,7 +27,7 @@ export default function withAdminAuth<P>(Wrapped: React.ComponentType<P>) {
     }, []);
 
     if (!authorized) return null;
-    return <Wrapped {...props} />;
+    return <Wrapped {...(props as P)} />;
   };
   return Guarded;
 }
