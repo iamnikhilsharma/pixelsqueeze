@@ -10,8 +10,44 @@ const { logger } = require('../utils/logger');
 
 const router = express.Router();
 
-// Apply admin middleware to all routes
+// Combined middleware
 router.use(authenticateToken, requireAdmin);
+
+// GET /api/admin/stats - basic KPI stats
+router.get('/stats', async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const activeUsers = await User.countDocuments({ isActive: true });
+    const admins = await User.countDocuments({ isAdmin: true });
+
+    return res.json({
+      success: true,
+      data: {
+        totalUsers,
+        activeUsers,
+        admins
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch stats' });
+  }
+});
+
+// GET /api/admin/users - list users (basic)
+router.get('/users', async (req, res) => {
+  const { page = 1, limit = 20 } = req.query;
+  try {
+    const users = await User.find()
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .select('-password');
+
+    const total = await User.countDocuments();
+    return res.json({ success: true, data: { users, total } });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch users' });
+  }
+});
 
 /**
  * GET /api/admin/dashboard
@@ -115,75 +151,6 @@ router.get('/dashboard',
       res.status(500).json({
         error: 'Failed to retrieve dashboard statistics',
         code: 'DASHBOARD_ERROR',
-        details: error.message
-      });
-    }
-  })
-);
-
-/**
- * GET /api/admin/users
- * Get all users with pagination
- */
-router.get('/users',
-  asyncHandler(async (req, res) => {
-    const { page = 1, limit = 20, search, plan, status } = req.query;
-
-    try {
-      const query = {};
-
-      // Search filter
-      if (search) {
-        query.$or = [
-          { email: { $regex: search, $options: 'i' } },
-          { firstName: { $regex: search, $options: 'i' } },
-          { lastName: { $regex: search, $options: 'i' } },
-          { company: { $regex: search, $options: 'i' } }
-        ];
-      }
-
-      // Plan filter
-      if (plan) {
-        query['subscription.plan'] = plan;
-      }
-
-      // Status filter
-      if (status) {
-        if (status === 'active') {
-          query.isActive = true;
-        } else if (status === 'inactive') {
-          query.isActive = false;
-        }
-      }
-
-      const skip = (parseInt(page) - 1) * parseInt(limit);
-      
-      const users = await User.find(query)
-        .select('-password')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(parseInt(limit));
-
-      const total = await User.countDocuments(query);
-
-      res.json({
-        success: true,
-        data: {
-          users,
-          pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
-            total,
-            pages: Math.ceil(total / parseInt(limit))
-          }
-        }
-      });
-
-    } catch (error) {
-      logger.error('Admin users retrieval error:', error);
-      res.status(500).json({
-        error: 'Failed to retrieve users',
-        code: 'USERS_ERROR',
         details: error.message
       });
     }
