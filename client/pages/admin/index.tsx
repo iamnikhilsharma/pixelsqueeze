@@ -7,6 +7,8 @@ interface Stats {
   totalUsers: number;
   activeUsers: number;
   admins: number;
+  activeSubscriptions: number;
+  planBreakdown: Record<string, number>;
 }
 
 function AdminDashboard() {
@@ -51,6 +53,10 @@ function AdminDashboard() {
               <div className="bg-white shadow rounded-lg p-6 text-center">
                 <p className="text-5xl font-bold text-indigo-600 mb-2">{stats.admins}</p>
                 <p className="text-gray-600">Admins</p>
+              </div>
+              <div className="bg-white shadow rounded-lg p-6 text-center">
+                <p className="text-5xl font-bold text-secondary-600 mb-2">{stats.activeSubscriptions}</p>
+                <p className="text-gray-600">Active Subs</p>
               </div>
             </div>
           )}

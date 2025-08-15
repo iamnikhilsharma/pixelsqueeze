@@ -20,12 +20,21 @@ router.get('/stats', async (req, res) => {
     const activeUsers = await User.countDocuments({ isActive: true });
     const admins = await User.countDocuments({ isAdmin: true });
 
+    const activeSubs = await User.countDocuments({ 'subscription.status': 'active', 'subscription.plan': { $ne: 'free' } });
+
+    const planAgg = await User.aggregate([
+      { $group: { _id: '$subscription.plan', count: { $sum: 1 } } }
+    ]);
+    const planBreakdown = planAgg.reduce((acc, cur)=>{ acc[cur._id||'unknown'] = cur.count; return acc;}, {});
+
     return res.json({
       success: true,
       data: {
         totalUsers,
         activeUsers,
-        admins
+        admins,
+        activeSubscriptions: activeSubs,
+        planBreakdown
       }
     });
   } catch (error) {
