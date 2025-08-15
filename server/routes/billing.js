@@ -30,7 +30,7 @@ router.get('/plans', authenticateToken, async (req, res) => {
       {
         id: 'starter',
         name: 'Starter',
-        price: 9,
+        price: 999,
         period: 'month',
         description: 'Great for small projects',
         features: [
@@ -52,7 +52,7 @@ router.get('/plans', authenticateToken, async (req, res) => {
       {
         id: 'pro',
         name: 'Pro',
-        price: 29,
+        price: 3699,
         period: 'month',
         description: 'For growing businesses',
         features: [
@@ -76,7 +76,7 @@ router.get('/plans', authenticateToken, async (req, res) => {
       {
         id: 'enterprise',
         name: 'Enterprise',
-        price: 99,
+        price: 10000,
         period: 'month',
         description: 'For large organizations',
         features: [

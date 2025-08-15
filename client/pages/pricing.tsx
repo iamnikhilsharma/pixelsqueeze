@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/router';
 import MarketingLayout from '../components/MarketingLayout';
 import {
   CheckIcon,
@@ -10,70 +11,106 @@ import {
   GlobeIcon
 } from '../components/icons';
 
+// Import shared pricing configuration
+import { getAllPlans, calculateSavings, getPlanFeatures, getPlanLimits } from '../../shared/pricing.js';
+
 export default function Pricing() {
   const [isAnnual, setIsAnnual] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentPlan, setCurrentPlan] = useState('Free');
+  const [userEmail, setUserEmail] = useState('');
+  const router = useRouter();
 
-  const plans = [
-    {
-      name: "Free",
-      price: { monthly: 0, annual: 0 },
-      description: "Perfect for getting started",
-      features: [
-        "Up to 10 images per month",
-        "Basic compression",
-        "Standard formats (JPEG, PNG)",
-        "Community support",
-        "1GB storage"
-      ],
-      cta: "Get Started Free",
-      popular: false,
-      color: "from-gray-500 to-gray-600"
-    },
-    {
-      name: "Pro",
-      price: { monthly: 19, annual: 190 },
-      description: "For professionals and small teams",
-      features: [
-        "Up to 1,000 images per month",
-        "Advanced compression",
-        "All formats (WebP, AVIF)",
-        "Priority support",
-        "10GB storage",
-        "Watermarking",
-        "Thumbnail generation",
-        "Basic analytics"
-      ],
-      cta: "Start Pro Trial",
-      popular: true,
-      color: "from-primary-500 to-secondary-500"
-    },
-    {
-      name: "Enterprise",
-      price: { monthly: 99, annual: 990 },
-      description: "For large teams and businesses",
-      features: [
-        "Unlimited images",
-        "AI-powered optimization",
-        "Custom formats",
-        "24/7 phone support",
-        "Unlimited storage",
-        "Advanced watermarking",
-        "Batch processing",
-        "Full analytics dashboard",
-        "API access",
-        "Custom integrations",
-        "White-label options"
-      ],
-      cta: "Contact Sales",
-      popular: false,
-      color: "from-accent-500 to-light-500"
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    
+    if (token && user) {
+      try {
+        const userData = JSON.parse(user);
+        setIsLoggedIn(true);
+        setUserEmail(userData.email);
+        setCurrentPlan(userData.subscription?.plan || 'Free');
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
     }
-  ];
+  }, []);
 
+  const handlePlanAction = (planName: string, planPrice: number) => {
+    if (!isLoggedIn) {
+      // Redirect to register page with plan info
+      router.push(`/register?plan=${planName}&price=${planPrice}&billing=${isAnnual ? 'annual' : 'monthly'}`);
+      return;
+    }
+
+    if (planName === 'Free') {
+      // Handle downgrade to free
+      router.push('/dashboard?downgrade=free');
+      return;
+    }
+
+    // Redirect to checkout for paid plans
+    router.push(`/checkout?plan=${planName}&price=${planPrice}&billing=${isAnnual ? 'annual' : 'monthly'}`);
+  };
+
+  // Get plans from shared configuration
+  const plans = getAllPlans();
+  
+  // Calculate savings for each plan
   const savings = plans.map(plan => ({
     ...plan,
-    savings: isAnnual ? Math.round((plan.price.monthly * 12 - plan.price.annual) / (plan.price.monthly * 12) * 100) : 0
+    savings: calculateSavings(plan.id, isAnnual)
   }));
+
+  // Calculate plan limits map for comparison table
+  const planLimitsMap = React.useMemo(() => {
+    const map: Record<string, any> = {};
+    plans.forEach(p => {
+      map[p.id] = getPlanLimits(p.name);
+    });
+    return map;
+  }, [plans]);
+
+  // Table rows definition
+  const comparisonRows = [
+    {
+      feature: 'Images per month',
+      key: 'imagesPerMonth',
+      format: (v: any) => v ? v.toLocaleString() : '—'
+    },
+    {
+      feature: 'Storage',
+      key: 'storage',
+      format: (v: any) => v || '—'
+    },
+    {
+      feature: 'Formats',
+      key: 'formats',
+      format: (v: any) => Array.isArray(v) ? v.join(', ') : (v || '—')
+    },
+    {
+      feature: 'Watermarking',
+      key: 'watermarking',
+      format: (v: any) => v === true ? '✓' : v === false ? '✗' : v
+    },
+    {
+      feature: 'Analytics',
+      key: 'analytics',
+      format: (v: any) => v || '—'
+    },
+    {
+      feature: 'API Access',
+      key: 'apiAccess',
+      format: (v: any) => v ? '✓' : '✗'
+    },
+    {
+      feature: 'Support',
+      key: 'support',
+      format: (v: any) => v || '—'
+    }
+  ];
 
   return (
     <MarketingLayout title="Pricing - PixelSqueeze">
@@ -97,6 +134,24 @@ export default function Pricing() {
             </p>
           </motion.div>
 
+          {/* User Status Indicator */}
+          {isLoggedIn && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="text-center mb-8"
+            >
+              <div className="inline-flex items-center px-4 py-2 bg-white rounded-full shadow-lg border border-gray-200">
+                <span className="text-sm text-gray-600 mr-2">Currently on:</span>
+                <span className="text-sm font-semibold text-primary-600 bg-primary-50 px-3 py-1 rounded-full">
+                  {currentPlan} Plan
+                </span>
+                <span className="text-sm text-gray-500 ml-2">({userEmail})</span>
+              </div>
+            </motion.div>
+          )}
+
           {/* Billing Toggle */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -113,9 +168,10 @@ export default function Pricing() {
             >
               <motion.span
                 layout
-                className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform ${
-                  isAnnual ? 'translate-x-8' : 'translate-x-1'
-                }`}
+                className="inline-block h-6 w-6 rounded-full bg-white shadow-lg transition-all duration-200"
+                style={{
+                  transform: isAnnual ? 'translateX(32px)' : 'translateX(0px)'
+                }}
               />
             </button>
             <span className={`text-lg ${isAnnual ? 'text-gray-900' : 'text-gray-500'}`}>
@@ -162,7 +218,7 @@ export default function Pricing() {
       {/* Pricing Cards */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {savings.map((plan, index) => (
               <motion.div
                 key={plan.name}
@@ -190,7 +246,7 @@ export default function Pricing() {
                   
                   <div className="mb-4">
                     <span className="text-4xl font-bold text-gray-900">
-                      ${isAnnual ? plan.price.annual : plan.price.monthly}
+                      ₹{isAnnual ? plan.price.annual : plan.price.monthly}
                     </span>
                     {plan.price.monthly > 0 && (
                       <span className="text-gray-500 ml-2">
@@ -204,6 +260,7 @@ export default function Pricing() {
                       Save {plan.savings}% with annual billing
                     </div>
                   )}
+
                 </div>
 
                 <ul className="space-y-4 mb-8">
@@ -215,12 +272,16 @@ export default function Pricing() {
                   ))}
                 </ul>
 
-                <button className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 ${
-                  plan.popular
-                    ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white hover:from-primary-600 hover:to-secondary-600 transform hover:scale-105'
-                    : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                }`}>
-                  {plan.cta}
+                <button 
+                  onClick={() => handlePlanAction(plan.name, isAnnual ? plan.price.annual : plan.price.monthly)}
+                  className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 ${
+                    plan.popular
+                      ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white hover:from-primary-600 hover:to-secondary-600 transform hover:scale-105'
+                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                  }`}>
+                  {plan.name === currentPlan ? 'Current Plan' : 
+                   plan.name === 'Free' ? (isLoggedIn ? 'Downgrade to Free' : 'Get Started Free') :
+                   isLoggedIn ? `Upgrade to ${plan.name}` : plan.cta}
                 </button>
               </motion.div>
             ))}
@@ -259,25 +320,20 @@ export default function Pricing() {
                   <tr>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Feature</th>
                     <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Free</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Starter</th>
                     <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Pro</th>
                     <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Enterprise</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {[
-                    { feature: "Images per month", free: "10", pro: "1,000", enterprise: "Unlimited" },
-                    { feature: "Storage", free: "1GB", pro: "10GB", enterprise: "Unlimited" },
-                    { feature: "Formats", free: "JPEG, PNG", pro: "All formats", enterprise: "All + Custom" },
-                    { feature: "Watermarking", free: "✗", pro: "✓", enterprise: "Advanced" },
-                    { feature: "Analytics", free: "Basic", pro: "Standard", enterprise: "Full dashboard" },
-                    { feature: "API Access", free: "✗", pro: "✗", enterprise: "✓" },
-                    { feature: "Support", free: "Community", pro: "Priority", enterprise: "24/7 Phone" }
-                  ].map((row, index) => (
+                  {comparisonRows.map((row, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">{row.feature}</td>
-                      <td className="px-6 py-4 text-sm text-center text-gray-600">{row.free}</td>
-                      <td className="px-6 py-4 text-sm text-center text-gray-600">{row.pro}</td>
-                      <td className="px-6 py-4 text-sm text-center text-gray-600">{row.enterprise}</td>
+                      {['free','starter','pro','enterprise'].map(pid => (
+                        <td key={pid} className="px-6 py-4 text-sm text-center text-gray-600">
+                          {row.format(planLimitsMap[pid][row.key])}
+                        </td>
+                      ))}
                     </tr>
                   ))}
                 </tbody>

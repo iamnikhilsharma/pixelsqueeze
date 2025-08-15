@@ -16,6 +16,9 @@ const analyticsRoutes = require('./routes/analytics');
 const batchProcessingRoutes = require('./routes/batchProcessing');
 const preferencesRoutes = require('./routes/preferences');
 const performanceRoutes = require('./routes/performance');
+const razorpayRoutes = require('./routes/razorpay');
+const subscriptionRoutes = require('./routes/subscription');
+const invoiceRoutes = require('./routes/invoice');
 const performanceMonitor = require('./services/performanceMonitor');
 const storageService = require('./services/storageService');
 const sentry = require('./services/sentry');
@@ -155,6 +158,9 @@ app.use('/api/billing', billingRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/batch-processing', batchProcessingRoutes);
 app.use('/api/preferences', preferencesRoutes);
+app.use('/api/razorpay', razorpayRoutes);
+app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/invoice', invoiceRoutes);
 
 // Performance routes (optional)
 if (performanceRoutes) {
