@@ -2,6 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import AdminLayout from '../../components/AdminLayout';
 import withAdminAuth from '../../components/AdminGuard';
+import dynamic from 'next/dynamic';
+// @ts-ignore – runtime import only
+const Doughnut = dynamic(()=>import('react-chartjs-2').then((m:any)=>m.Doughnut),{ ssr:false });
+// @ts-ignore
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface Stats {
   totalUsers: number;
@@ -14,6 +20,7 @@ interface Stats {
 function AdminDashboard() {
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
+  const [chartData,setChartData]=useState<any>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -28,7 +35,14 @@ function AdminDashboard() {
         if (res.status === 403) throw new Error('Not admin');
         return res.json();
       })
-      .then(json => setStats(json.data))
+      .then(json => {
+        setStats(json.data);
+        const pb = json.data.planBreakdown || {};
+        setChartData({
+          labels: Object.keys(pb),
+          datasets:[{ data:Object.values(pb), backgroundColor:['#6366f1','#3b82f6','#10b981','#f59e0b'] }]
+        });
+      })
       .catch(() => router.replace('/admin/login'));
   }, []);
 
@@ -58,6 +72,12 @@ function AdminDashboard() {
                 <p className="text-5xl font-bold text-secondary-600 mb-2">{stats.activeSubscriptions}</p>
                 <p className="text-gray-600">Active Subs</p>
               </div>
+            </div>
+          )}
+          {chartData && (
+            <div className="mt-12 max-w-sm mx-auto">
+              {/* @ts-ignore */}
+              <Doughnut data={chartData} />
             </div>
           )}
         </div>
