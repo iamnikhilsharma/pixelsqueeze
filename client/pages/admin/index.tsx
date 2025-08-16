@@ -6,35 +6,17 @@ import {
   CreditCardIcon, 
   DocumentTextIcon,
   ArrowUpIcon,
-  ArrowDownIcon
+  ArrowDownIcon,
+  GlobeAltIcon,
+  CpuChipIcon
 } from '@heroicons/react/24/outline';
-import { Doughnut, Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-} from 'chart.js';
 import AdminLayout from '../../components/AdminLayout';
 import AdminGuard from '../../components/AdminGuard';
 import AdminCard from '../../components/AdminCard';
+import AdminChart from '../../components/AdminChart';
+import AnalyticsWidget from '../../components/AnalyticsWidget';
+import PerformanceMetrics from '../../components/PerformanceMetrics';
 import useAdminMetrics from '../../hooks/useAdminMetrics';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement
-);
 
 const AdminDashboard: React.FC = () => {
   const { metrics, isLoading, isError: error } = useAdminMetrics();
@@ -63,12 +45,59 @@ const AdminDashboard: React.FC = () => {
   const dailyOptimizations = metrics?.dailyOptimizations || [];
   const planBreakdown = metrics?.planBreakdown || {};
 
+  // Mock performance metrics for demonstration
+  const performanceMetrics = [
+    {
+      name: 'CPU Usage',
+      value: 45,
+      unit: '%',
+      status: 'good' as const,
+      trend: 'stable' as const
+    },
+    {
+      name: 'Memory Usage',
+      value: 78,
+      unit: '%',
+      status: 'warning' as const,
+      trend: 'up' as const
+    },
+    {
+      name: 'Disk Space',
+      value: 62,
+      unit: '%',
+      status: 'good' as const,
+      trend: 'stable' as const
+    },
+    {
+      name: 'Network Latency',
+      value: 12,
+      unit: 'ms',
+      status: 'good' as const,
+      trend: 'down' as const
+    },
+    {
+      name: 'Active Connections',
+      value: 156,
+      unit: '',
+      status: 'good' as const,
+      trend: 'up' as const
+    },
+    {
+      name: 'Error Rate',
+      value: 0.2,
+      unit: '%',
+      status: 'good' as const,
+      trend: 'stable' as const
+    }
+  ];
+
   // Prepare chart data
   const planChartData = {
     labels: Object.keys(planBreakdown),
     datasets: [
       {
-        data: Object.values(planBreakdown),
+        label: 'Plan Distribution',
+        data: Object.values(planBreakdown) as number[],
         backgroundColor: [
           '#3B82F6', // blue-500
           '#10B981', // emerald-500
@@ -95,39 +124,40 @@ const AdminDashboard: React.FC = () => {
     ],
   };
 
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        display: false,
+  const revenueChartData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    datasets: [
+      {
+        label: 'Monthly Revenue',
+        data: [12000, 15000, 18000, 22000, 25000, 28000],
+        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+        borderColor: '#10B981',
+        borderWidth: 2,
+        fill: true,
       },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: {
-          color: 'rgba(0, 0, 0, 0.1)',
-        },
-      },
-      x: {
-        grid: {
-          display: false,
-        },
-      },
-    },
+    ],
   };
 
-  const doughnutOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'bottom' as const,
-        labels: {
-          padding: 20,
-          usePointStyle: true,
-        },
+  const userGrowthData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    datasets: [
+      {
+        label: 'New Users',
+        data: [150, 220, 180, 300, 280, 350],
+        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        borderColor: '#3B82F6',
+        borderWidth: 2,
+        fill: false,
       },
-    },
+      {
+        label: 'Active Users',
+        data: [1200, 1350, 1280, 1500, 1450, 1600],
+        backgroundColor: 'rgba(139, 92, 246, 0.2)',
+        borderColor: '#8B5CF6',
+        borderWidth: 2,
+        fill: false,
+      }
+    ],
   };
 
   return (
@@ -141,9 +171,9 @@ const AdminDashboard: React.FC = () => {
           </p>
         </div>
 
-        {/* Stats Cards */}
+        {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <AdminCard
+          <AnalyticsWidget
             title="Total Users"
             value={stats.totalUsers || 0}
             change={{
@@ -151,11 +181,15 @@ const AdminDashboard: React.FC = () => {
               isPositive: true,
               period: 'last month'
             }}
+            trend={{
+              data: [1200, 1350, 1280, 1500, 1450, 1600],
+              period: '6 months'
+            }}
             icon={<UsersIcon className="h-6 w-6" />}
             color="primary"
           />
           
-          <AdminCard
+          <AnalyticsWidget
             title="Active Subscriptions"
             value={stats.activeSubscriptions || 0}
             change={{
@@ -163,11 +197,15 @@ const AdminDashboard: React.FC = () => {
               isPositive: true,
               period: 'last month'
             }}
+            trend={{
+              data: [450, 480, 520, 580, 620, 680],
+              period: '6 months'
+            }}
             icon={<CreditCardIcon className="h-6 w-6" />}
             color="success"
           />
           
-          <AdminCard
+          <AnalyticsWidget
             title="Total Optimizations"
             value={stats.totalImagesOptimized || 0}
             change={{
@@ -175,11 +213,15 @@ const AdminDashboard: React.FC = () => {
               isPositive: true,
               period: 'last week'
             }}
+            trend={{
+              data: [12000, 13500, 12800, 15000, 14500, 16000],
+              period: '6 months'
+            }}
             icon={<ChartBarIcon className="h-6 w-6" />}
             color="info"
           />
           
-          <AdminCard
+          <AnalyticsWidget
             title="Revenue This Month"
             value={`$${stats.monthlyRevenue || 0}`}
             change={{
@@ -187,38 +229,59 @@ const AdminDashboard: React.FC = () => {
               isPositive: true,
               period: 'last month'
             }}
+            trend={{
+              data: [12000, 15000, 18000, 22000, 25000, 28000],
+              period: '6 months'
+            }}
             icon={<DocumentTextIcon className="h-6 w-6" />}
             color="warning"
           />
         </div>
 
-        {/* Charts Section */}
+        {/* Advanced Charts Section */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Plan Distribution Chart */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-xl bg-white p-6 shadow-lg"
-          >
-            <h3 className="mb-4 text-lg font-semibold text-gray-900">Plan Distribution</h3>
-            <div className="h-64">
-              <Doughnut data={planChartData} options={doughnutOptions} />
-            </div>
-          </motion.div>
+          <AdminChart
+            type="doughnut"
+            data={planChartData}
+            title="Plan Distribution"
+            subtitle="Current subscription plan breakdown"
+            height={300}
+          />
 
           {/* Daily Optimizations Chart */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="rounded-xl bg-white p-6 shadow-lg"
-          >
-            <h3 className="mb-4 text-lg font-semibold text-gray-900">Daily Optimizations (7 Days)</h3>
-            <div className="h-64">
-              <Line data={dailyChartData} options={chartOptions} />
-            </div>
-          </motion.div>
+          <AdminChart
+            type="line"
+            data={dailyChartData}
+            title="Daily Optimizations (7 Days)"
+            subtitle="Image optimization trends"
+            height={300}
+          />
         </div>
+
+        {/* Additional Analytics */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Revenue Trend */}
+          <AdminChart
+            type="bar"
+            data={revenueChartData}
+            title="Revenue Trend"
+            subtitle="Monthly revenue growth"
+            height={300}
+          />
+
+          {/* User Growth */}
+          <AdminChart
+            type="line"
+            data={userGrowthData}
+            title="User Growth"
+            subtitle="New vs Active users over time"
+            height={300}
+          />
+        </div>
+
+        {/* Performance Metrics */}
+        <PerformanceMetrics metrics={performanceMetrics} />
 
         {/* Quick Actions */}
         <motion.div
