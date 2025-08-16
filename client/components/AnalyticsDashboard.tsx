@@ -4,7 +4,7 @@ import {
   ChartBarIcon,
   UserGroupIcon,
   BellIcon,
-  TrendingUpIcon
+  ArrowTrendingUpIcon
 } from '@heroicons/react/24/outline';
 
 interface AnalyticsDashboardProps {
@@ -36,7 +36,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
   const tabs = [
     { key: 'overview', label: 'Overview', icon: ChartBarIcon },
-    { key: 'trends', label: 'Trends', icon: TrendingUpIcon },
+    { key: 'trends', label: 'Trends', icon: ArrowTrendingUpIcon },
     { key: 'users', label: 'Users', icon: UserGroupIcon },
     { key: 'performance', label: 'Performance', icon: BellIcon }
   ];
@@ -128,7 +128,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     <p className="text-sm font-medium text-purple-600">Delivery Rate</p>
                     <p className="text-2xl font-bold text-purple-900">{mockData.summary.deliveryRate}%</p>
                   </div>
-                  <TrendingUpIcon className="h-8 w-8 text-purple-400" />
+                  <ArrowTrendingUpIcon className="h-8 w-8 text-purple-400" />
                 </div>
               </motion.div>
 
@@ -171,7 +171,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
         {activeTab === 'trends' && (
           <div className="text-center py-12">
-            <TrendingUpIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <ArrowTrendingUpIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600">Trend analysis charts will be displayed here</p>
           </div>
         )}

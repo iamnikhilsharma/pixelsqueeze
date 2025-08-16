@@ -5,7 +5,11 @@ import {
   TrashIcon,
   EyeIcon,
   EyeSlashIcon,
-  BellIcon
+  BellIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  XCircleIcon,
+  InformationCircleIcon
 } from '@heroicons/react/24/outline';
 import { Notification } from '../hooks/useNotifications';
 

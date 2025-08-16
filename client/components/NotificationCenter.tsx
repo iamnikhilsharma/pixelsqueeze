@@ -31,7 +31,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
   className = ''
 }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'system'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'read' | 'success' | 'warning' | 'error' | 'info'>('all');
 
   useEffect(() => {
     if (isOpen) {
@@ -130,8 +130,13 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
   };
 
   const filteredNotifications = notifications.filter(n => {
+    if (activeTab === 'all') return true;
     if (activeTab === 'unread') return !n.read;
-    if (activeTab === 'system') return n.type === 'system';
+    if (activeTab === 'read') return n.read;
+    if (activeTab === 'success') return n.type === 'success';
+    if (activeTab === 'warning') return n.type === 'warning';
+    if (activeTab === 'info') return n.type === 'info';
+    if (activeTab === 'error') return n.type === 'error';
     return true;
   });
 
@@ -185,7 +190,11 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
             {[
               { key: 'all', label: 'All' },
               { key: 'unread', label: 'Unread' },
-              { key: 'system', label: 'System' }
+              { key: 'read', label: 'Read' },
+              { key: 'success', label: 'Success' },
+              { key: 'warning', label: 'Warning' },
+              { key: 'error', label: 'Error' },
+              { key: 'info', label: 'Info' }
             ].map((tab) => (
               <button
                 key={tab.key}

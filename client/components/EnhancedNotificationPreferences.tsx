@@ -113,9 +113,9 @@ const EnhancedNotificationPreferences: React.FC<EnhancedNotificationPreferencesP
       ...prev,
       [channelId]: {
         ...prev[channelId],
-        categories: {
-          ...prev[channelId].categories,
-          [categoryId]: !prev[channelId].categories[categoryId]
+        categories: channelId === 'quietHours' ? {} : {
+          ...(prev[channelId] as any).categories,
+          [categoryId]: !(prev[channelId] as any).categories[categoryId]
         }
       }
     }));
@@ -126,9 +126,9 @@ const EnhancedNotificationPreferences: React.FC<EnhancedNotificationPreferencesP
       ...prev,
       [channelId]: {
         ...prev[channelId],
-        priorities: {
-          ...prev[channelId].priorities,
-          [priorityId]: !prev[channelId].priorities[priorityId]
+        priorities: channelId === 'quietHours' ? {} : {
+          ...(prev[channelId] as any).priorities,
+          [priorityId]: !(prev[channelId] as any).priorities[priorityId]
         }
       }
     }));
@@ -282,7 +282,7 @@ const EnhancedNotificationPreferences: React.FC<EnhancedNotificationPreferencesP
                       <label key={channel.id} className="flex items-center space-x-2">
                         <input
                           type="checkbox"
-                          checked={channelData.enabled && channelData.categories[category.id]}
+                          checked={channelData.enabled && (channelData as any).categories?.[category.id]}
                           disabled={!channelData.enabled}
                           onChange={() => handleCategoryToggle(channel.id as keyof NotificationPreferences, category.id)}
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
@@ -321,7 +321,7 @@ const EnhancedNotificationPreferences: React.FC<EnhancedNotificationPreferencesP
                       <label key={channel.id} className="flex items-center space-x-2">
                         <input
                           type="checkbox"
-                          checked={channelData.enabled && channelData.priorities[priority.id]}
+                          checked={channelData.enabled && (channelData as any).priorities?.[priority.id]}
                           disabled={!channelData.enabled}
                           onChange={() => handlePriorityToggle(channel.id as keyof NotificationPreferences, priority.id)}
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
