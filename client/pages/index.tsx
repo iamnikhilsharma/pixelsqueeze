@@ -169,7 +169,7 @@ export default function Home() {
           </div>
 
           {/* Interactive Image Optimization Demo */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
@@ -216,7 +216,7 @@ export default function Home() {
 
             {/* Error Display */}
             {error && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg"
@@ -281,8 +281,8 @@ export default function Home() {
                       </div>
                     </motion.div>
                   ))}
-                </div>
-                
+              </div>
+              
                 <div className="text-center mt-6">
                   <button
                     onClick={processImages}
@@ -346,9 +346,9 @@ export default function Home() {
                           <span className="font-medium text-green-600">
                             {result.compression}%
                           </span>
-                        </div>
-                      </div>
-                      
+              </div>
+            </div>
+            
                       {/* Download Button for Logged-in Users */}
                       {user && token && (
                         <button
@@ -382,9 +382,9 @@ export default function Home() {
                         Sign Up to Download
                       </Link>
                     ) : null}
-                  </div>
                 </div>
-              </motion.div>
+              </div>
+            </motion.div>
             )}
           </motion.div>
         </div>
@@ -506,8 +506,8 @@ export default function Home() {
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Advanced Analytics</h3>
               <p className="text-gray-600">Get detailed insights into your image optimization performance.</p>
             </motion.div>
-          </div>
-        </div>
+              </div>
+            </div>
       </section>
 
       {/* Statistics Section */}
@@ -643,9 +643,9 @@ export default function Home() {
       {/* Try Basic Optimization Demo Section */}
       <section className="py-20 bg-gradient-to-br from-gray-50 to-primary-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
             className="text-center mb-16"
@@ -704,7 +704,7 @@ export default function Home() {
                 </p>
               </div>
             </div>
-          </motion.div>
+              </motion.div>
         </div>
       </section>
 
