@@ -27,6 +27,9 @@ const adminPlansRoutes = require('./routes/adminPlans');
 const adminSubscriptionsRoutes = require('./routes/adminSubscriptions');
 const adminInvoicesRoutes = require('./routes/adminInvoices');
 const adminMetricsRoutes = require('./routes/adminMetrics');
+const adminNotificationRoutes = require('./routes/adminNotifications');
+const notificationRoutes = require('./routes/notifications');
+const notificationPreferenceRoutes = require('./routes/notificationPreferences');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { logger } = require('./utils/logger');
@@ -34,6 +37,9 @@ const { logger } = require('./utils/logger');
 const app = express();
 // Force port to avoid conflicts, but allow override via environment
 const PORT = process.env.PORT === '5000' ? 5002 : (process.env.PORT || 5002);
+
+// Create HTTP server for WebSocket support
+const server = require('http').createServer(app);
 
 // Trust proxy
 app.set('trust proxy', 1);
@@ -171,6 +177,9 @@ app.use('/api/invoice', invoiceRoutes);
 app.use('/api/admin/subscriptions', adminSubscriptionsRoutes);
 app.use('/api/admin/invoices', adminInvoicesRoutes);
 app.use('/api/admin/metrics', adminMetricsRoutes);
+app.use('/api/admin/notifications', adminNotificationRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/notification-preferences', notificationPreferenceRoutes);
 
 // Performance routes (optional)
 if (performanceRoutes) {
@@ -193,15 +202,32 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found', path: req.originalUrl });
 });
 
-app.listen(PORT, () => {
+// Initialize WebSocket service
+let websocketService;
+try {
+  const WebSocketService = require('./services/websocketService');
+  websocketService = new WebSocketService(server);
+  logger.info('WebSocket service initialized successfully');
+} catch (error) {
+  logger.warn('WebSocket service not available:', error.message);
+}
+
+// Start server
+server.listen(PORT, () => {
   logger.info(`PixelSqueeze server running on port ${PORT}`);
   logger.info(`Environment: ${process.env.NODE_ENV}`);
   logger.info(`Local storage path: ${process.env.LOCAL_STORAGE_PATH || path.join(__dirname, '../uploads')}`);
+  if (websocketService) {
+    logger.info('WebSocket service is running');
+  }
 });
 
 process.on('SIGTERM', async () => { 
   logger.info('SIGTERM received, shutting down gracefully'); 
   try {
+    if (websocketService) {
+      websocketService.shutdown();
+    }
     await mongoose.connection.close();
     logger.info('MongoDB connection closed');
   } catch (error) {
@@ -213,6 +239,9 @@ process.on('SIGTERM', async () => {
 process.on('SIGINT', async () => { 
   logger.info('SIGINT received, shutting down gracefully'); 
   try {
+    if (websocketService) {
+      websocketService.shutdown();
+    }
     await mongoose.connection.close();
     logger.info('MongoDB connection closed');
   } catch (error) {
