@@ -6,7 +6,8 @@ import {
   UsersIcon, 
   CreditCardIcon, 
   DocumentTextIcon,
-  BellIcon
+  BellIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 
 const AdminSidebar: React.FC = () => {
@@ -19,6 +20,7 @@ const AdminSidebar: React.FC = () => {
     { name: 'Subscriptions', href: '/admin/subscriptions', icon: CreditCardIcon },
     { name: 'Invoices', href: '/admin/invoices', icon: DocumentTextIcon },
     { name: 'Notifications', href: '/admin/notifications', icon: BellIcon },
+    { name: 'Analytics', href: '/admin/analytics', icon: ChartBarIcon },
   ];
 
   return (
