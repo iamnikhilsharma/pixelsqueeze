@@ -10,7 +10,12 @@ import {
   ChartBarIcon
 } from '@heroicons/react/24/outline';
 
-const AdminSidebar: React.FC = () => {
+interface AdminSidebarProps {
+  open: boolean;
+  toggle: () => void;
+}
+
+const AdminSidebar: React.FC<AdminSidebarProps> = ({ open, toggle }) => {
   const router = useRouter();
   
   const navigation = [
@@ -24,7 +29,9 @@ const AdminSidebar: React.FC = () => {
   ];
 
   return (
-    <div className="flex h-full w-64 flex-col bg-white border-r border-gray-200">
+    <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${
+      open ? 'translate-x-0' : '-translate-x-full'
+    } md:translate-x-0 md:static`}>
       <div className="flex h-16 items-center justify-center border-b border-gray-200">
         <h1 className="text-xl font-bold text-gray-900">Admin Panel</h1>
       </div>
@@ -36,6 +43,7 @@ const AdminSidebar: React.FC = () => {
             <Link
               key={item.name}
               href={item.href}
+              onClick={() => toggle()}
               className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
                 isActive
                   ? 'bg-blue-100 text-blue-700'

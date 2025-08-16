@@ -17,6 +17,14 @@ export default function AdminLayout({ title = 'Admin', children }: Props) {
         <title>{title}</title>
       </Head>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+        {/* Mobile overlay */}
+        {sidebarOpen && (
+          <div 
+            className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+        
         <AdminSidebar open={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
         <div className="md:ml-64">
           <AdminHeader toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
