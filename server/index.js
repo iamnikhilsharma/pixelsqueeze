@@ -30,7 +30,6 @@ const adminMetricsRoutes = require('./routes/adminMetrics');
 const adminNotificationRoutes = require('./routes/adminNotifications');
 const notificationRoutes = require('./routes/notifications');
 const notificationPreferenceRoutes = require('./routes/notificationPreferences');
-const analyticsRoutes = require('./routes/analytics');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { logger } = require('./utils/logger');
@@ -181,7 +180,6 @@ app.use('/api/admin/metrics', adminMetricsRoutes);
 app.use('/api/admin/notifications', adminNotificationRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/notification-preferences', notificationPreferenceRoutes);
-app.use('/api/analytics', analyticsRoutes);
 
 // Performance routes (optional)
 if (performanceRoutes) {
