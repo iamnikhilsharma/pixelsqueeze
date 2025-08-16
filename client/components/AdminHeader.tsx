@@ -17,15 +17,23 @@ export default function AdminHeader({ toggleSidebar }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 bg-white/80 backdrop-blur-md shadow md:ml-64 dark:bg-gray-900/80">
-      <button onClick={toggleSidebar} className="p-2 text-gray-600 rounded md:hidden hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
-        ☰
-      </button>
-      <h1 className="text-lg font-semibold">Admin Panel</h1>
+    <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-6 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-200 dark:bg-gray-900/95 dark:border-gray-700">
+      <div className="flex items-center space-x-4">
+        <button 
+          onClick={toggleSidebar} 
+          className="p-2 text-gray-600 rounded-lg md:hidden hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
+        >
+          ☰
+        </button>
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Admin Panel</h1>
+      </div>
       {user && (
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-4">
           <span className="text-sm text-gray-700 dark:text-gray-300">{user.email}</span>
-          <button onClick={logout} className="text-sm text-primary-600 hover:underline">
+          <button 
+            onClick={logout} 
+            className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition-colors"
+          >
             Logout
           </button>
         </div>

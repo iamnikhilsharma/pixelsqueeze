@@ -29,14 +29,14 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ open, toggle }) => {
   ];
 
   return (
-    <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${
+    <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 shadow-lg transform transition-transform duration-300 ease-in-out ${
       open ? 'translate-x-0' : '-translate-x-full'
-    } md:translate-x-0 md:static`}>
-      <div className="flex h-16 items-center justify-center border-b border-gray-200">
+    } md:translate-x-0 md:static md:shadow-none`}>
+      <div className="flex h-16 items-center justify-center border-b border-gray-200 bg-white">
         <h1 className="text-xl font-bold text-gray-900">Admin Panel</h1>
       </div>
       
-      <nav className="flex-1 space-y-1 px-2 py-4">
+      <nav className="flex-1 space-y-1 px-2 py-4 bg-white">
         {navigation.map((item) => {
           const isActive = router.pathname === item.href;
           return (
@@ -44,9 +44,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ open, toggle }) => {
               key={item.name}
               href={item.href}
               onClick={() => toggle()}
-              className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+              className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                 isActive
-                  ? 'bg-blue-100 text-blue-700'
+                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-500'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
             >

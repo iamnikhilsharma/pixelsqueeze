@@ -25,10 +25,14 @@ export default function AdminLayout({ title = 'Admin', children }: Props) {
           />
         )}
         
-        <AdminSidebar open={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
-        <div className="md:ml-64">
-          <AdminHeader toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-          <main className="p-6">{children}</main>
+        <div className="flex h-screen">
+          <AdminSidebar open={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
+          <div className="flex-1 flex flex-col md:ml-0">
+            <AdminHeader toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+            <main className="flex-1 p-6 overflow-auto bg-gray-50 dark:bg-gray-950">
+              {children}
+            </main>
+          </div>
         </div>
       </div>
     </>
