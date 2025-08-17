@@ -105,14 +105,6 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Performance monitoring middleware (optional)
-if (performanceMonitor && typeof performanceMonitor.trackRequest === 'function') {
-  app.use('/api/', performanceMonitor.trackRequest.bind(performanceMonitor));
-  logger.info('Performance monitoring middleware enabled');
-} else {
-  logger.warn('Performance monitoring not available, skipping middleware');
-}
-
 // Database connection
 mongoose.connect(process.env.MONGODB_URI)
 .then(() => { logger.info('Connected to MongoDB'); })
