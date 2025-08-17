@@ -1,14 +1,23 @@
-# Multi-stage build for PixelSqueeze Frontend
+# Use Node.js 18 Alpine as base image
 FROM node:18-alpine AS base
 
-# Install dependencies for native modules and Redis
+# Install dependencies for native modules
 RUN apk add --no-cache \
     python3 \
     make \
     g++ \
-    libc6-compat \
-    redis \
-    curl
+    cairo-dev \
+    jpeg-dev \
+    pango-dev \
+    musl-dev \
+    giflib-dev \
+    pixman-dev \
+    pangomm-dev \
+    libjpeg-turbo-dev \
+    freetype-dev
+
+# Development stage
+FROM base AS development
 
 # Set working directory
 WORKDIR /app
@@ -16,31 +25,29 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies including Redis client
-RUN npm ci && \
-    npm install redis
-
-# Development stage
-FROM base AS development
+# Install dependencies
+RUN npm install
 
 # Copy source code
 COPY . .
 
-# Create Redis configuration
-RUN echo "daemonize yes" >> /etc/redis.conf && \
-    echo "bind 0.0.0.0" >> /etc/redis.conf && \
-    echo "port 6379" >> /etc/redis.conf && \
-    echo "maxmemory 256mb" >> /etc/redis.conf && \
-    echo "maxmemory-policy allkeys-lru" >> /etc/redis.conf
+# Expose port
+EXPOSE 3000
 
-# Expose ports
-EXPOSE 3000 6379
+# Start development server
+CMD ["npm", "run", "dev"]
 
-# Start Redis and development server
-CMD ["sh", "-c", "redis-server /etc/redis.conf & npm run dev"]
+# Production build stage
+FROM base AS builder
 
-# Production stage
-FROM base AS production
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
 
 # Copy source code
 COPY . .
@@ -48,27 +55,28 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Create Redis configuration
-RUN echo "daemonize yes" >> /etc/redis.conf && \
-    echo "bind 0.0.0.0" >> /etc/redis.conf && \
-    echo "port 6379" >> /etc/redis.conf && \
-    echo "maxmemory 256mb" >> /etc/redis.conf && \
-    echo "maxmemory-policy allkeys-lru" >> /etc/redis.conf
+# Production stage
+FROM base AS production
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
+# Set working directory
+WORKDIR /app
 
-# Change ownership of the app directory
-RUN chown -R nodejs:nodejs /app
-USER nodejs
+# Copy package files
+COPY package*.json ./
 
-# Expose ports
-EXPOSE 3000 6379
+# Install only production dependencies
+RUN npm ci --only=production
 
-# Health check for both app and Redis
+# Copy built application from builder stage
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+
+# Expose port
+EXPOSE 3000
+
+# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000 && redis-cli ping || exit 1
+  CMD curl -f http://localhost:3000 || exit 1
 
-# Start Redis and production server
-CMD ["sh", "-c", "redis-server /etc/redis.conf & npm start"] 
+# Start production server
+CMD ["npm", "start"] 

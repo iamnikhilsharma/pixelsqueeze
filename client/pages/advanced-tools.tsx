@@ -1,20 +1,17 @@
 import React from 'react';
-import Link from 'next/link';
-import Layout from '../components/Layout';
+import { motion } from 'framer-motion';
 import { 
-  PhotoIcon, 
-  SparklesIcon, 
-  CogIcon,
-  ArrowRightIcon,
-  DocumentTextIcon,
-  Square3Stack3DIcon,
-  EyeIcon
+  DocumentTextIcon, 
+  Square3Stack3DIcon, 
+  EyeIcon,
+  ArrowRightIcon
 } from '@heroicons/react/24/outline';
-import { useAuthStore } from '@/store/authStore';
+import Layout from '../components/Layout';
+import { useAuthStore } from '../store/authStore';
+import Link from 'next/link';
 
 export default function AdvancedTools() {
-  const { user, token } = useAuthStore();
-  const isAuthenticated = !!token;
+  const { isAuthenticated } = useAuthStore();
 
   if (!isAuthenticated) {
     return (

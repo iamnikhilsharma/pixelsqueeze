@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   DocumentTextIcon, 
-  ArrowDownTrayIcon,
-  EyeIcon,
-  CheckCircleIcon,
-  ClockIcon
+  DownloadIcon, 
+  CreditCardIcon,
+  CheckIcon,
+  XCircleIcon
 } from '@heroicons/react/24/outline';
 import AdminLayout from '../../components/AdminLayout';
 import AdminGuard from '../../components/AdminGuard';
@@ -71,22 +71,24 @@ const AdminInvoices: React.FC = () => {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+      } else {
+        setError('Failed to download invoice');
       }
     } catch (err) {
-      console.error('Error downloading invoice:', err);
+      setError('Error downloading invoice');
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'paid':
-        return <CheckCircleIcon className="h-4 w-4 text-green-500" />;
+        return <CheckIcon className="h-4 w-4 text-green-500" />;
       case 'pending':
-        return <ClockIcon className="h-4 w-4 text-yellow-500" />;
+        return <CreditCardIcon className="h-4 w-4 text-yellow-500" />;
       case 'failed':
-        return <ClockIcon className="h-4 w-4 text-red-500" />;
+        return <XCircleIcon className="h-4 w-4 text-red-500" />;
       default:
-        return <ClockIcon className="h-4 w-4 text-gray-500" />;
+        return <DocumentTextIcon className="h-4 w-4 text-gray-500" />;
     }
   };
 
@@ -179,7 +181,7 @@ const AdminInvoices: React.FC = () => {
     {
       label: 'Download PDF',
       onClick: handleDownloadInvoice,
-      icon: <ArrowDownTrayIcon className="h-4 w-4" />
+      icon: <DownloadIcon className="h-4 w-4" />
     }
   ];
 

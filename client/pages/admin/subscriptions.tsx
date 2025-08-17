@@ -70,7 +70,7 @@ const AdminSubscriptions: React.FC = () => {
         ));
       }
     } catch (err) {
-      console.error('Error cancelling subscription:', err);
+      setError('Failed to update subscription');
     }
   };
 

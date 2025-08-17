@@ -4,7 +4,6 @@ import {
   UserIcon, 
   ShieldCheckIcon, 
   XCircleIcon,
-  PencilIcon,
   TrashIcon
 } from '@heroicons/react/24/outline';
 import AdminLayout from '../../components/AdminLayout';
@@ -61,7 +60,6 @@ const AdminUsers: React.FC = () => {
         setError(`Failed to fetch users (${response.status})`);
       }
     } catch (err) {
-      console.error('Error fetching users:', err);
       if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
         setError('Network error. Please check your connection and try again.');
       } else {
@@ -90,7 +88,7 @@ const AdminUsers: React.FC = () => {
         ));
       }
     } catch (err) {
-      console.error('Error updating user:', err);
+      setError('Failed to update user status');
     }
   };
 
@@ -108,7 +106,7 @@ const AdminUsers: React.FC = () => {
         ));
       }
     } catch (err) {
-      console.error('Error updating user:', err);
+      setError('Failed to update user status');
     }
   };
 
@@ -126,7 +124,7 @@ const AdminUsers: React.FC = () => {
         setUsers(users.filter(u => u._id !== user._id));
       }
     } catch (err) {
-      console.error('Error deleting user:', err);
+      setError('Failed to delete user');
     }
   };
 

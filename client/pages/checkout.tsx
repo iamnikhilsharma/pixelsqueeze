@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { CheckIcon, LockClosedIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
+import { 
+  CheckIcon, 
+  CreditCardIcon, 
+  ShieldCheckIcon,
+  ArrowRightIcon
+} from '@heroicons/react/24/outline';
+import Layout from '../components/Layout';
+import { useAuthStore } from '../store/authStore';
+import { getAllPlans, getPlanFeatures, getPlanLimits } from '../../shared/pricing';
 
 declare global {
   interface Window {
@@ -26,7 +34,7 @@ const CheckoutForm = ({ plan, price, billing, onSuccess }: any) => {
         setName(`${userData.firstName || ''} ${userData.lastName || ''}`.trim());
         setPhone(userData.phone || '');
       } catch (error) {
-        console.error('Error parsing user data:', error);
+        setError('Error parsing user data');
       }
     }
 
@@ -173,7 +181,7 @@ const CheckoutForm = ({ plan, price, billing, onSuccess }: any) => {
       </button>
 
       <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-        <LockClosedIcon className="w-4 h-4" />
+        <ShieldCheckIcon className="w-4 h-4" />
         <span>Your payment is secure and encrypted</span>
       </div>
     </form>
@@ -226,7 +234,7 @@ export default function Checkout() {
         })
       });
     } catch (error) {
-      console.error('Error updating subscription:', error);
+      setError('Error updating subscription');
     }
 
     // Redirect to thank you page with plan details
@@ -371,7 +379,7 @@ export default function Checkout() {
                   <span>SSL Secure</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <LockClosedIcon className="w-4 h-4" />
+                  <CreditCardIcon className="w-4 h-4" />
                   <span>PCI Compliant</span>
                 </div>
               </div>

@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   CreditCardIcon, 
-  CheckIcon,
-  PencilIcon,
-  XMarkIcon
+  PlusIcon, 
+  PencilIcon, 
+  TrashIcon,
+  CheckIcon
 } from '@heroicons/react/24/outline';
 import AdminLayout from '../../components/AdminLayout';
 import AdminGuard from '../../components/AdminGuard';
 import AdminTable from '../../components/AdminTable';
-import { getAllPlans, getPlanFeatures, getPlanLimits } from '../../../shared/pricing';
+import { getAllPlans } from '../../../shared/pricing';
 
 interface Plan {
   id: string;
@@ -32,6 +33,7 @@ const AdminPlans: React.FC = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [editingPlan, setEditingPlan] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<{ monthly: number; annual: number }>({ monthly: 0, annual: 0 });
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadPlans();
@@ -75,7 +77,7 @@ const AdminPlans: React.FC = () => {
         setEditingPlan(null);
       }
     } catch (err) {
-      console.error('Error updating plan:', err);
+      setError('Failed to update plan');
     }
   };
 

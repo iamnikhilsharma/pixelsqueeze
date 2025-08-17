@@ -15,12 +15,10 @@ const billingRoutes = require('./routes/billing');
 const analyticsRoutes = require('./routes/analytics');
 const batchProcessingRoutes = require('./routes/batchProcessing');
 const preferencesRoutes = require('./routes/preferences');
-const performanceRoutes = require('./routes/performance');
 const razorpayRoutes = require('./routes/razorpay');
 const subscriptionRoutes = require('./routes/subscription');
 const invoiceRoutes = require('./routes/invoice');
 const adminAuthRoutes = require('./routes/adminAuth');
-const performanceMonitor = require('./services/performanceMonitor');
 const storageService = require('./services/storageService');
 const sentry = require('./services/sentry');
 const adminPlansRoutes = require('./routes/adminPlans');
@@ -180,14 +178,6 @@ app.use('/api/admin/metrics', adminMetricsRoutes);
 app.use('/api/admin/notifications', adminNotificationRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/notification-preferences', notificationPreferenceRoutes);
-
-// Performance routes (optional)
-if (performanceRoutes) {
-  app.use('/api/performance', performanceRoutes);
-  logger.info('Performance routes enabled');
-} else {
-  logger.warn('Performance routes not available');
-}
 
 // Sentry error handler (before our error handler)
 if (sentry.errorHandler) {

@@ -232,7 +232,7 @@ npm run test:e2e
 
 ### Optimization Features
 - **Database Indexing**: Optimized query performance
-- **Caching**: In-memory and Redis caching
+- **Caching**: In-memory caching for performance optimization
 - **Load Balancing**: Horizontal scaling support
 - **CDN Integration**: Static asset optimization
 

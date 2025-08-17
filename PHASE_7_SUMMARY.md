@@ -202,7 +202,7 @@ class UserBehaviorService {
 - **Custom Dashboards**: User-configurable analytics views
 
 ### Performance Improvements
-- **Data Caching**: Redis integration for faster access
+- **Data Caching**: In-memory caching for faster access
 - **Real-time Streaming**: WebSocket-based live updates
 - **Advanced Aggregation**: More sophisticated data processing
 - **Export Formats**: Additional export options (PDF, Excel)

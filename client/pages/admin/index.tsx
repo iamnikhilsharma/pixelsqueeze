@@ -4,15 +4,10 @@ import {
   UsersIcon, 
   ChartBarIcon, 
   CreditCardIcon, 
-  DocumentTextIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
-  GlobeAltIcon,
-  CpuChipIcon
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
 import AdminLayout from '../../components/AdminLayout';
 import AdminGuard from '../../components/AdminGuard';
-import AdminCard from '../../components/AdminCard';
 import AdminChart from '../../components/AdminChart';
 import AnalyticsWidget from '../../components/AnalyticsWidget';
 import PerformanceMetrics from '../../components/PerformanceMetrics';
