@@ -33,18 +33,39 @@ const AdminUsers: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Authentication required');
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch('/api/admin/users', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       if (response.ok) {
         const data = await response.json();
-        setUsers(data.data || []);
+        if (data.success && data.data && Array.isArray(data.data.users)) {
+          setUsers(data.data.users);
+        } else {
+          setError('Invalid data format received');
+        }
+      } else if (response.status === 502) {
+        setError('Backend service unavailable. Please check if the server is running.');
+      } else if (response.status === 401) {
+        setError('Authentication failed. Please log in again.');
+      } else if (response.status === 403) {
+        setError('Access denied. Admin privileges required.');
       } else {
-        setError('Failed to fetch users');
+        setError(`Failed to fetch users (${response.status})`);
       }
     } catch (err) {
-      setError('Error fetching users');
+      console.error('Error fetching users:', err);
+      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError('Error fetching users');
+      }
     } finally {
       setLoading(false);
     }
@@ -197,8 +218,21 @@ const AdminUsers: React.FC = () => {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex h-64 items-center justify-center">
-          <div className="text-lg text-gray-600">Loading users...</div>
+        <div className="space-y-6">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+            <p className="mt-2 text-gray-600">
+              Manage user accounts, roles, and permissions.
+            </p>
+          </div>
+          
+          <div className="flex h-64 items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+              <div className="text-lg text-gray-600">Loading users...</div>
+              <div className="text-sm text-gray-500 mt-2">This may take a moment</div>
+            </div>
+          </div>
         </div>
       </AdminLayout>
     );
@@ -207,8 +241,35 @@ const AdminUsers: React.FC = () => {
   if (error) {
     return (
       <AdminLayout>
-        <div className="rounded-lg bg-red-50 p-4">
-          <div className="text-red-800">{error}</div>
+        <div className="space-y-6">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+            <p className="mt-2 text-gray-600">
+              Manage user accounts, roles, and permissions.
+            </p>
+          </div>
+          
+          <div className="rounded-lg bg-red-50 border border-red-200 p-6">
+            <div className="flex items-center">
+              <XCircleIcon className="h-5 w-5 text-red-400 mr-3" />
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-red-800">Error Loading Users</h3>
+                <div className="mt-2 text-sm text-red-700">{error}</div>
+              </div>
+            </div>
+            <div className="mt-4">
+              <button
+                onClick={() => {
+                  setError(null);
+                  setLoading(true);
+                  fetchUsers();
+                }}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
         </div>
       </AdminLayout>
     );
