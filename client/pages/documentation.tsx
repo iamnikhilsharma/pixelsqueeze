@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import Head from 'next/head';
+import Link from 'next/link';
 import MarketingLayout from '@/components/MarketingLayout';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
@@ -78,7 +80,7 @@ export default function DocumentationPage() {
                     <ol className="space-y-2 text-gray-700">
                       <li className="flex items-start">
                         <span className="bg-primary-100 text-primary-800 text-xs font-bold px-2 py-1 rounded-full mr-3 mt-0.5">1</span>
-                        Get your API key from the <a href="/settings" className="text-primary-600 hover:text-primary-700 underline">Settings page</a>
+                        Get your API key from the <Link href="/settings" className="text-primary-600 hover:text-primary-700 underline">Settings page</Link>
                       </li>
                       <li className="flex items-start">
                         <span className="bg-primary-100 text-primary-800 text-xs font-bold px-2 py-1 rounded-full mr-3 mt-0.5">2</span>
@@ -173,12 +175,12 @@ export default function DocumentationPage() {
                       </code>
                     </div>
                     <div className="mt-4">
-                      <a 
+                      <Link 
                         href="/settings" 
                         className="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
                       >
                         Manage API Keys
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 )}

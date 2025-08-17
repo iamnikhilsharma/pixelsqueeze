@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { 
   ArrowTrendingUpIcon,
   PhotoIcon,
@@ -120,12 +121,12 @@ export default function EnhancedDashboard() {
               Try Again
             </button>
             {error === 'Authentication required' || error === 'Authentication failed. Please log in again.' ? (
-              <a
+              <Link
                 href="/login"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 inline-block"
               >
                 Sign In
-              </a>
+              </Link>
             ) : null}
           </div>
         </div>
@@ -151,7 +152,7 @@ export default function EnhancedDashboard() {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Welcome back, {usageStats.user?.name || 'User'}! 👋
         </h1>
-        <p className="text-gray-600">Here's what's happening with your image optimization today.</p>
+        <p className="text-gray-600">Here&apos;s what&apos;s happening with your image optimization today.</p>
       </div>
 
       {/* Plan Usage Progress */}
@@ -329,7 +330,7 @@ export default function EnhancedDashboard() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <a
+          <Link
             href="/images"
             className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-all duration-200"
           >
@@ -338,8 +339,8 @@ export default function EnhancedDashboard() {
               <div className="font-medium text-gray-900">View Images</div>
               <div className="text-sm text-gray-500">See all your optimized images</div>
             </div>
-          </a>
-          <a
+          </Link>
+          <Link
             href="/watermark"
             className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-secondary-300 hover:bg-secondary-50 transition-all duration-200"
           >
@@ -348,8 +349,8 @@ export default function EnhancedDashboard() {
               <div className="font-medium text-gray-900">Add Watermark</div>
               <div className="text-sm text-gray-500">Protect your images</div>
             </div>
-          </a>
-          <a
+          </Link>
+          <Link
             href="/thumbnails"
             className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-accent-300 hover:bg-accent-50 transition-all duration-200"
           >
@@ -358,7 +359,7 @@ export default function EnhancedDashboard() {
               <div className="font-medium text-gray-900">Generate Thumbnails</div>
               <div className="text-sm text-gray-500">Create multiple sizes</div>
             </div>
-          </a>
+          </Link>
         </div>
       </div>
     </div>

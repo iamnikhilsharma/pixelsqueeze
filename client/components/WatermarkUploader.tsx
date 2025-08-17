@@ -632,7 +632,7 @@ const WatermarkUploader: React.FC = () => {
               <div className="h-64 bg-surface-50 rounded-lg border-2 border-dashed border-surface-300 flex items-center justify-center">
                 <div className="text-center text-surface-500">
                   <EyeSlashIcon className="w-12 h-12 mx-auto mb-2" />
-                  <p>Click "Generate Preview" to see how your watermark will look</p>
+                  <p>Click &quot;Generate Preview&quot; to see how your watermark will look</p>
                 </div>
               </div>
             )}

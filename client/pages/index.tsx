@@ -446,7 +446,7 @@ export default function Home() {
               Everything You Need for Image Optimization
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              From basic compression to advanced AI-powered analysis, we've got you covered.
+              From basic compression to advanced AI-powered analysis, we&apos;ve got you covered.
             </p>
           </motion.div>
 

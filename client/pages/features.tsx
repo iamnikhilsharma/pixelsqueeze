@@ -1,4 +1,6 @@
 import React from 'react';
+import Head from 'next/head';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import MarketingLayout from '../components/MarketingLayout';
 import {
@@ -286,12 +288,12 @@ export default function Features() {
             viewport={{ once: true }}
             className="space-x-4"
           >
-            <a href="/register" className="bg-white text-primary-500 hover:bg-gray-100 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200 inline-block">
+            <Link href="/register" className="bg-white text-primary-500 hover:bg-gray-100 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200 inline-block">
               Get Started Free
-            </a>
-            <a href="/pricing" className="border-2 border-white text-white hover:bg-white hover:text-primary-500 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200 inline-block">
+            </Link>
+            <Link href="/pricing" className="border-2 border-white text-white hover:bg-white hover:text-primary-500 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200 inline-block">
               View Pricing
-            </a>
+            </Link>
           </motion.div>
         </div>
       </section>

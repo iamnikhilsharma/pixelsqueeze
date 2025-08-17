@@ -121,7 +121,7 @@ export default function ThankYou() {
           </h1>
           
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Your subscription is now active! Here's everything you need to know about your new plan.
+            Your subscription is now active! Here&apos;s everything you need to know about your new plan.
           </p>
         </motion.div>
 
@@ -244,7 +244,7 @@ export default function ThankYou() {
           className="bg-white rounded-2xl shadow-xl p-8 mb-16"
         >
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-            What's Included in Your {planDetails.plan} Plan
+            What&apos;s Included in Your {planDetails.plan} Plan
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

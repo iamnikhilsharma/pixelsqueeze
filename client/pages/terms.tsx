@@ -24,7 +24,7 @@ export default function TermsPage() {
             <h2>5. Termination</h2>
             <p>We may suspend or terminate accounts for violations. You may cancel at any time.</p>
             <h2>6. Limitation of Liability</h2>
-            <p>PixelSqueeze is provided "as is". To the fullest extent permitted by law, we are not liable for indirect damages.</p>
+            <p>PixelSqueeze is provided &quot;as is&quot;. To the fullest extent permitted by law, we are not liable for indirect damages.</p>
             <h2>7. Changes</h2>
             <p>We may update these Terms. Continued use signifies acceptance of changes.</p>
           </div>

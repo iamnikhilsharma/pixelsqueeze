@@ -96,7 +96,7 @@ export default function ContactPage() {
               </svg>
             </motion.div>
             <h1 className="text-4xl font-bold text-surface-900 mb-4">Message Sent Successfully!</h1>
-            <p className="text-xl text-surface-600 mb-8">Thank you for reaching out. We'll get back to you within 1-2 business days.</p>
+            <p className="text-xl text-surface-600 mb-8">Thank you for reaching out. We&apos;ll get back to you within 1-2 business days.</p>
             <Button href="/" variant="primary">Back to Home</Button>
           </div>
         </section>
@@ -116,12 +116,12 @@ export default function ContactPage() {
             className="text-center mb-16"
           >
             <h1 className="text-5xl font-bold text-surface-900 mb-6">
-              Let's{' '}
+              Let&apos;s{' '}
               <span className="gradient-text">Connect</span>
             </h1>
             <p className="text-xl text-surface-600 max-w-3xl mx-auto leading-relaxed">
               Have questions about PixelSqueeze? Need help with image optimization? 
-              Want to discuss enterprise solutions? We're here to help you succeed.
+              Want to discuss enterprise solutions? We&apos;re here to help you succeed.
             </p>
           </motion.div>
 
@@ -168,7 +168,7 @@ export default function ContactPage() {
           >
             <h2 className="text-3xl font-bold text-surface-900 mb-4">Send us a Message</h2>
             <p className="text-lg text-surface-600">
-              Fill out the form below and we'll get back to you as soon as possible.
+              Fill out the form below and we&apos;ll get back to you as soon as possible.
             </p>
           </motion.div>
 

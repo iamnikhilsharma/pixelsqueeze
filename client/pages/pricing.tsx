@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
+import Link from 'next/link';
 import MarketingLayout from '../components/MarketingLayout';
 import {
   CheckIcon,
@@ -303,7 +305,7 @@ export default function Pricing() {
               Compare Plans
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              See what's included in each plan to make the best choice for your needs.
+              See what&apos;s included in each plan to make the best choice for your needs.
             </p>
           </motion.div>
 
@@ -417,20 +419,16 @@ export default function Pricing() {
           >
             Join thousands of users optimizing their images with PixelSqueeze.
           </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            viewport={{ once: true }}
+          <div
             className="space-x-4"
           >
-            <a href="/register" className="bg-white text-primary-500 hover:bg-gray-100 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200 inline-block">
+            <Link href="/register" className="bg-white text-primary-500 hover:bg-gray-100 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200 inline-block">
               Start Free Trial
-            </a>
-            <a href="/contact" className="border-2 border-white text-white hover:bg-white hover:text-primary-500 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200 inline-block">
+            </Link>
+            <Link href="/contact" className="border-2 border-white text-white hover:bg-white hover:text-primary-500 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200 inline-block">
               Contact Sales
-            </a>
-          </motion.div>
+            </Link>
+          </div>
         </div>
       </section>
     </MarketingLayout>
