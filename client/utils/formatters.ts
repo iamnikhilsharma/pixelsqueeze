@@ -181,7 +181,34 @@ export function formatSubscriptionStatus(status: string): string {
  * Construct API URL properly by handling trailing slashes
  */
 export function buildApiUrl(path: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002';
+  // Check for production backend URL first
+  const productionUrl = process.env.NEXT_PUBLIC_API_URL;
+  
+  // Debug logging in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔧 buildApiUrl Debug:', {
+      path,
+      productionUrl,
+      nodeEnv: process.env.NODE_ENV,
+      hasProductionUrl: !!productionUrl
+    });
+  }
+  
+  // If we're in production and have a backend URL, use it
+  if (productionUrl) {
+    const cleanBaseUrl = productionUrl.replace(/\/$/, '');
+    const cleanPath = path.replace(/^\//, '');
+    const finalUrl = `${cleanBaseUrl}/${cleanPath}`;
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🌐 Using production backend:', finalUrl);
+    }
+    
+    return finalUrl;
+  }
+  
+  // For development, use localhost
+  const baseUrl = 'http://localhost:5002';
   
   // Remove trailing slash from baseUrl
   const cleanBaseUrl = baseUrl.replace(/\/$/, '');
@@ -195,5 +222,11 @@ export function buildApiUrl(path: string): string {
   const cleanPath = path.replace(/^\//, '');
   
   // Combine baseUrl and path with single slash
-  return `${cleanBaseUrl}/${cleanPath}`;
+  const finalUrl = `${cleanBaseUrl}/${cleanPath}`;
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🏠 Using local backend:', finalUrl);
+  }
+  
+  return finalUrl;
 } 

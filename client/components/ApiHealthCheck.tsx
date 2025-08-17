@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { buildApiUrl } from '../utils/formatters';
 
 interface ApiHealthCheckProps {
   className?: string;
@@ -17,16 +18,16 @@ const ApiHealthCheck: React.FC<ApiHealthCheckProps> = ({ className = '' }) => {
   const [isChecking, setIsChecking] = useState(false);
 
   const endpoints = [
-    '/api/admin/users',
-    '/api/admin/stats',
-    '/api/notifications',
-    '/api/analytics/overview'
+    '/admin/users',
+    '/admin/stats',
+    '/notifications',
+    '/analytics/overview'
   ];
 
   const checkEndpoint = async (endpoint: string): Promise<HealthStatus> => {
     const startTime = Date.now();
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch(buildApiUrl(endpoint), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

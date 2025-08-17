@@ -10,6 +10,7 @@ import {
 import AdminLayout from '../../components/AdminLayout';
 import AdminGuard from '../../components/AdminGuard';
 import AdminTable from '../../components/AdminTable';
+import { buildApiUrl } from '../../utils/formatters';
 
 interface User {
   _id: string;
@@ -39,7 +40,7 @@ const AdminUsers: React.FC = () => {
         return;
       }
 
-      const response = await fetch('/api/admin/users', {
+      const response = await fetch(buildApiUrl('/admin/users'), {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -74,7 +75,7 @@ const AdminUsers: React.FC = () => {
   const handleToggleAdmin = async (user: User) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/users/${user._id}`, {
+      const response = await fetch(buildApiUrl(`/admin/users/${user._id}`), {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -96,7 +97,7 @@ const AdminUsers: React.FC = () => {
   const handleToggleActive = async (user: User) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/users/${user._id}/deactivate`, {
+      const response = await fetch(buildApiUrl(`/admin/users/${user._id}/deactivate`), {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -116,7 +117,7 @@ const AdminUsers: React.FC = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/users/${user._id}`, {
+      const response = await fetch(buildApiUrl(`/admin/users/${user._id}`), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

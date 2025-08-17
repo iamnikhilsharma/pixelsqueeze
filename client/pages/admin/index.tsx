@@ -17,6 +17,7 @@ import AdminChart from '../../components/AdminChart';
 import AnalyticsWidget from '../../components/AnalyticsWidget';
 import PerformanceMetrics from '../../components/PerformanceMetrics';
 import ApiHealthCheck from '../../components/ApiHealthCheck';
+import ConfigurationCheck from '../../components/ConfigurationCheck';
 import useAdminMetrics from '../../hooks/useAdminMetrics';
 
 const AdminDashboard: React.FC = () => {
@@ -283,6 +284,15 @@ const AdminDashboard: React.FC = () => {
 
         {/* Performance Metrics */}
         <PerformanceMetrics metrics={performanceMetrics} />
+
+        {/* Configuration Check */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <ConfigurationCheck />
+        </motion.div>
 
         {/* API Health Check */}
         <motion.div
