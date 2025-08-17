@@ -1,20 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 import { 
-  ChartBarIcon,
+  ArrowTrendingUpIcon,
   PhotoIcon,
   ClockIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
-  ArrowTrendingUpIcon,
   CalendarIcon,
   CogIcon
 } from '@heroicons/react/24/outline';
 import { StatsCard } from './StatsCard';
 import { RecentImages } from './RecentImages';
 import { useAuthStore } from '@/store/authStore';
-import { buildApiUrl } from '@/utils/formatters';
-import { formatBytes, formatNumber } from '@/utils/formatters';
+import { formatFileSize, formatNumber, formatBytes, buildApiUrl } from '@/utils/formatters';
 import toast from 'react-hot-toast';
 
 interface UsageStats {
