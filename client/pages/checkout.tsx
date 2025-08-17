@@ -249,7 +249,10 @@ export default function Checkout() {
             Complete Your Purchase
           </h1>
           <p className="text-xl text-gray-600">
-            You're just one step away from upgrading to the {plan} plan
+            You&apos;re just one step away from upgrading to the {plan} plan
+          </p>
+          <p className="text-sm text-gray-600 mb-4">
+            You&apos;ll be redirected to Stripe to complete your payment securely.
           </p>
         </motion.div>
 
@@ -290,7 +293,7 @@ export default function Checkout() {
 
             {/* Plan Features */}
             <div className="mt-8">
-              <h3 className="font-semibold text-gray-900 mb-4">What's included:</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">What&apos;s included:</h3>
               <ul className="space-y-2">
                 {plan === 'Starter' && (
                   <>

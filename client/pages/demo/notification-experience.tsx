@@ -1,9 +1,9 @@
 import React from 'react';
-import { NextPage } from 'next';
 import Head from 'next/head';
+import Link from 'next/link';
 import NotificationExperienceDashboard from '../../components/NotificationExperienceDashboard';
 
-const NotificationExperienceDemo: NextPage = () => {
+const NotificationExperienceDemo = () => {
   return (
     <>
       <Head>
@@ -24,18 +24,18 @@ const NotificationExperienceDemo: NextPage = () => {
                 <span className="text-sm text-gray-500">Notification Experience Demo</span>
               </div>
               <div className="flex items-center space-x-4">
-                <a
+                <Link
                   href="/"
                   className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100"
                 >
                   Back to Home
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/admin"
                   className="text-sm text-blue-600 hover:text-blue-700 px-3 py-2 rounded-md hover:bg-blue-50"
                 >
                   Admin Panel
-                </a>
+                </Link>
               </div>
             </div>
           </div>

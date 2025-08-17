@@ -1,32 +1,20 @@
 import React from 'react';
-import { useAuthStore } from '@/store/authStore';
+import Link from 'next/link';
 import Layout from '../components/Layout';
 import { 
-  WatermarkIcon, 
-  ThumbnailIcon, 
-  AnalysisIcon, 
-  AdvancedToolsIcon,
-  ArrowRightIcon
-} from '../components/icons';
+  PhotoIcon, 
+  SparklesIcon, 
+  CogIcon,
+  ArrowRightIcon,
+  DocumentTextIcon,
+  Square3Stack3DIcon,
+  EyeIcon
+} from '@heroicons/react/24/outline';
+import { useAuthStore } from '@/store/authStore';
 
 export default function AdvancedTools() {
-  const { user, token, isAuthenticated, isLoading, checkAuth, hasRehydrated } = useAuthStore();
-
-  React.useEffect(() => {
-    if (hasRehydrated && !isAuthenticated) {
-      checkAuth();
-    }
-  }, [hasRehydrated, isAuthenticated, checkAuth]);
-
-  if (isLoading || !hasRehydrated) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-        </div>
-      </Layout>
-    );
-  }
+  const { user, token } = useAuthStore();
+  const isAuthenticated = !!token;
 
   if (!isAuthenticated) {
     return (
@@ -35,9 +23,9 @@ export default function AdvancedTools() {
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h1>
             <p className="text-gray-600 mb-6">Please sign in to access advanced tools.</p>
-            <a href="/login" className="btn-primary">
+            <Link href="/login" className="btn-primary">
               Sign In
-            </a>
+            </Link>
           </div>
         </div>
       </Layout>
@@ -50,7 +38,7 @@ export default function AdvancedTools() {
       name: 'Watermarking System',
       description: 'Add professional watermarks to your images with customizable text, logos, and positioning.',
       status: 'available',
-      icon: <WatermarkIcon className="w-8 h-8" />,
+      icon: <DocumentTextIcon className="w-8 h-8" />,
       features: [
         'Text and logo watermarks',
         'Custom positioning and opacity',
@@ -64,7 +52,7 @@ export default function AdvancedTools() {
       name: 'Thumbnail Generation',
       description: 'Generate multiple thumbnail sizes and formats for responsive web design and social media.',
       status: 'available',
-      icon: <ThumbnailIcon className="w-8 h-8" />,
+      icon: <Square3Stack3DIcon className="w-8 h-8" />,
       features: [
         'Multiple preset sizes',
         'Custom dimensions',
@@ -78,7 +66,7 @@ export default function AdvancedTools() {
       name: 'Image Analysis',
       description: 'Get detailed insights about your images including color analysis, metadata, and quality assessment.',
       status: 'available',
-      icon: <AnalysisIcon className="w-8 h-8" />,
+      icon: <EyeIcon className="w-8 h-8" />,
       features: [
         'Color palette analysis',
         'Metadata extraction',
@@ -152,13 +140,13 @@ export default function AdvancedTools() {
 
                 {/* Action Button */}
                 {tool.status === 'available' ? (
-                  <a
+                  <Link
                     href={tool.href}
                     className="w-full btn-primary inline-flex items-center justify-center"
                   >
                     Open {tool.name}
                     <ArrowRightIcon className="w-4 h-4 ml-2" />
-                  </a>
+                  </Link>
                 ) : (
                   <button
                     disabled
@@ -182,10 +170,10 @@ export default function AdvancedTools() {
               Upgrade to our Pro or Enterprise plans to unlock unlimited processing, 
               advanced analytics, API access, and priority support.
             </p>
-            <a href="/pricing" className="btn-secondary inline-flex items-center">
+            <Link href="/pricing" className="btn-secondary inline-flex items-center">
               View Pricing Plans
               <ArrowRightIcon className="w-4 h-4 ml-2" />
-            </a>
+            </Link>
           </div>
         </div>
       </div>
