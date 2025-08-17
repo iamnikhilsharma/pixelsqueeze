@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   DocumentTextIcon, 
-  DownloadIcon, 
+  ArrowDownTrayIcon, 
   CreditCardIcon,
   CheckIcon,
   XCircleIcon
@@ -181,7 +181,7 @@ const AdminInvoices: React.FC = () => {
     {
       label: 'Download PDF',
       onClick: handleDownloadInvoice,
-      icon: <DownloadIcon className="h-4 w-4" />
+      icon: <ArrowDownTrayIcon className="h-4 w-4" />
     }
   ];
 

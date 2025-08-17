@@ -194,6 +194,7 @@ export default function Checkout() {
   const [price, setPrice] = useState(0);
   const [billing, setBilling] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if user is logged in
