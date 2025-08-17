@@ -198,7 +198,8 @@ export function buildApiUrl(path: string): string {
   if (productionUrl) {
     const cleanBaseUrl = productionUrl.replace(/\/$/, '');
     const cleanPath = path.replace(/^\//, '');
-    const finalUrl = `${cleanBaseUrl}/${cleanPath}`;
+    // Add /api prefix for all API calls
+    const finalUrl = `${cleanBaseUrl}/api/${cleanPath}`;
     
     if (process.env.NODE_ENV === 'development') {
       console.log('🌐 Using production backend:', finalUrl);
@@ -221,8 +222,8 @@ export function buildApiUrl(path: string): string {
   // Remove leading slash from path
   const cleanPath = path.replace(/^\//, '');
   
-  // Combine baseUrl and path with single slash
-  const finalUrl = `${cleanBaseUrl}/${cleanPath}`;
+  // Combine baseUrl and path with /api prefix
+  const finalUrl = `${cleanBaseUrl}/api/${cleanPath}`;
   
   if (process.env.NODE_ENV === 'development') {
     console.log('🏠 Using local backend:', finalUrl);
