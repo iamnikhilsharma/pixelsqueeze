@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: pixelsqueeze-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: pixelsqueeze
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - pixelsqueeze-network
+
+  # Node.js Backend
+  backend:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: pixelsqueeze-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/pixelsqueeze?authSource=admin
+      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      PORT: 5002
+      CORS_ORIGIN: http://localhost:3000
+      LOCAL_STORAGE_PATH: /app/uploads
+      MAX_FILE_SIZE: 10485760
+      ALLOWED_IMAGE_TYPES: jpg,jpeg,png,webp
+      FILE_RETENTION_HOURS: 24
+      STRIPE_SECRET_KEY: sk_test_your_stripe_secret_key
+      STRIPE_WEBHOOK_SECRET: whsec_your_stripe_webhook_secret
+      RAZORPAY_KEY_ID: rzp_test_your_razorpay_key_id
+      RAZORPAY_KEY_SECRET: your_razorpay_key_secret
+      FIREBASE_SERVICE_ACCOUNT_KEY: your_firebase_service_account_key
+      VAPID_PUBLIC_KEY: your_vapid_public_key
+      VAPID_PRIVATE_KEY: your_vapid_private_key
+      SENTRY_DSN: your_sentry_dsn
+      WEBPUSH_EMAIL: your_email@example.com
+    ports:
+      - "5002:5002"
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      - mongodb
+    networks:
+      - pixelsqueeze-network
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: pixelsqueeze-frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:5002
+      NEXT_PUBLIC_RAZORPAY_KEY_ID: rzp_test_your_razorpay_key_id
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - pixelsqueeze-network
+
+volumes:
+  mongodb_data:
+  uploads_data:
+
+networks:
+  pixelsqueeze-network:
+    driver: bridge 

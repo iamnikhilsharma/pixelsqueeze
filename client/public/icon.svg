@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <!-- SVG with refined mountain curves: sharper than before but still smooth -->
+
+  <defs>
+    <mask id="roundedMask">
+      <rect x="0" y="0" width="40" height="40" fill="white"/>
+      <rect x="2" y="2" width="36" height="36" rx="5" ry="5" fill="black"/>
+    </mask>
+  </defs>
+
+  <!-- Background with rounded corners -->
+  <rect x="2" y="2" width="36" height="36" rx="5" ry="5" fill="url(#skyGrad)" />
+  
+  <!-- Mountains and sun -->
+  <g transform="translate(2,2)">
+    <circle cx="12" cy="9" r="4" fill="#FFFFFF" />
+
+    <!-- Back mountain: exact same proportions as logo -->
+    <path d="M0 29.6 C7.4 19.8 14.8 20.9 22.2 27.7 C28.9 33.3 33.3 29.8 36 25.2 L36 36 L0 36 Z" fill="#4CAF50" />
+
+    <!-- Front mountain: exact same proportions as logo -->
+    <path d="M0 32.6 C7.4 24.5 15.1 25.2 22.2 30.5 C28.4 34.8 33.1 32.4 36 28.4 L36 36 L0 36 Z" fill="#388E3C" />
+
+    <!-- Ridge highlight: exact same proportions as logo -->
+    <path d="M1.5 30.2 C8.9 22.7 16.5 23.4 23.3 29.2 C29.2 33.2 34.5 30.6 36 27.4" fill="none" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="1" stroke-linecap="round" />
+  </g>
+
+  <!-- Border with rounded corners -->
+  <rect x="2" y="2" width="36" height="36" rx="5" ry="5" fill="none" stroke="#03A9F4" stroke-width="2" stroke-linejoin="round" />
+
+  <defs>
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#A8E6A1" />
+      <stop offset="100%" stop-color="#8BC34A" />
+    </linearGradient>
+  </defs>
+</svg> 

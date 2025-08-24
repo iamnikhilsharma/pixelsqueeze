@@ -1,0 +1,21 @@
+{
+  "name": "PixelSqueeze",
+  "short_name": "PixelSqueeze",
+  "description": "Professional image optimization made simple",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366F1",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "40x40",
+      "type": "image/svg+xml"
+    }
+  ]
+} 
