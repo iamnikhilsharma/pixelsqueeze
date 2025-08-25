@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { 
   DocumentTextIcon, 
   Square3Stack3DIcon, 
@@ -80,9 +80,11 @@ export default function AdvancedTools() {
         {/* Header */}
         <div className="text-center mb-16">
           <div className="flex items-center justify-center mb-6">
-            <img 
+            <Image 
               src="/logo.svg" 
               alt="PixelSqueeze" 
+              width={64}
+              height={64}
               className="h-16 w-auto mr-4"
             />
             <h1 className="text-4xl font-bold text-gray-900">Advanced Tools</h1>

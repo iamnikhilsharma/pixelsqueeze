@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import MarketingLayout from '@/components/MarketingLayout';
 import Button from '@/components/Button';
 import { motion } from 'framer-motion';
@@ -20,7 +21,14 @@ export default function NotFoundPage() {
           </motion.div>
 
           <motion.div className="mt-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15, duration: 0.6 }}>
-            <img src="/illustrations/hero.svg" alt="Not found" className="mx-auto w-full max-w-xl rounded-xl border border-gray-200" />
+            <Image 
+              src="/illustrations/hero.svg" 
+              alt="Not found" 
+              width={600} 
+              height={400}
+              className="mx-auto w-full max-w-xl rounded-xl border border-gray-200" 
+              priority={false}
+            />
           </motion.div>
         </div>
       </section>

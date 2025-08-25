@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: pixelsqueeze-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5002
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://pixelsqueeze-rho.vercel.app
+      - key: LOCAL_STORAGE_PATH
+        value: /opt/render/project/uploads
+      - key: MAX_FILE_SIZE
+        value: 10485760
+      - key: ALLOWED_IMAGE_TYPES
+        value: jpg,jpeg,png,webp
+      - key: FILE_RETENTION_HOURS
+        value: 24
+      - key: API_RATE_LIMIT
+        value: 100
+      - key: API_RATE_LIMIT_WINDOW
+        value: 900000
+    healthCheckPath: /api/health

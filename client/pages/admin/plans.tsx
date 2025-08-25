@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   CreditCardIcon, 
-  PlusIcon, 
   PencilIcon, 
-  TrashIcon,
   CheckIcon
 } from '@heroicons/react/24/outline';
 import AdminLayout from '../../components/AdminLayout';
@@ -33,7 +31,7 @@ const AdminPlans: React.FC = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [editingPlan, setEditingPlan] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<{ monthly: number; annual: number }>({ monthly: 0, annual: 0 });
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadPlans();
