@@ -149,7 +149,7 @@ export default function Home() {
     };
   };
 
-  const downloadOptimizedImage = (result: any) => {
+  const downloadOptimizedImage = async (result: any) => {
     if (!user || !token) {
       setError('Please log in to download optimized images');
       return;
@@ -158,14 +158,22 @@ export default function Home() {
     // If this is a real optimized image with download URL
     if (result.downloadUrl && !result.isDemo) {
       try {
-        // Create download link for real optimized image
+        // For cross-origin downloads, we need to fetch and create blob
+        const response = await fetch(result.downloadUrl);
+        if (!response.ok) throw new Error('Download failed');
+        
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        
+        // Create download link
         const a = document.createElement('a');
-        a.href = result.downloadUrl;
+        a.href = url;
         a.download = `optimized_${result.name}`;
-        a.target = '_blank';
+        a.style.display = 'none';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+        URL.revokeObjectURL(url);
         return;
       } catch (error) {
         console.error('Download error:', error);
