@@ -21,6 +21,7 @@ const ApiHealthCheck: React.FC<ApiHealthCheckProps> = ({ className = '' }) => {
 
   // Use mix of public and authenticated endpoints for comprehensive health check
   const endpoints = [
+    '/api/health', // Basic health endpoint (no auth required) - RELIABLE
     '/api/test', // API test endpoint (no auth required) - RELIABLE
     '/api/cors-test', // CORS test endpoint (no auth required) - RELIABLE
     ...(token ? ['/admin/users', '/admin/stats'] : []) // Only check admin endpoints if authenticated
