@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { buildApiUrl } from '../utils/formatters';
+import { useAuthStore } from '../store/authStore';
 
 interface ApiHealthCheckProps {
   className?: string;
@@ -14,24 +15,34 @@ interface HealthStatus {
 }
 
 const ApiHealthCheck: React.FC<ApiHealthCheckProps> = ({ className = '' }) => {
+  const { token } = useAuthStore();
   const [healthStatus, setHealthStatus] = useState<HealthStatus[]>([]);
   const [isChecking, setIsChecking] = useState(false);
 
+  // Use mix of public and authenticated endpoints for comprehensive health check
   const endpoints = [
-    '/admin/users',
-    '/admin/stats',
-    '/notifications',
-    '/analytics/overview'
+    '/health', // Basic health endpoint (no auth required)
+    '/api/test', // API test endpoint (no auth required)
+    '/api/cors-test', // CORS test endpoint (no auth required)
+    ...(token ? ['/admin/users', '/admin/stats'] : []) // Only check admin endpoints if authenticated
   ];
 
   const checkEndpoint = async (endpoint: string): Promise<HealthStatus> => {
     const startTime = Date.now();
     try {
+      // Build headers with authentication if available
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add auth header for protected endpoints
+      if (token && (endpoint.includes('/admin') || endpoint.includes('/notifications'))) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(buildApiUrl(endpoint), {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
       });
       
       const responseTime = Date.now() - startTime;
