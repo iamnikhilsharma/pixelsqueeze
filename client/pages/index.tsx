@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import MarketingLayout from '../components/MarketingLayout';
 import { useAuthStore } from '../store/authStore';
+import { buildApiUrl } from '../utils/formatters';
 import {
   LightningIcon,
   ShieldIcon,
@@ -66,32 +67,86 @@ export default function Home() {
     setError(null);
     
     try {
-      // Simulate processing with more realistic timing
-      const processingTime = Math.min(uploadedFiles.length * 500, 3000); // 500ms per image, max 3s
+      const processedResults = [];
       
-      setTimeout(() => {
-        const mockResults = uploadedFiles.map((file, index) => ({
-          name: file.name,
-          originalSize: file.size,
-          optimizedSize: Math.floor(file.size * (0.6 + Math.random() * 0.3)), // 60-90% of original
-          compression: Math.floor((1 - (file.size * (0.6 + Math.random() * 0.3)) / file.size) * 100),
-          format: file.name.toLowerCase().endsWith('.webp') ? 'WEBP' : 
-                 file.name.toLowerCase().endsWith('.png') ? 'PNG' : 'JPEG',
-          processingTime: Math.floor(Math.random() * 2000) + 500, // 0.5-2.5s
-          id: `opt_${Date.now()}_${index}` // Unique ID for each result
-        }));
-        setResults(mockResults);
-        setIsProcessing(false);
+      // Process images one by one for better UX
+      for (let i = 0; i < uploadedFiles.length; i++) {
+        const file = uploadedFiles[i];
         
-        // Increment usage count for logged-in users
-        if (user && token) {
-          setUsageCount(prev => prev + uploadedFiles.length);
+        try {
+          if (user && token) {
+            // Authenticated users: call real API
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('quality', '80');
+            formData.append('format', 'auto');
+            formData.append('preserveMetadata', 'false');
+
+            const response = await fetch(buildApiUrl('optimize'), {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`
+              },
+              body: formData
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              processedResults.push({
+                name: file.name,
+                originalSize: file.size,
+                optimizedSize: data.data.optimizedSize,
+                compression: Math.round(data.data.compressionRatio),
+                format: data.data.format.toUpperCase(),
+                processingTime: data.data.processingTime,
+                downloadUrl: data.data.downloadUrl,
+                id: `opt_${Date.now()}_${i}`,
+                expiresAt: data.data.expiresAt
+              });
+            } else {
+              // Fallback to demo data if API fails
+              processedResults.push(createDemoResult(file, i));
+            }
+          } else {
+            // Guest users: use demo data with realistic processing simulation
+            await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 700)); // 0.3-1s delay
+            processedResults.push(createDemoResult(file, i));
+          }
+        } catch (error) {
+          console.error(`Error processing ${file.name}:`, error);
+          processedResults.push(createDemoResult(file, i, true));
         }
-      }, processingTime);
+      }
+      
+      setResults(processedResults);
+      setIsProcessing(false);
+      
+      // Increment usage count for logged-in users
+      if (user && token) {
+        setUsageCount(prev => prev + uploadedFiles.length);
+      }
     } catch (err) {
+      console.error('Processing error:', err);
       setError('Failed to process images. Please try again.');
       setIsProcessing(false);
     }
+  };
+
+  // Helper function for demo/fallback results
+  const createDemoResult = (file: File, index: number, hasError = false) => {
+    const compressionRatio = hasError ? 0 : 0.6 + Math.random() * 0.3; // 60-90% of original
+    return {
+      name: file.name,
+      originalSize: file.size,
+      optimizedSize: hasError ? file.size : Math.floor(file.size * compressionRatio),
+      compression: hasError ? 0 : Math.floor((1 - compressionRatio) * 100),
+      format: file.name.toLowerCase().endsWith('.webp') ? 'WEBP' : 
+              file.name.toLowerCase().endsWith('.png') ? 'PNG' : 'JPEG',
+      processingTime: Math.floor(Math.random() * 2000) + 500, // 0.5-2.5s
+      id: `demo_${Date.now()}_${index}`,
+      isDemo: !hasError,
+      hasError
+    };
   };
 
   const downloadOptimizedImage = (result: any) => {
@@ -100,7 +155,26 @@ export default function Home() {
       return;
     }
 
-    // Create a mock optimized image blob (in real app, this would be the actual optimized image)
+    // If this is a real optimized image with download URL
+    if (result.downloadUrl && !result.isDemo) {
+      try {
+        // Create download link for real optimized image
+        const a = document.createElement('a');
+        a.href = result.downloadUrl;
+        a.download = `optimized_${result.name}`;
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        return;
+      } catch (error) {
+        console.error('Download error:', error);
+        setError('Failed to download image. Please try again.');
+        return;
+      }
+    }
+
+    // Fallback: Create a demo optimized image blob
     const canvas = document.createElement('canvas');
     canvas.width = 800;
     canvas.height = 600;
@@ -113,8 +187,11 @@ export default function Home() {
       ctx.fillStyle = '#6b7280';
       ctx.font = '24px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('Optimized Image', 400, 300);
-      ctx.fillText(`${result.compression}% compression`, 400, 340);
+      ctx.fillText('Demo Optimized Image', 400, 280);
+      ctx.fillText(`${result.compression}% compression`, 400, 320);
+      ctx.font = '16px Arial';
+      ctx.fillText(`Original: ${(result.originalSize / 1024).toFixed(1)} KB`, 400, 360);
+      ctx.fillText(`Optimized: ${(result.optimizedSize / 1024).toFixed(1)} KB`, 400, 380);
     }
 
     // Convert to blob and download
@@ -123,7 +200,7 @@ export default function Home() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `optimized_${result.name}`;
+        a.download = `demo_optimized_${result.name}`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -328,9 +405,21 @@ export default function Home() {
                         <span className="text-sm font-medium text-gray-900 truncate">
                           {result.name}
                         </span>
-                        <span className="text-xs bg-primary-100 text-primary-800 px-2 py-1 rounded-full">
-                          {result.format}
-                        </span>
+                        <div className="flex items-center space-x-1">
+                          {result.isDemo && (
+                            <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">
+                              DEMO
+                            </span>
+                          )}
+                          {result.hasError && (
+                            <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                              ERROR
+                            </span>
+                          )}
+                          <span className="text-xs bg-primary-100 text-primary-800 px-2 py-1 rounded-full">
+                            {result.format}
+                          </span>
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <div className="flex justify-between text-xs">
@@ -364,9 +453,13 @@ export default function Home() {
                 </div>
                 
                 <div className="text-center mt-6 space-y-3">
-                  {user && token && (
+                  {user && token ? (
                     <p className="text-sm text-gray-600">
                       💡 You can download all optimized images. Your usage count: {usageCount} images
+                    </p>
+                  ) : (
+                    <p className="text-sm text-amber-600">
+                      🔮 Demo mode: Results are simulated. Sign up to use real optimization!
                     </p>
                   )}
                   <div className="flex justify-center space-x-4">
