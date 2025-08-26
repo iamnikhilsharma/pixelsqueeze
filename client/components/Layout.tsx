@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useAuthStore } from '../store/authStore';
 import { 
   MenuIcon, 
@@ -25,12 +26,13 @@ interface LayoutProps {
 }
 
 export default function Layout({ children, title = 'PixelSqueeze - AI Image Compression' }: LayoutProps) {
-  const { user, token, logout } = useAuthStore();
+  const router = useRouter();
+  const { user, token, logoutWithRedirect } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const handleLogout = () => {
-    logout();
+    logoutWithRedirect(router);
     setIsUserMenuOpen(false);
   };
 

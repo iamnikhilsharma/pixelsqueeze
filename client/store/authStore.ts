@@ -39,6 +39,7 @@ interface AuthActions {
   login: (userData: any, token: string) => void;
   register: (userData: RegisterData) => Promise<void>;
   logout: () => void;
+  logoutWithRedirect: (router: any, currentPath?: string) => void;
   updateUser: (userData: Partial<User>) => void;
   clearError: () => void;
   checkAuth: () => Promise<void>;
@@ -106,6 +107,43 @@ export const useAuthStore = create<AuthStore>()(
       logout: () => {
         delete axios.defaults.headers.common['Authorization'];
         set({ user: null, token: null, isAuthenticated: false, isLoading: false, error: null });
+      },
+
+      logoutWithRedirect: (router: any, currentPath?: string) => {
+        // Clear auth state first
+        delete axios.defaults.headers.common['Authorization'];
+        set({ user: null, token: null, isAuthenticated: false, isLoading: false, error: null });
+        
+        // Determine redirect path based on current location
+        const path = currentPath || router.pathname;
+        
+        // Define restricted paths that require authentication
+        const restrictedPaths = [
+          '/dashboard',
+          '/settings', 
+          '/images',
+          '/performance',
+          '/image-analysis',
+          '/thumbnails',
+          '/watermark',
+          '/advanced-tools',
+          '/billing',
+          '/checkout'
+        ];
+        
+        // Check if current path requires authentication
+        const isRestrictedPage = restrictedPaths.some(restrictedPath => 
+          path.startsWith(restrictedPath)
+        );
+        
+        // Redirect logic
+        if (isRestrictedPage) {
+          // If on a restricted page, redirect to login with return URL
+          router.replace(`/login?returnUrl=${encodeURIComponent(path)}`);
+        } else {
+          // If on a public page, redirect to home
+          router.replace('/');
+        }
       },
 
       updateUser: (userData: Partial<User>) => {

@@ -17,6 +17,9 @@ export default function Login() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Get return URL from query params
+  const returnUrl = router.query.returnUrl as string;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +39,8 @@ export default function Login() {
       if (response.ok) {
         login(data.data.user, data.data.token);
         toast.success('Welcome back!');
-        router.push('/dashboard');
+        // Redirect to return URL if provided, otherwise dashboard
+        router.push(returnUrl || '/dashboard');
       } else {
         toast.error(data.error || 'Login failed');
       }
