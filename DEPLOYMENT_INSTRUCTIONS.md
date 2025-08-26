@@ -34,12 +34,15 @@ Your PixelSqueeze project is **READY FOR DEPLOYMENT** with all code quality issu
    PORT=5002
    MONGODB_URI=mongodb+srv://your-username:your-password@cluster.mongodb.net/pixelsqueeze
    JWT_SECRET=pixelsqueeze-super-secret-jwt-key-change-in-production-2024
+   PUBLIC_URL=https://your-backend-name.onrender.com
    CORS_ORIGIN=https://pixelsqueeze-rho.vercel.app
    LOCAL_STORAGE_PATH=/opt/render/project/uploads
    MAX_FILE_SIZE=10485760
    ALLOWED_IMAGE_TYPES=jpg,jpeg,png,webp
    FILE_RETENTION_HOURS=24
    ```
+
+   **Important**: Replace `your-backend-name.onrender.com` with your actual Render app URL!
 
 5. **Deploy**: Click "Create Web Service"
 

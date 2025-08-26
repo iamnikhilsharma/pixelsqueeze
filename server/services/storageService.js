@@ -6,8 +6,59 @@ const { logger } = require('../utils/logger');
 class LocalStorageService {
   constructor() {
     this.baseDir = process.env.LOCAL_STORAGE_PATH || path.join(__dirname, '../../uploads');
-    this.publicUrl = process.env.PUBLIC_URL || 'http://localhost:5000';
+    // Auto-detect public URL based on environment
+    this.publicUrl = this.getPublicUrl();
+    console.log(`🌐 StorageService initialized with publicUrl: ${this.publicUrl}`);
     this.ensureDirectories();
+  }
+
+  /**
+   * Get the correct public URL based on environment
+   */
+  getPublicUrl() {
+    // 1. Check if PUBLIC_URL is explicitly set
+    if (process.env.PUBLIC_URL) {
+      return process.env.PUBLIC_URL.replace(/\/$/, ''); // Remove trailing slash
+    }
+
+    // 2. Auto-detect for common deployment platforms
+    if (process.env.RENDER_EXTERNAL_URL) {
+      // Render.com deployment
+      return process.env.RENDER_EXTERNAL_URL.replace(/\/$/, '');
+    }
+
+    if (process.env.HEROKU_APP_NAME) {
+      // Heroku deployment
+      return `https://${process.env.HEROKU_APP_NAME}.herokuapp.com`;
+    }
+
+    if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+      // Railway deployment
+      return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+    }
+
+    if (process.env.VERCEL_URL) {
+      // Vercel deployment (though backend shouldn't be on Vercel)
+      return `https://${process.env.VERCEL_URL}`;
+    }
+
+    // 3. Production fallback - try to construct from PORT
+    if (process.env.NODE_ENV === 'production') {
+      const port = process.env.PORT || 5002;
+      console.warn('⚠️  PUBLIC_URL not set in production. Auto-detecting...');
+      
+      // If running on a standard web port, assume it's accessible via domain
+      if (port === 80 || port === 443) {
+        return process.env.DOMAIN ? `https://${process.env.DOMAIN}` : 'https://your-backend-domain.com';
+      }
+      
+      // Otherwise, include the port
+      return process.env.DOMAIN ? `https://${process.env.DOMAIN}:${port}` : `https://your-backend-domain.com:${port}`;
+    }
+
+    // 4. Development fallback
+    const port = process.env.PORT || 5002;
+    return `http://localhost:${port}`;
   }
 
   /**
@@ -100,7 +151,7 @@ class LocalStorageService {
         throw new Error('File not found');
       }
       const downloadUrl = `${this.publicUrl}/uploads/${key}`;
-      logger.info(`Generated download URL for: ${key}`);
+      logger.info(`Generated download URL: ${downloadUrl} (publicUrl: ${this.publicUrl}, key: ${key})`);
       return downloadUrl;
     } catch (error) {
       logger.error('Local download URL generation error:', error);
