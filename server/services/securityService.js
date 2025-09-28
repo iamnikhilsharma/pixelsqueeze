@@ -431,6 +431,8 @@ module.exports = {
   validateInput: securityService.validateInput.bind(securityService),
   validateFileUpload: securityService.validateFileUpload.bind(securityService),
   validatePassword: securityService.validatePassword.bind(securityService),
+  validateEmail: securityService.validateEmail.bind(securityService),
+  validateUrl: securityService.validateUrl.bind(securityService),
   hashPassword: securityService.hashPassword.bind(securityService),
   comparePassword: securityService.comparePassword.bind(securityService),
   sanitizeInput: securityService.sanitizeInput.bind(securityService),

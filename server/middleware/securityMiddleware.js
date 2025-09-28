@@ -1,4 +1,4 @@
-const securityService = require('../services/securityService');
+const { securityService } = require('../services/securityService');
 const { logger } = require('../utils/logger');
 
 // Security middleware factory
