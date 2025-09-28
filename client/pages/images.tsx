@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   MagnifyingGlassIcon,
-  FunnelIcon,
   PhotoIcon,
   ArrowDownTrayIcon,
   TrashIcon,
@@ -790,7 +789,7 @@ export default function Images() {
               {!searchTerm && selectedFormat === 'all' && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
                   <p className="text-sm text-blue-800">
-                    💡 <strong>Tip:</strong> Use the compression form above to upload and optimize your images. They'll appear here once processed!
+                    💡 <strong>Tip:</strong> Use the compression form above to upload and optimize your images. They&apos;ll appear here once processed!
                   </p>
                 </div>
               )}
