@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuthStore } from '../store/authStore';
+import ErrorBoundary from './ErrorBoundary';
 import { 
   MenuIcon, 
   CloseIcon, 
@@ -223,7 +224,9 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
 
       {/* Main Content */}
       <main className="flex-1">
-        {children}
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
       </main>
 
       {/* Footer */}
