@@ -13,7 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 import Layout from '@/components/Layout';
 import Button from '@/components/Button';
-import { SkeletonImageCard, SkeletonList } from '@/components/Skeleton';
+import { SkeletonImageCard } from '@/components/Skeleton';
 import { useAuthStore } from '@/store/authStore';
 import { formatBytes, formatDate, buildApiUrl } from '@/utils/formatters';
 import toast from 'react-hot-toast';
@@ -488,13 +488,13 @@ export default function Images() {
               <h2 className="text-xl font-semibold text-gray-900">Compress New Images</h2>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               {/* File Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Select Images
                 </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 md:p-6 text-center hover:border-gray-400 transition-colors min-h-[120px] flex flex-col justify-center">
                   <input
                     type="file"
                     multiple
@@ -625,7 +625,7 @@ export default function Images() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-center">
                 <PhotoIcon className="h-8 w-8 text-blue-600" />
@@ -771,7 +771,7 @@ export default function Images() {
           transition={{ delay: 0.2 }}
         >
           {loading && page === 1 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {Array.from({ length: 6 }).map((_, index) => (
                 <SkeletonImageCard key={index} />
               ))}
@@ -795,7 +795,7 @@ export default function Images() {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {sortedImages.map((image, index) => (
                 <motion.div
                   key={image.id}
@@ -872,12 +872,13 @@ export default function Images() {
                   </div>
 
                   {/* Actions */}
-                  <div className="mt-4 flex items-center justify-between">
+                  <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex items-center space-x-3">
                       <input
                         type="checkbox"
                         checked={selectedImages.includes(image.id)}
                         onChange={() => handleImageSelect(image.id)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       />
                       <span className="text-sm text-gray-600">Select</span>
                     </div>

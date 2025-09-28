@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useAuthStore } from '../store/authStore';
 import ErrorBoundary from './ErrorBoundary';
@@ -51,9 +52,11 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
             {/* Logo */}
             <div className="flex items-center">
               <Link href="/" className="flex items-center">
-                <img 
+                <Image 
                   src="/logo.svg" 
                   alt="PixelSqueeze" 
+                  width={40}
+                  height={40}
                   className="h-10 w-auto"
                 />
               </Link>
@@ -235,9 +238,11 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center mb-4">
-                <img 
+                <Image 
                   src="/logo.svg" 
                   alt="PixelSqueeze" 
+                  width={48}
+                  height={48}
                   className="h-12 w-auto"
                 />
               </div>
