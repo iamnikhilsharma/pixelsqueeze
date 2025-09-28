@@ -324,11 +324,18 @@ class SecurityService {
         const allowedOrigins = [
           'http://localhost:3000',
           'http://localhost:3001',
+          'https://pixelsqueeze-rho.vercel.app',
+          'https://pixelsqueeze.vercel.app',
           process.env.FRONTEND_URL,
           process.env.ADMIN_URL
         ].filter(Boolean);
         
-        if (!origin || allowedOrigins.includes(origin)) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) {
+          return callback(null, true);
+        }
+        
+        if (allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
           logger.warn('CORS blocked origin:', origin);
