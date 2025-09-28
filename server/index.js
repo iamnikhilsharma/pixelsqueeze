@@ -1,10 +1,19 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const path = require('path');
 require('dotenv').config();
+
+// Import comprehensive rate limiting middleware
+const {
+  generalRateLimit,
+  imageProcessingRateLimiter,
+  authRateLimiter,
+  apiKeyRateLimiter,
+  speedLimiter,
+  subscriptionRateLimit
+} = require('./middleware/rateLimiter');
 
 const authRoutes = require('./routes/auth');
 const apiRoutes = require('./routes/api');
@@ -95,15 +104,9 @@ app.options('*', cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.API_RATE_LIMIT_WINDOW) || 15 * 60 * 1000,
-  max: parseInt(process.env.API_RATE_LIMIT) || 100,
-  message: { error: 'Too many requests from this IP, please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use('/api/', limiter);
+// Apply comprehensive rate limiting middleware
+app.use(speedLimiter); // Slow down requests gradually
+app.use(generalRateLimit); // General rate limiting for all requests
 
 // Database connection with improved configuration
 const mongooseOptions = {
@@ -203,16 +206,17 @@ app.get('/api/test', (req, res) => {
 app.use('/uploads', storageService.getStaticMiddleware());
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api', apiRoutes);
-app.use('/api/webhooks', webhookRoutes);
+// API Routes with specific rate limiting
+app.use('/api/auth', authRateLimiter, authRoutes); // Strict rate limiting for auth
+app.use('/api', subscriptionRateLimit, apiRoutes); // Subscription-based rate limiting
+app.use('/api/webhooks', webhookRoutes); // No rate limiting for webhooks
 app.use('/api/admin', adminAuthRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/plans', adminPlansRoutes);
-app.use('/api/advanced', advancedImageRoutes);
+app.use('/api/advanced', imageProcessingRateLimiter, advancedImageRoutes); // Image processing rate limiting
 app.use('/api/billing', billingRoutes);
 app.use('/api/analytics', analyticsRoutes);
-app.use('/api/batch-processing', batchProcessingRoutes);
+app.use('/api/batch-processing', imageProcessingRateLimiter, batchProcessingRoutes); // Image processing rate limiting
 app.use('/api/preferences', preferencesRoutes);
 app.use('/api/razorpay', razorpayRoutes);
 app.use('/api/subscription', subscriptionRoutes);
