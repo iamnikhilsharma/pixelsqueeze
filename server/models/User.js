@@ -31,8 +31,7 @@ const userSchema = new mongoose.Schema({
     trim: true
   },
   apiKey: {
-    type: String,
-    sparse: true
+    type: String
   },
   subscription: {
     plan: {

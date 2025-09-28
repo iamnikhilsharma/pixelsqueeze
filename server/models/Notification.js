@@ -4,8 +4,7 @@ const notificationSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: ['success', 'warning', 'error', 'info', 'system'],
-    required: true,
-    index: true
+    required: true
   },
   title: {
     type: String,
@@ -22,24 +21,20 @@ const notificationSchema = new mongoose.Schema({
   category: {
     type: String,
     enum: ['system', 'user', 'billing', 'security'],
-    required: true,
-    index: true
+    required: true
   },
   priority: {
     type: String,
     enum: ['low', 'medium', 'high', 'critical'],
-    default: 'medium',
-    index: true
+    default: 'medium'
   },
   read: {
     type: Boolean,
-    default: false,
-    index: true
+    default: false
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    index: true
+    ref: 'User'
   },
   adminOnly: {
     type: Boolean,

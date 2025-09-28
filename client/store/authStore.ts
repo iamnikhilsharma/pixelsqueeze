@@ -122,7 +122,6 @@ export const useAuthStore = create<AuthStore>()(
           '/dashboard',
           '/settings', 
           '/images',
-          '/performance',
           '/image-analysis',
           '/thumbnails',
           '/watermark',
@@ -191,8 +190,10 @@ export const useAuthStore = create<AuthStore>()(
         } else {
           delete axios.defaults.headers.common['Authorization'];
         }
-        // Note: hasRehydrated will be set to true by the persist middleware automatically
-        // We don't need to manually set it here to avoid React hook errors
+        // Set hasRehydrated to true after rehydration is complete
+        if (state) {
+          state.hasRehydrated = true;
+        }
       },
     }
   )

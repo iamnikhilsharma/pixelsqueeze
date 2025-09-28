@@ -44,11 +44,6 @@ export const AnalysisIcon = ({ className = "w-6 h-6", ...props }) => (
   </svg>
 );
 
-export const PerformanceIcon = ({ className = "w-6 h-6", ...props }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-  </svg>
-);
 
 // New icons for modern landing page
 export const UploadIcon = ({ className = "w-6 h-6", ...props }) => (

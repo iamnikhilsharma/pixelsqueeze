@@ -14,7 +14,6 @@ import {
   WatermarkIcon,
   ThumbnailIcon,
   AnalysisIcon,
-  PerformanceIcon,
   SettingsIcon,
   ChevronDownIcon
 } from './icons';
@@ -85,7 +84,6 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
                 </button>
                 <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                   <Link href="/advanced-tools" className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-t-lg">Advanced Tools</Link>
-                  <Link href="/performance" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">Performance Dashboard</Link>
                   <Link href="/api-docs" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">API Documentation</Link>
                 </div>
               </div>
@@ -189,10 +187,7 @@ export default function Layout({ children, title = 'PixelSqueeze - AI Image Comp
                     Analysis
                   </Link>
                   
-                  <Link href="/performance" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                    <PerformanceIcon className="w-5 h-5" />
-                    Performance
-                  </Link>
+
                   
                   <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Account

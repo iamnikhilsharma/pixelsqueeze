@@ -5,8 +5,7 @@ const notificationPreferenceSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
-    unique: true,
-    index: true
+    unique: true
   },
   email: {
     enabled: {
@@ -159,7 +158,6 @@ const notificationPreferenceSchema = new mongoose.Schema({
 });
 
 // Indexes
-notificationPreferenceSchema.index({ userId: 1 });
 notificationPreferenceSchema.index({ 'email.enabled': 1 });
 notificationPreferenceSchema.index({ 'inApp.enabled': 1 });
 notificationPreferenceSchema.index({ 'push.enabled': 1 });

@@ -10,7 +10,7 @@ import AdminLayout from '../../components/AdminLayout';
 import AdminGuard from '../../components/AdminGuard';
 import AdminChart from '../../components/AdminChart';
 import AnalyticsWidget from '../../components/AnalyticsWidget';
-import PerformanceMetrics from '../../components/PerformanceMetrics';
+
 import ApiHealthCheck from '../../components/ApiHealthCheck';
 import ConfigurationCheck from '../../components/ConfigurationCheck';
 import useAdminMetrics from '../../hooks/useAdminMetrics';
@@ -42,51 +42,7 @@ const AdminDashboard: React.FC = () => {
   const dailyOptimizations = metrics?.dailyOptimizations || [];
   const planBreakdown = metrics?.planBreakdown || {};
 
-  // Mock performance metrics for demonstration
-  const performanceMetrics = [
-    {
-      name: 'CPU Usage',
-      value: 45,
-      unit: '%',
-      status: 'good' as const,
-      trend: 'stable' as const
-    },
-    {
-      name: 'Memory Usage',
-      value: 78,
-      unit: '%',
-      status: 'warning' as const,
-      trend: 'up' as const
-    },
-    {
-      name: 'Disk Space',
-      value: 62,
-      unit: '%',
-      status: 'good' as const,
-      trend: 'stable' as const
-    },
-    {
-      name: 'Network Latency',
-      value: 12,
-      unit: 'ms',
-      status: 'good' as const,
-      trend: 'down' as const
-    },
-    {
-      name: 'Active Connections',
-      value: 156,
-      unit: '',
-      status: 'good' as const,
-      trend: 'up' as const
-    },
-    {
-      name: 'Error Rate',
-      value: 0.2,
-      unit: '%',
-      status: 'good' as const,
-      trend: 'stable' as const
-    }
-  ];
+
 
   // Prepare chart data
   const planChartData = {
@@ -277,8 +233,7 @@ const AdminDashboard: React.FC = () => {
           />
         </div>
 
-        {/* Performance Metrics */}
-        <PerformanceMetrics metrics={performanceMetrics} />
+
 
         {/* Configuration Check */}
         <motion.div

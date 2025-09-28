@@ -7,7 +7,9 @@ import {
   ArrowDownTrayIcon,
   TrashIcon,
   EyeIcon,
-  CalendarIcon
+  CalendarIcon,
+  ArrowUpTrayIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 import Layout from '@/components/Layout';
 import Button from '@/components/Button';
@@ -61,6 +63,14 @@ export default function Images() {
   const [hasMore, setHasMore] = useState(true);
   const [now, setNow] = useState(Date.now());
 
+  // Compression form state
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [compressionError, setCompressionError] = useState<string | null>(null);
+  const [quality, setQuality] = useState(80);
+  const [format, setFormat] = useState('auto');
+  const [preserveMetadata, setPreserveMetadata] = useState(false);
+
   useEffect(() => {
     (async () => {
       if (!hasRehydrated) return;
@@ -72,6 +82,33 @@ export default function Images() {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, hasRehydrated]);
+
+  // Fallback: Force rehydration after 2 seconds if still not rehydrated
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!hasRehydrated) {
+        console.log('Forcing rehydration after timeout');
+        // Force rehydration by updating the store
+        const authData = localStorage.getItem('pixelsqueeze-auth');
+        if (authData) {
+          try {
+            const parsed = JSON.parse(authData);
+            if (parsed.state) {
+              // Manually set the rehydrated state
+              useAuthStore.setState({ hasRehydrated: true });
+            }
+          } catch (error) {
+            console.error('Error parsing auth data:', error);
+            useAuthStore.setState({ hasRehydrated: true });
+          }
+        } else {
+          useAuthStore.setState({ hasRehydrated: true });
+        }
+      }
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [hasRehydrated]);
 
   // Re-render every minute to update countdowns
   useEffect(() => {
@@ -145,23 +182,73 @@ export default function Images() {
     };
 
     fetchImages();
-  }, [isAuthenticated, page, hasRehydrated]);
+  }, [isAuthenticated, page, hasRehydrated, now]); // Added 'now' as dependency to trigger refresh
 
   // Handle loading and authentication states
   if (!hasRehydrated) {
-    return <div className="min-h-screen"/>;
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </Layout>
+    );
   }
   
   if (!token) {
-    return null;
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <PhotoIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Please Log In</h2>
+            <p className="text-gray-600 mb-6">You need to be logged in to view and manage your images.</p>
+            <Button
+              variant="primary"
+              onClick={() => router.push('/login')}
+            >
+              Go to Login
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    );
   }
   
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center text-gray-500">Checking session...</div>;
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center text-gray-500">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p>Checking session...</p>
+          </div>
+        </div>
+      </Layout>
+    );
   }
   
   if (!isAuthenticated) {
-    return null;
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <PhotoIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Authentication Required</h2>
+            <p className="text-gray-600 mb-6">Your session has expired. Please log in again.</p>
+            <Button
+              variant="primary"
+              onClick={() => router.push('/login')}
+            >
+              Log In Again
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    );
   }
 
   const filteredImages = images.filter(image => {
@@ -276,6 +363,107 @@ export default function Images() {
     }
   };
 
+  // File upload handler
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    setCompressionError(null);
+    
+    // Validate file count
+    if (files.length > 10) {
+      setCompressionError('Maximum 10 images allowed');
+      return;
+    }
+
+    // Validate file types
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+    
+    if (invalidFiles.length > 0) {
+      setCompressionError(`Invalid file type(s): ${invalidFiles.map(f => f.name).join(', ')}. Only JPEG, PNG, and WebP are supported.`);
+      return;
+    }
+
+    // Validate file sizes (max 10MB per file)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const oversizedFiles = files.filter(file => file.size > maxSize);
+    
+    if (oversizedFiles.length > 0) {
+      setCompressionError(`File(s) too large: ${oversizedFiles.map(f => f.name).join(', ')}. Maximum size is 10MB per file.`);
+      return;
+    }
+
+    setUploadedFiles(files);
+  };
+
+  // Process images function
+  const processImages = async () => {
+    if (uploadedFiles.length === 0) return;
+    
+    setIsProcessing(true);
+    setCompressionError(null);
+    
+    try {
+      const processedResults = [];
+      
+      // Process images one by one for better UX
+      for (let i = 0; i < uploadedFiles.length; i++) {
+        const file = uploadedFiles[i];
+        
+        try {
+          const formData = new FormData();
+          formData.append('image', file);
+          formData.append('quality', quality.toString());
+          formData.append('format', format);
+          formData.append('preserveMetadata', preserveMetadata.toString());
+
+          const response = await fetch(buildApiUrl('/api/optimize'), {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: formData
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            processedResults.push({
+              name: file.name,
+              originalSize: file.size,
+              optimizedSize: data.data.optimizedSize,
+              compression: Math.round(data.data.compressionRatio),
+              format: data.data.format.toUpperCase(),
+              downloadUrl: data.data.downloadUrl
+            });
+            
+            toast.success(`${file.name} compressed successfully!`);
+          } else {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Compression failed');
+          }
+        } catch (error) {
+          console.error(`Error processing ${file.name}:`, error);
+          toast.error(`Failed to compress ${file.name}`);
+        }
+      }
+
+      // Refresh images list after successful processing
+      if (processedResults.length > 0) {
+        setImages([]); // Clear current images
+        setPage(1); // Reset to first page
+        // Trigger refetch by updating a dependency
+        setNow(Date.now());
+        toast.success(`${processedResults.length} image(s) compressed successfully!`);
+      }
+
+    } catch (error) {
+      console.error('Compression error:', error);
+      setCompressionError('Failed to process images. Please try again.');
+    } finally {
+      setIsProcessing(false);
+      setUploadedFiles([]);
+    }
+  };
+
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -286,6 +474,149 @@ export default function Images() {
             Manage and organize your optimized images
           </p>
         </div>
+
+        {/* Image Compression Form */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="flex items-center mb-4">
+              <SparklesIcon className="h-6 w-6 text-blue-600 mr-2" />
+              <h2 className="text-xl font-semibold text-gray-900">Compress New Images</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* File Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Images
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/png,image/webp,image/jpg"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <label htmlFor="file-upload" className="cursor-pointer">
+                    <ArrowUpTrayIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-sm text-gray-600">
+                      Click to upload or drag and drop
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      PNG, JPG, WebP up to 10MB each (max 10 files)
+                    </p>
+                  </label>
+                </div>
+                
+                {uploadedFiles.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-gray-700 mb-2">
+                      Selected Files ({uploadedFiles.length}):
+                    </p>
+                    <div className="space-y-1">
+                      {uploadedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded">
+                          <span className="truncate">{file.name}</span>
+                          <span>{formatBytes(file.size)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {compressionError && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-600">{compressionError}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Compression Settings */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Compression Settings
+                </label>
+                
+                <div className="space-y-4">
+                  {/* Quality Slider */}
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-2">
+                      Quality: {quality}%
+                    </label>
+                    <input
+                      type="range"
+                      min="10"
+                      max="100"
+                      value={quality}
+                      onChange={(e) => setQuality(parseInt(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>Smaller file</span>
+                      <span>Better quality</span>
+                    </div>
+                  </div>
+
+                  {/* Format Selection */}
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-2">
+                      Output Format
+                    </label>
+                    <select
+                      value={format}
+                      onChange={(e) => setFormat(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="auto">Auto (Recommended)</option>
+                      <option value="jpeg">JPEG</option>
+                      <option value="png">PNG</option>
+                      <option value="webp">WebP</option>
+                    </select>
+                  </div>
+
+                  {/* Metadata Option */}
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="preserve-metadata"
+                      checked={preserveMetadata}
+                      onChange={(e) => setPreserveMetadata(e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="preserve-metadata" className="ml-2 text-sm text-gray-600">
+                      Preserve metadata (EXIF, etc.)
+                    </label>
+                  </div>
+
+                  {/* Process Button */}
+                  <Button
+                    variant="primary"
+                    onClick={processImages}
+                    disabled={uploadedFiles.length === 0 || isProcessing}
+                    className="w-full"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <SparklesIcon className="h-4 w-4 mr-2" />
+                        Compress Images
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Stats */}
         <motion.div
@@ -450,12 +781,19 @@ export default function Images() {
             <div className="text-center py-12">
               <PhotoIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No images found</h3>
-              <p className="text-gray-500">
+              <p className="text-gray-500 mb-4">
                 {searchTerm || selectedFormat !== 'all' 
                   ? 'Try adjusting your search or filters'
-                  : 'Start by uploading some images to see them here'
+                  : 'Upload and compress images using the form above to see them here'
                 }
               </p>
+              {!searchTerm && selectedFormat === 'all' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+                  <p className="text-sm text-blue-800">
+                    💡 <strong>Tip:</strong> Use the compression form above to upload and optimize your images. They'll appear here once processed!
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -473,8 +811,21 @@ export default function Images() {
                   onClick={() => handleImageSelect(image.id)}
                 >
                   {/* Image Preview */}
-                  <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
-                    <PhotoIcon className="h-12 w-12 text-gray-400" />
+                  <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                    {image.downloadUrl ? (
+                      <img
+                        src={image.downloadUrl}
+                        alt={image.originalName}
+                        className="w-full h-full object-cover rounded-lg"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className={`h-full w-full flex items-center justify-center ${image.downloadUrl ? 'hidden' : 'flex'}`}>
+                      <PhotoIcon className="h-12 w-12 text-gray-400" />
+                    </div>
                   </div>
 
                   {/* Image Info */}

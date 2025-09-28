@@ -105,13 +105,67 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Database connection
-mongoose.connect(process.env.MONGODB_URI)
-.then(() => { logger.info('Connected to MongoDB'); })
+// Database connection with improved configuration
+const mongooseOptions = {
+  serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+  socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+  maxPoolSize: 10, // Maintain up to 10 socket connections
+  minPoolSize: 5, // Maintain a minimum of 5 socket connections
+  maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
+  connectTimeoutMS: 10000, // Give up initial connection after 10 seconds
+};
+
+mongoose.connect(process.env.MONGODB_URI, mongooseOptions)
+.then(() => { 
+  logger.info('Connected to MongoDB successfully'); 
+  logger.info(`MongoDB connection state: ${mongoose.connection.readyState}`);
+})
 .catch((error) => { 
   logger.error('MongoDB connection error:', error); 
   logger.warn('Server will continue without database connection. Some features may not work.');
   // Don't exit the process - allow CORS and basic functionality to work
+});
+
+// Handle connection events
+mongoose.connection.on('connected', () => {
+  logger.info('Mongoose connected to MongoDB');
+});
+
+mongoose.connection.on('error', (err) => {
+  logger.error('Mongoose connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  logger.warn('Mongoose disconnected from MongoDB');
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  logger.info('SIGINT received, shutting down gracefully');
+  try {
+    if (websocketService) {
+      websocketService.shutdown();
+    }
+    await mongoose.connection.close();
+    logger.info('MongoDB connection closed');
+  } catch (error) {
+    logger.error('Error closing MongoDB connection:', error);
+  }
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  try {
+    if (websocketService) {
+      websocketService.shutdown();
+    }
+    await mongoose.connection.close();
+    logger.info('MongoDB connection closed');
+  } catch (error) {
+    logger.error('Error closing MongoDB connection:', error);
+  }
+  process.exit(0);
 });
 
 // Health check
@@ -138,7 +192,6 @@ app.get('/api/test', (req, res) => {
     routes: [
       '/api/auth/*',
       '/api/analytics/*',
-      '/api/performance/*',
       '/api/advanced/*',
       '/api/batch-processing/*',
       '/api/preferences/*'
@@ -204,32 +257,5 @@ server.listen(PORT, () => {
   }
 });
 
-process.on('SIGTERM', async () => { 
-  logger.info('SIGTERM received, shutting down gracefully'); 
-  try {
-    if (websocketService) {
-      websocketService.shutdown();
-    }
-    await mongoose.connection.close();
-    logger.info('MongoDB connection closed');
-  } catch (error) {
-    logger.error('Error closing MongoDB connection:', error);
-  }
-  process.exit(0); 
-});
-
-process.on('SIGINT', async () => { 
-  logger.info('SIGINT received, shutting down gracefully'); 
-  try {
-    if (websocketService) {
-      websocketService.shutdown();
-    }
-    await mongoose.connection.close();
-    logger.info('MongoDB connection closed');
-  } catch (error) {
-    logger.error('Error closing MongoDB connection:', error);
-  }
-  process.exit(0); 
-});
 
 module.exports = app; 
