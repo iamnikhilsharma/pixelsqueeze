@@ -103,13 +103,10 @@ const apiKeyRateLimit = {
 const speedLimiter = slowDown({
   windowMs: 15 * 60 * 1000, // 15 minutes
   delayAfter: 50, // Allow 50 requests per 15 minutes, then...
-  delayMs: 500, // Add 500ms delay per request after delayAfter
+  delayMs: () => 500, // Add 500ms delay per request after delayAfter
   maxDelayMs: 20000, // Maximum delay of 20 seconds
   skipSuccessfulRequests: true, // Don't count successful requests
   skipFailedRequests: false, // Count failed requests
-  onLimitReached: (req, res, options) => {
-    logger.warn(`Speed limiter activated for IP: ${req.ip}, User: ${req.user?.email || 'anonymous'}`);
-  }
 });
 
 // Create rate limiters
@@ -147,47 +144,102 @@ const createUserRateLimit = (maxRequests = 200, windowMs = 15 * 60 * 1000) => {
   });
 };
 
-// Subscription-based rate limiting
-const createSubscriptionRateLimit = (planType) => {
-  const limits = {
-    free: { max: 50, windowMs: 15 * 60 * 1000 }, // 50 requests per 15 minutes
-    basic: { max: 200, windowMs: 15 * 60 * 1000 }, // 200 requests per 15 minutes
-    pro: { max: 1000, windowMs: 15 * 60 * 1000 }, // 1000 requests per 15 minutes
-    enterprise: { max: 5000, windowMs: 15 * 60 * 1000 } // 5000 requests per 15 minutes
-  };
-
-  const config = limits[planType] || limits.free;
-
-  return rateLimit({
-    windowMs: config.windowMs,
-    max: config.max,
-    keyGenerator: (req) => {
-      return req.user?.id || req.ip;
-    },
+// Pre-create subscription rate limiters
+const subscriptionRateLimiters = {
+  free: rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 50,
+    keyGenerator: (req) => req.user?.id || req.ip,
     message: {
       error: 'Subscription rate limit exceeded',
       code: 'SUBSCRIPTION_RATE_LIMIT_EXCEEDED',
-      details: `Rate limit exceeded for ${planType} plan. Consider upgrading your subscription.`,
-      retryAfter: Math.floor(config.windowMs / 1000)
+      details: 'Rate limit exceeded for free plan. Consider upgrading your subscription.',
+      retryAfter: 15 * 60
     },
     standardHeaders: true,
     legacyHeaders: false,
     handler: (req, res) => {
-      logger.warn(`Subscription rate limit exceeded for User: ${req.user?.email || 'anonymous'}, Plan: ${planType}`);
+      logger.warn(`Subscription rate limit exceeded for User: ${req.user?.email || 'anonymous'}, Plan: free`);
       res.status(429).json({
         error: 'Subscription rate limit exceeded',
         code: 'SUBSCRIPTION_RATE_LIMIT_EXCEEDED',
-        details: `Rate limit exceeded for ${planType} plan. Consider upgrading your subscription.`,
-        retryAfter: Math.floor(config.windowMs / 1000)
+        details: 'Rate limit exceeded for free plan. Consider upgrading your subscription.',
+        retryAfter: 15 * 60
       });
     }
-  });
+  }),
+  basic: rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 200,
+    keyGenerator: (req) => req.user?.id || req.ip,
+    message: {
+      error: 'Subscription rate limit exceeded',
+      code: 'SUBSCRIPTION_RATE_LIMIT_EXCEEDED',
+      details: 'Rate limit exceeded for basic plan. Consider upgrading your subscription.',
+      retryAfter: 15 * 60
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+      logger.warn(`Subscription rate limit exceeded for User: ${req.user?.email || 'anonymous'}, Plan: basic`);
+      res.status(429).json({
+        error: 'Subscription rate limit exceeded',
+        code: 'SUBSCRIPTION_RATE_LIMIT_EXCEEDED',
+        details: 'Rate limit exceeded for basic plan. Consider upgrading your subscription.',
+        retryAfter: 15 * 60
+      });
+    }
+  }),
+  pro: rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 1000,
+    keyGenerator: (req) => req.user?.id || req.ip,
+    message: {
+      error: 'Subscription rate limit exceeded',
+      code: 'SUBSCRIPTION_RATE_LIMIT_EXCEEDED',
+      details: 'Rate limit exceeded for pro plan.',
+      retryAfter: 15 * 60
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+      logger.warn(`Subscription rate limit exceeded for User: ${req.user?.email || 'anonymous'}, Plan: pro`);
+      res.status(429).json({
+        error: 'Subscription rate limit exceeded',
+        code: 'SUBSCRIPTION_RATE_LIMIT_EXCEEDED',
+        details: 'Rate limit exceeded for pro plan.',
+        retryAfter: 15 * 60
+      });
+    }
+  }),
+  enterprise: rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5000,
+    keyGenerator: (req) => req.user?.id || req.ip,
+    message: {
+      error: 'Subscription rate limit exceeded',
+      code: 'SUBSCRIPTION_RATE_LIMIT_EXCEEDED',
+      details: 'Rate limit exceeded for enterprise plan.',
+      retryAfter: 15 * 60
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+      logger.warn(`Subscription rate limit exceeded for User: ${req.user?.email || 'anonymous'}, Plan: enterprise`);
+      res.status(429).json({
+        error: 'Subscription rate limit exceeded',
+        code: 'SUBSCRIPTION_RATE_LIMIT_EXCEEDED',
+        details: 'Rate limit exceeded for enterprise plan.',
+        retryAfter: 15 * 60
+      });
+    }
+  })
 };
 
 // Middleware to apply subscription-based rate limiting
 const subscriptionRateLimit = (req, res, next) => {
   const planType = req.user?.subscription?.plan || 'free';
-  const rateLimiter = createSubscriptionRateLimit(planType);
+  const rateLimiter = subscriptionRateLimiters[planType] || subscriptionRateLimiters.free;
   rateLimiter(req, res, next);
 };
 
@@ -199,6 +251,5 @@ module.exports = {
   apiKeyRateLimiter,
   speedLimiter,
   createUserRateLimit,
-  createSubscriptionRateLimit,
   subscriptionRateLimit
 };
