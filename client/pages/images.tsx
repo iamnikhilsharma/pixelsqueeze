@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { 
   MagnifyingGlassIcon,
   PhotoIcon,
@@ -812,9 +813,11 @@ export default function Images() {
                   {/* Image Preview */}
                   <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
                     {image.downloadUrl ? (
-                      <img
+                      <Image
                         src={image.downloadUrl}
                         alt={image.originalName}
+                        width={300}
+                        height={200}
                         className="w-full h-full object-cover rounded-lg"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
