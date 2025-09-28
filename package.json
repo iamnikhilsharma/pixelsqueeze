@@ -11,7 +11,11 @@
     "start": "node server/index.js",
     "reset:password": "node scripts/reset-password.js",
     "docker:build": "docker build -t pixelsqueeze .",
-    "docker:run": "docker run -p 3000:3000 -p 5000:5000 pixelsqueeze"
+    "docker:run": "docker run -p 3000:3000 -p 5000:5000 pixelsqueeze",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --watchAll=false"
   },
   "keywords": [
     "image-optimization",
@@ -55,7 +59,19 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@babel/core": "^7.28.4",
+    "@babel/preset-env": "^7.28.3",
+    "@babel/preset-react": "^7.27.1",
+    "@babel/preset-typescript": "^7.27.1",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "babel-jest": "^30.2.0",
     "concurrently": "^8.2.2",
-    "nodemon": "^3.0.2"
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
+    "mongodb-memory-server": "^10.2.1",
+    "nodemon": "^3.0.2",
+    "supertest": "^7.1.4"
   }
 }
