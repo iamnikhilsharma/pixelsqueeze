@@ -1,5 +1,5 @@
 const cacheService = require('../services/cacheService');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 
 // Cache middleware factory
 const createCacheMiddleware = (namespace, ttl = 3600, keyGenerator = null) => {
