@@ -1,14 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  CreditCardIcon, 
-  CheckIcon, 
-  StarIcon,
-  ArrowRightIcon
-} from '@heroicons/react/24/outline';
+import { CreditCardIcon, CheckIcon, StarIcon } from '@heroicons/react/24/outline';
 import Layout from '../components/Layout';
 import { useAuthStore } from '../store/authStore';
-import { getAllPlans, getPlanFeatures, getPlanLimits } from '../../shared/pricing';
 import Button from '@/components/Button';
 import { formatBytes, formatNumber, buildApiUrl } from '@/utils/formatters';
 import toast from 'react-hot-toast';
@@ -110,7 +104,6 @@ export default function Billing() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
-
   const currentPlan = plans.find(plan => plan.id === user?.subscription?.plan) || plans[0];
 
   useEffect(() => {
