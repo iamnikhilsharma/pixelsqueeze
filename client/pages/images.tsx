@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 import Layout from '@/components/Layout';
 import Button from '@/components/Button';
+import { SkeletonImageCard, SkeletonList } from '@/components/Skeleton';
 import { useAuthStore } from '@/store/authStore';
 import { formatBytes, formatDate, buildApiUrl } from '@/utils/formatters';
 import toast from 'react-hot-toast';
@@ -221,10 +222,10 @@ export default function Images() {
   if (isLoading) {
     return (
       <Layout>
-        <div className="min-h-screen flex items-center justify-center text-gray-500">
+        <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p>Checking session...</p>
+            <p className="text-gray-600">Checking session...</p>
           </div>
         </div>
       </Layout>
@@ -770,12 +771,10 @@ export default function Images() {
           transition={{ delay: 0.2 }}
         >
           {loading && page === 1 ? (
-            <div className="text-center py-12">
-              <PhotoIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Loading images...</h3>
-              <p className="text-gray-500">
-                Fetching your images from the server.
-              </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <SkeletonImageCard key={index} />
+              ))}
             </div>
           ) : sortedImages.length === 0 ? (
             <div className="text-center py-12">
