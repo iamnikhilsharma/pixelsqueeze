@@ -28,6 +28,19 @@ const {
 // Import cache service
 const cacheService = require('./services/cacheService');
 
+// Import monitoring service
+const monitoringService = require('./services/monitoringService');
+const {
+  httpMonitoringMiddleware,
+  errorTrackingMiddleware,
+  apiUsageTrackingMiddleware,
+  businessMetricsMiddleware,
+  healthCheckMiddleware,
+  metricsMiddleware,
+  trackUserActivity,
+  systemResourceMonitoring
+} = require('./middleware/monitoringMiddleware');
+
 const authRoutes = require('./routes/auth');
 const apiRoutes = require('./routes/api');
 const webhookRoutes = require('./routes/webhooks');
@@ -120,6 +133,14 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Apply comprehensive rate limiting middleware
 app.use(speedLimiter); // Slow down requests gradually
 app.use(generalRateLimit); // General rate limiting for all requests
+
+// Apply monitoring middleware
+app.use(httpMonitoringMiddleware); // HTTP request monitoring
+app.use(apiUsageTrackingMiddleware); // API usage tracking
+app.use(businessMetricsMiddleware); // Business metrics tracking
+app.use(trackUserActivity); // User activity tracking
+app.use(healthCheckMiddleware); // Health check endpoint
+app.use(metricsMiddleware); // Metrics endpoint
 
 // Database connection with improved configuration
 const mongooseOptions = {
@@ -265,6 +286,9 @@ if (sentry.errorHandler) {
   app.use(sentry.errorHandler);
 }
 
+// Custom error tracking middleware
+app.use(errorTrackingMiddleware);
+
 // Error handling
 app.use(errorHandler);
 
@@ -330,6 +354,11 @@ server.listen(PORT, () => {
     logger.info('WebSocket service is running');
   }
   logger.info(`Cache service: ${cacheService.isAvailable() ? 'available' : 'unavailable'}`);
+  logger.info(`Monitoring service: ${monitoringService.isInitialized ? 'initialized' : 'not initialized'}`);
+  
+  // Start system resource monitoring
+  systemResourceMonitoring();
+  logger.info('System resource monitoring started');
 });
 
 module.exports = app; 
