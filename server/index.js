@@ -15,6 +15,19 @@ const {
   subscriptionRateLimit
 } = require('./middleware/rateLimiter');
 
+// Import caching middleware
+const {
+  createCacheMiddleware,
+  createCacheInvalidationMiddleware,
+  cacheStatsMiddleware,
+  cacheHealthMiddleware,
+  generateUserKey,
+  generateImageCacheKey
+} = require('./middleware/cacheMiddleware');
+
+// Import cache service
+const cacheService = require('./services/cacheService');
+
 const authRoutes = require('./routes/auth');
 const apiRoutes = require('./routes/api');
 const webhookRoutes = require('./routes/webhooks');
@@ -206,16 +219,16 @@ app.get('/api/test', (req, res) => {
 app.use('/uploads', storageService.getStaticMiddleware());
 
 // Routes
-// API Routes with specific rate limiting
+// API Routes with specific rate limiting and caching
 app.use('/api/auth', authRateLimiter, authRoutes); // Strict rate limiting for auth
-app.use('/api', subscriptionRateLimit, apiRoutes); // Subscription-based rate limiting
+app.use('/api', subscriptionRateLimit, createCacheMiddleware('api', 300, generateUserKey), apiRoutes); // Subscription-based rate limiting + caching
 app.use('/api/webhooks', webhookRoutes); // No rate limiting for webhooks
 app.use('/api/admin', adminAuthRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/plans', adminPlansRoutes);
-app.use('/api/advanced', imageProcessingRateLimiter, advancedImageRoutes); // Image processing rate limiting
+app.use('/api/advanced', imageProcessingRateLimiter, createCacheMiddleware('advanced', 600, generateUserKey), advancedImageRoutes); // Image processing rate limiting + caching
 app.use('/api/billing', billingRoutes);
-app.use('/api/analytics', analyticsRoutes);
+app.use('/api/analytics', createCacheMiddleware('analytics', 300, generateUserKey), analyticsRoutes); // Analytics caching
 app.use('/api/batch-processing', imageProcessingRateLimiter, batchProcessingRoutes); // Image processing rate limiting
 app.use('/api/preferences', preferencesRoutes);
 app.use('/api/razorpay', razorpayRoutes);
@@ -225,8 +238,27 @@ app.use('/api/admin/subscriptions', adminSubscriptionsRoutes);
 app.use('/api/admin/invoices', adminInvoicesRoutes);
 app.use('/api/admin/metrics', adminMetricsRoutes);
 app.use('/api/admin/notifications', adminNotificationRoutes);
-app.use('/api/notifications', notificationRoutes);
+app.use('/api/notifications', createCacheMiddleware('notifications', 180, generateUserKey), notificationRoutes); // Notifications caching
 app.use('/api/notification-preferences', notificationPreferenceRoutes);
+
+// Cache management endpoints
+app.get('/api/cache/stats', cacheStatsMiddleware);
+app.get('/api/cache/health', cacheHealthMiddleware);
+app.post('/api/cache/clear', async (req, res) => {
+  try {
+    const result = await cacheService.clear();
+    res.json({
+      success: result,
+      message: result ? 'Cache cleared successfully' : 'Failed to clear cache'
+    });
+  } catch (error) {
+    logger.error('Cache clear error:', error);
+    res.status(500).json({
+      error: 'Failed to clear cache',
+      details: error.message
+    });
+  }
+});
 
 // Sentry error handler (before our error handler)
 if (sentry.errorHandler) {
@@ -251,6 +283,44 @@ try {
   logger.warn('WebSocket service not available:', error.message);
 }
 
+// Graceful shutdown handling
+const gracefulShutdown = async (signal) => {
+  logger.info(`${signal} received, shutting down gracefully`);
+  
+  // Shutdown WebSocket service
+  if (websocketService) {
+    logger.info('Shutting down WebSocket service...');
+    websocketService.shutdown();
+    logger.info('WebSocket service shutdown complete');
+  }
+  
+  // Shutdown cache service
+  logger.info('Shutting down cache service...');
+  await cacheService.disconnect();
+  logger.info('Cache service shutdown complete');
+  
+  // Close database connection
+  logger.info('Closing database connection...');
+  await mongoose.connection.close();
+  logger.info('Database connection closed');
+  
+  // Close server
+  server.close(() => {
+    logger.info('Server closed');
+    process.exit(0);
+  });
+  
+  // Force close after 10 seconds
+  setTimeout(() => {
+    logger.error('Forced shutdown after timeout');
+    process.exit(1);
+  }, 10000);
+};
+
+// Handle shutdown signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
 // Start server
 server.listen(PORT, () => {
   logger.info(`PixelSqueeze server running on port ${PORT}`);
@@ -259,7 +329,7 @@ server.listen(PORT, () => {
   if (websocketService) {
     logger.info('WebSocket service is running');
   }
+  logger.info(`Cache service: ${cacheService.isAvailable() ? 'available' : 'unavailable'}`);
 });
-
 
 module.exports = app; 
