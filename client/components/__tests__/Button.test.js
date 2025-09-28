@@ -1,11 +1,11 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useAuthStore } from '@/store/authStore';
-import Button from '@/components/Button';
+import { useAuthStore } from '../../store/authStore';
+import Button from '../Button';
 
 // Mock the auth store
-jest.mock('@/store/authStore', () => ({
+jest.mock('../../store/authStore', () => ({
   useAuthStore: jest.fn(),
 }));
 

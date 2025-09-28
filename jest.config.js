@@ -6,12 +6,12 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/client/__tests__/setup.js'],
   
   // Module name mapping for absolute imports
-  moduleNameMapping: {
-    '^@/(.*)$': '<rootDir>/client/$1',
-    '^@components/(.*)$': '<rootDir>/client/components/$1',
-    '^@pages/(.*)$': '<rootDir>/client/pages/$1',
-    '^@utils/(.*)$': '<rootDir>/client/utils/$1',
-    '^@store/(.*)$': '<rootDir>/client/store/$1',
+  moduleNameMapper: {
+    '^@/components/(.*)$': '<rootDir>/client/components/$1',
+    '^@/pages/(.*)$': '<rootDir>/client/pages/$1',
+    '^@/store/(.*)$': '<rootDir>/client/store/$1',
+    '^@/utils/(.*)$': '<rootDir>/client/utils/$1',
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   
   // Test file patterns
@@ -59,6 +59,9 @@ module.exports = {
     '<rootDir>/.next/',
     '<rootDir>/node_modules/',
     '<rootDir>/client/node_modules/',
+    '<rootDir>/client/__tests__/setup.js',
+    '<rootDir>/server/__tests__/setup.js',
+    '<rootDir>/server/__tests__/teardown.js',
   ],
   
   // Global setup

@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { Skeleton, SkeletonCard, SkeletonImageCard } from '@/components/Skeleton';
+import { Skeleton, SkeletonCard, SkeletonImageCard } from '../Skeleton';
 
 describe('Skeleton Components', () => {
   describe('Skeleton', () => {
