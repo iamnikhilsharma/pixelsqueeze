@@ -51,7 +51,7 @@ const formatCountdown = (expiresAt?: string, nowMs?: number) => {
 
 export default function Images() {
   const router = useRouter();
-  const { user, token, isAuthenticated, isLoading, checkAuth, hasRehydrated } = useAuthStore();
+  const { token, isAuthenticated, isLoading, checkAuth, hasRehydrated } = useAuthStore();
   const [images, setImages] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -86,7 +86,7 @@ export default function Images() {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!hasRehydrated) {
-        console.log('Forcing rehydration after timeout');
+        // Forcing rehydration after timeout
         // Force rehydration by updating the store
         const authData = localStorage.getItem('pixelsqueeze-auth');
         if (authData) {
@@ -97,7 +97,7 @@ export default function Images() {
               useAuthStore.setState({ hasRehydrated: true });
             }
           } catch (error) {
-            console.error('Error parsing auth data:', error);
+            // Error parsing auth data, forcing rehydration
             useAuthStore.setState({ hasRehydrated: true });
           }
         } else {
@@ -173,7 +173,7 @@ export default function Images() {
 
         setHasMore(data.data.pagination.page < data.data.pagination.pages);
       } catch (error) {
-        console.error('Error fetching images:', error);
+        // Error fetching images
         toast.error('Failed to fetch images');
       } finally {
         setLoading(false);
@@ -323,7 +323,7 @@ export default function Images() {
         toast.error('Failed to create ZIP');
       }
     } catch (error) {
-      console.error('Batch download error:', error);
+      // Batch download error
       toast.error('Failed to download');
     }
   };
@@ -351,7 +351,7 @@ export default function Images() {
       setSelectedImages([]);
       toast.success('Deleted successfully');
     } catch (error) {
-      console.error('Delete error:', error);
+      // Delete error
       toast.error('Failed to delete images');
     }
   };
@@ -440,7 +440,7 @@ export default function Images() {
             throw new Error(errorData.error || 'Compression failed');
           }
         } catch (error) {
-          console.error(`Error processing ${file.name}:`, error);
+          // Error processing file
           toast.error(`Failed to compress ${file.name}`);
         }
       }
@@ -455,7 +455,7 @@ export default function Images() {
       }
 
     } catch (error) {
-      console.error('Compression error:', error);
+      // Compression error
       setCompressionError('Failed to process images. Please try again.');
     } finally {
       setIsProcessing(false);
@@ -913,7 +913,7 @@ export default function Images() {
                                 a.remove();
                                 window.URL.revokeObjectURL(url);
                               } catch (e) {
-                                console.error(e);
+                                // Download error
                                 toast.error('Download failed');
                               }
                             }}
