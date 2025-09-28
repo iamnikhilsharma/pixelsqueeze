@@ -818,12 +818,17 @@ export default function Images() {
                         width={300}
                         height={200}
                         className="w-full h-full object-cover rounded-lg"
+                        unoptimized={true}
                         onError={(e) => {
+                          console.error('Image load error:', image.downloadUrl, e);
                           e.currentTarget.style.display = 'none';
                           const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
                           if (nextElement) {
                             nextElement.style.display = 'flex';
                           }
+                        }}
+                        onLoad={() => {
+                          console.log('Image loaded successfully:', image.downloadUrl);
                         }}
                       />
                     ) : null}
