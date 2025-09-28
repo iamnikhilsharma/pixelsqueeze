@@ -41,6 +41,10 @@ const {
   systemResourceMonitoring
 } = require('./middleware/monitoringMiddleware');
 
+// Import security service
+const securityService = require('./services/securityService');
+const securityMiddleware = require('./middleware/securityMiddleware');
+
 const authRoutes = require('./routes/auth');
 const apiRoutes = require('./routes/api');
 const webhookRoutes = require('./routes/webhooks');
@@ -83,34 +87,11 @@ if (sentry.requestHandler) {
 }
 
 // Security middleware
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
-  crossOriginEmbedderPolicy: false,
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https:"],
-      fontSrc: ["'self'", "https:", "data:"],
-      imgSrc: ["'self'", "data:", "https:"],
-      scriptSrc: ["'self'"],
-      connectSrc: ["'self'", "https:"],
-    },
-  },
-}));
+// Security headers
+app.use(securityService.getSecurityHeaders());
 
 // CORS configuration
-app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'https://pixelsqueeze-rho.vercel.app',
-    'https://pixelsqueeze.vercel.app',
-    'https://pixelsqueeze.onrender.com'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+app.use(cors(securityService.getCORSConfig()));
 
 // Handle CORS preflight requests explicitly
 app.options('*', cors({
@@ -141,6 +122,13 @@ app.use(businessMetricsMiddleware); // Business metrics tracking
 app.use(trackUserActivity); // User activity tracking
 app.use(healthCheckMiddleware); // Health check endpoint
 app.use(metricsMiddleware); // Metrics endpoint
+
+// Apply security middleware
+app.use(securityMiddleware.sanitizeInput); // Input sanitization
+app.use(securityMiddleware.preventXSS); // XSS prevention
+app.use(securityMiddleware.preventSQLInjection); // SQL injection prevention
+app.use(securityMiddleware.logSecurityEvents); // Security event logging
+app.use(securityMiddleware.limitRequestSize()); // Request size limiting
 
 // Database connection with improved configuration
 const mongooseOptions = {
@@ -240,20 +228,20 @@ app.get('/api/test', (req, res) => {
 app.use('/uploads', storageService.getStaticMiddleware());
 
 // Routes
-// API Routes with specific rate limiting and caching
-app.use('/api/auth', authRateLimiter, authRoutes); // Strict rate limiting for auth
+// API Routes with specific rate limiting, caching, and security
+app.use('/api/auth', authRateLimiter, securityMiddleware.secureAuthentication, securityMiddleware.validatePasswordStrength, securityMiddleware.validateEmailFormat, authRoutes); // Strict rate limiting + security for auth
 app.use('/api', subscriptionRateLimit, createCacheMiddleware('api', 300, generateUserKey), apiRoutes); // Subscription-based rate limiting + caching
 app.use('/api/webhooks', webhookRoutes); // No rate limiting for webhooks
 app.use('/api/admin', adminAuthRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/admin', securityMiddleware.validateSignature, adminRoutes);
 app.use('/api/admin/plans', adminPlansRoutes);
-app.use('/api/advanced', imageProcessingRateLimiter, createCacheMiddleware('advanced', 600, generateUserKey), advancedImageRoutes); // Image processing rate limiting + caching
-app.use('/api/billing', billingRoutes);
+app.use('/api/advanced', imageProcessingRateLimiter, createCacheMiddleware('advanced', 600, generateUserKey), securityMiddleware.secureFileUpload, advancedImageRoutes); // Image processing + caching + file security
+app.use('/api/billing', securityMiddleware.sensitiveOperationRateLimit, billingRoutes);
 app.use('/api/analytics', createCacheMiddleware('analytics', 300, generateUserKey), analyticsRoutes); // Analytics caching
-app.use('/api/batch-processing', imageProcessingRateLimiter, batchProcessingRoutes); // Image processing rate limiting
+app.use('/api/batch-processing', imageProcessingRateLimiter, securityMiddleware.secureFileUpload, batchProcessingRoutes); // Image processing + file security
 app.use('/api/preferences', preferencesRoutes);
 app.use('/api/razorpay', razorpayRoutes);
-app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/subscription', securityMiddleware.sensitiveOperationRateLimit, subscriptionRoutes);
 app.use('/api/invoice', invoiceRoutes);
 app.use('/api/admin/subscriptions', adminSubscriptionsRoutes);
 app.use('/api/admin/invoices', adminInvoicesRoutes);
@@ -288,6 +276,9 @@ if (sentry.errorHandler) {
 
 // Custom error tracking middleware
 app.use(errorTrackingMiddleware);
+
+// Security error handler
+app.use(securityMiddleware.securityErrorHandler);
 
 // Error handling
 app.use(errorHandler);
@@ -355,6 +346,7 @@ server.listen(PORT, () => {
   }
   logger.info(`Cache service: ${cacheService.isAvailable() ? 'available' : 'unavailable'}`);
   logger.info(`Monitoring service: ${monitoringService.isInitialized ? 'initialized' : 'not initialized'}`);
+  logger.info(`Security service: initialized`);
   
   // Start system resource monitoring
   systemResourceMonitoring();
